@@ -18,6 +18,8 @@
 | [baseline-browser-mapping](https://github.com/web-platform-dx/baseline-browser-mapping) | Baseline queries | Apache-2.0 |
 | [MDN browser-compat-data](https://github.com/mdn/browser-compat-data) | `@font-face` descriptor support | CC0-1.0 |
 | [StatCounter Global Stats](https://gs.statcounter.com/) | Default desktop OS share | CC BY-SA 3.0 |
+| [Capsize unpack 4.0.1](https://github.com/seek-oss/capsize/tree/master/packages/unpack) | English/Latin frequency weights, sampled from English Wikinews abstracts | MIT; underlying Wikinews content CC BY 2.5 |
+| [UD Russian GSD](https://github.com/UniversalDependencies/UD_Russian-GSD/tree/0f34b7362ac3c3facd1d6ff4b876d241bb15793e) by Ryan McDonald, Vitaly Nikolaev and Olga Lyashevskaya | Cyrillic character counts derived from 3,850 training sentences; corpus text is not shipped | CC BY-SA 4.0 |
 
 ## Tooling
 
@@ -34,3 +36,6 @@
 - [MDN Worker.terminate](https://developer.mozilla.org/en-US/docs/Web/API/Worker/terminate) — watchdog cancellation of parsing.
 - [FontTools](https://github.com/fonttools/fonttools) — independent fixture metric checks (MIT).
 - [OpenType OS/2 specification](https://learn.microsoft.com/en-us/typography/opentype/spec/os2) — legacy table lengths and vertical metric fields.
+- [CSS Fonts Level 5](https://drafts.csswg.org/css-fonts-5/#descdef-font-face-size-adjust) — scaling metric overrides and nonnegative descriptors.
+- [Capsize core](https://github.com/seek-oss/capsize/blob/master/packages/core/src/createFontStack.ts) (MIT) and [Fontaine](https://github.com/unjs/fontaine/blob/main/packages/fontaine/src/css.ts) (MIT) — fit formulas; frozen Capsize 4.1.3 reference outputs with metrics 4.3.0.
+- [FreeType SFNT metrics selection](https://github.com/freetype/freetype/blob/master/src/sfnt/sfobjs.c) — explicit `freetype` vertical metric policy (FreeType License / GPLv2).

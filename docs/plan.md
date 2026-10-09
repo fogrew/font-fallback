@@ -40,7 +40,7 @@ Every numeric control = slider + number input + "auto" toggle. Auto values recom
 | Value | Auto-fit method |
 |---|---|
 | `size-adjust` | Ratio of weighted average glyph width (language-specific letter frequencies, per script) of web font vs fallback; optional exact fit against the preview text by measuring rendered width. |
-| `ascent-override` / `descent-override` / `line-gap-override` | Web font vertical metrics (hhea/OS2 per browser rules) divided by fallback `unitsPerEm` and `size-adjust`. |
+| `ascent-override` / `descent-override` / `line-gap-override` | Web font vertical metrics (hhea/OS2 selected by an explicit engine policy) divided by the web font's own `unitsPerEm` and `size-adjust`. |
 | `letter-spacing` / `word-spacing` | Numeric optimizer minimizing line-break mismatches and block height delta on sample text across chosen viewports. Emitted as a "fonts loading" CSS class + Font Loading API snippet (these are not `@font-face` descriptors). |
 | `font-size-adjust` | Computed from x-height/cap-height ratio; offered as the Safari strategy (see 1.6). |
 | Global "Optimize for CLS" | Runs the solver over all pinned/unpinned values to minimize simulated CLS. |

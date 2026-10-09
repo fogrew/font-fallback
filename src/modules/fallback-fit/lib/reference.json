@@ -1,0 +1,110 @@
+{
+  "coreVersion": "4.1.3",
+  "metricsVersion": "4.3.0",
+  "pairs": [
+    {
+      "target": {
+        "familyName": "Inter",
+        "fullName": "Inter Regular",
+        "postscriptName": "Inter-Regular",
+        "category": "sans-serif",
+        "capHeight": 1490,
+        "ascent": 1984,
+        "descent": -494,
+        "lineGap": 0,
+        "unitsPerEm": 2048,
+        "xHeight": 1118,
+        "xWidthAvg": 978,
+        "subsets": {
+          "latin": {
+            "xWidthAvg": 978
+          },
+          "thai": {
+            "xWidthAvg": 1344
+          }
+        }
+      },
+      "fallback": {
+        "familyName": "Arial",
+        "fullName": "Arial",
+        "postscriptName": "ArialMT",
+        "category": "sans-serif",
+        "capHeight": 1467,
+        "ascent": 1854,
+        "descent": -434,
+        "lineGap": 67,
+        "unitsPerEm": 2048,
+        "xHeight": 1062,
+        "xWidthAvg": 913,
+        "subsets": {
+          "latin": {
+            "xWidthAvg": 913
+          },
+          "thai": {
+            "xWidthAvg": 1536
+          }
+        }
+      },
+      "expected": {
+        "fontFamily": "\"Inter Fallback\"",
+        "src": "local('Arial'), local('ArialMT')",
+        "ascentOverride": "90.4365%",
+        "descentOverride": "22.518%",
+        "lineGapOverride": "0%",
+        "sizeAdjust": "107.1194%"
+      }
+    },
+    {
+      "target": {
+        "familyName": "Roboto",
+        "fullName": "Roboto Regular",
+        "postscriptName": "Roboto-Regular",
+        "category": "sans-serif",
+        "capHeight": 1456,
+        "ascent": 1900,
+        "descent": -500,
+        "lineGap": 0,
+        "unitsPerEm": 2048,
+        "xHeight": 1082,
+        "xWidthAvg": 911,
+        "subsets": {
+          "latin": {
+            "xWidthAvg": 911
+          },
+          "thai": {
+            "xWidthAvg": 908
+          }
+        }
+      },
+      "fallback": {
+        "familyName": "Arial",
+        "fullName": "Arial",
+        "postscriptName": "ArialMT",
+        "category": "sans-serif",
+        "capHeight": 1467,
+        "ascent": 1854,
+        "descent": -434,
+        "lineGap": 67,
+        "unitsPerEm": 2048,
+        "xHeight": 1062,
+        "xWidthAvg": 913,
+        "subsets": {
+          "latin": {
+            "xWidthAvg": 913
+          },
+          "thai": {
+            "xWidthAvg": 1536
+          }
+        }
+      },
+      "expected": {
+        "fontFamily": "\"Roboto Fallback\"",
+        "src": "local('Arial'), local('ArialMT')",
+        "ascentOverride": "92.9771%",
+        "descentOverride": "24.4677%",
+        "lineGapOverride": "0%",
+        "sizeAdjust": "99.7809%"
+      }
+    }
+  ]
+}
