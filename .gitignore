@@ -13,3 +13,4 @@ playwright/.cache/
 *.log
 .DS_Store
 *.tsbuildinfo
+.feod/

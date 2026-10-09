@@ -114,23 +114,19 @@ Seeds:
 ### 3.2 FEOD layout
 [FEOD](https://fractal-oriented.tech/en/) levels: `app`, `pages`, `modules`, `common`, `global`. Imports only through each entity's root `index.ts`; direction per the [import matrix](https://fractal-oriented.tech/en/reference/import-matrix).
 
-Astro treats every file in `src/pages` as a route, so the FEOD `pages` level lives there with thin route files; page-private internals sit in `_`-prefixed folders (excluded from routing).
+Astro routes live in `src/app/pages` (`srcDir: ./src/app`), which frees `src/pages` for the FEOD `pages` level; route files are thin and render page entities.
 
 ```
 src/
-  app/                    # layouts, global styles/tokens, i18n wiring, head/meta, theme
+  app/                    # Astro srcDir: routes, layouts, global styles, i18n wiring, head/meta, theme
+    pages/                # thin Astro routes ([locale]/index.astro, fonts/[slug].astro, …)
     layouts/
     styles/
-    index.ts
-  pages/                  # FEOD pages level = Astro routes
-    [locale]/
-      index.astro         # generator
-      fonts/index.astro   # catalog
-      fonts/[slug].astro
-      presets.astro
-      guide.astro
-    _generator/           # page composition of modules (not routed)
-    _catalog/
+  pages/                  # FEOD pages level: page entities with root index.ts
+    generator/            # composition of modules for the generator page
+    catalog/
+    presets/
+    guide/
   modules/
     font-source/          # web font inputs
       upload/  google-fonts/  site-import/   # submodules

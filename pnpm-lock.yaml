@@ -191,6 +191,9 @@ importers:
       '@commitlint/config-conventional':
         specifier: 21.2.3
         version: 21.2.3
+      '@feod/analyzer':
+        specifier: 0.1.1
+        version: 0.1.1
       lefthook:
         specifier: 2.2.1
         version: 2.2.1
@@ -806,6 +809,11 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@feod/analyzer@0.1.1':
+    resolution: {integrity: sha512-iWfvTvFQA6J+D2fUzzx58Jp/kSxWzmcR+ikzuDNUSkAToQ2ASqg8dSGnR4ZVLpiK5gp0/75XCXHLuPcIzgCcIQ==}
+    engines: {node: '>=20'}
+    hasBin: true
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -3100,6 +3108,8 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@feod/analyzer@0.1.1': {}
 
   '@img/colour@1.1.0':
     optional: true

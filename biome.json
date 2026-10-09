@@ -36,5 +36,179 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["src/app/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/pages/*/**"],
+                    "message": "Import pages entities only through their public API (index.ts)."
+                  },
+                  {
+                    "group": ["@/modules/*/**"],
+                    "message": "Import modules entities only through their public API (index.ts)."
+                  },
+                  {
+                    "group": ["@/common/*/**"],
+                    "message": "Import common entities only through their public API (index.ts)."
+                  },
+                  {
+                    "group": ["@/global", "@/global/**"],
+                    "message": "global is not an import target."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/pages/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/app", "@/app/**"],
+                    "message": "pages must not import app."
+                  },
+                  {
+                    "group": ["@/pages", "@/pages/**"],
+                    "message": "pages must not import other pages; use relative imports inside a page."
+                  },
+                  {
+                    "group": ["@/global", "@/global/**"],
+                    "message": "global is not an import target."
+                  },
+                  {
+                    "group": ["@/modules/*/**"],
+                    "message": "Import modules entities only through their public API (index.ts)."
+                  },
+                  {
+                    "group": ["@/common/*/**"],
+                    "message": "Import common entities only through their public API (index.ts)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/modules/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/app", "@/app/**"],
+                    "message": "modules must not import app."
+                  },
+                  {
+                    "group": ["@/pages", "@/pages/**"],
+                    "message": "modules must not import pages."
+                  },
+                  {
+                    "group": ["@/global", "@/global/**"],
+                    "message": "global is not an import target."
+                  },
+                  {
+                    "group": ["@/modules/*/**"],
+                    "message": "Import modules entities only through their public API (index.ts)."
+                  },
+                  {
+                    "group": ["@/common/*/**"],
+                    "message": "Import common entities only through their public API (index.ts)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/common/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/app", "@/app/**"],
+                    "message": "common must not import app."
+                  },
+                  {
+                    "group": ["@/pages", "@/pages/**"],
+                    "message": "common must not import pages."
+                  },
+                  {
+                    "group": ["@/modules", "@/modules/**"],
+                    "message": "common must not import modules."
+                  },
+                  {
+                    "group": ["@/global", "@/global/**"],
+                    "message": "global is not an import target."
+                  },
+                  {
+                    "group": ["@/common/*/**"],
+                    "message": "Import common entities only through their public API (index.ts)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/global/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/app", "@/app/**"],
+                    "message": "global must not import FEOD levels."
+                  },
+                  {
+                    "group": ["@/pages", "@/pages/**"],
+                    "message": "global must not import FEOD levels."
+                  },
+                  {
+                    "group": ["@/modules", "@/modules/**"],
+                    "message": "global must not import FEOD levels."
+                  },
+                  {
+                    "group": ["@/common", "@/common/**"],
+                    "message": "global must not import FEOD levels."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

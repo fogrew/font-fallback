@@ -9,8 +9,9 @@ Static Astro site that generates metric-adjusted fallback font stacks. Full scop
 | `pnpm dev` / `pnpm build` / `pnpm preview` | Astro dev server, static build to `dist/`, serve the build |
 | `pnpm check` | Typecheck (`astro check`) |
 | `pnpm lint` / `pnpm lint:fix` / `pnpm format` | Biome lint + format |
+| `pnpm lint:arch` | FEOD boundary check (`@feod/analyzer`) |
 
-Git hooks (lefthook, installed by `pnpm install`; reinstall with `pnpm exec lefthook install`): `pre-commit` runs Biome on staged files (fixes re-staged), then `astro check` on the whole working tree (~5 s); `commit-msg` runs commitlint (~1 s).
+Git hooks (lefthook, installed by `pnpm install`; reinstall with `pnpm exec lefthook install`): `pre-commit` runs Biome on staged files (fixes re-staged), then the FEOD check and `astro check` on the whole working tree (~6 s); `commit-msg` runs commitlint (~1 s).
 
 ## Work tracking
 
@@ -67,7 +68,7 @@ Lowercase, hyphen-separated, issue number first.
 
 ## Code
 
-- FEOD architecture: levels `app`, `pages`, `modules`, `common`, `global`; imports only through an entity's root `index.ts`, direction per the [import matrix](https://fractal-oriented.tech/en/reference/import-matrix). Astro routes live in `src/pages`; page internals go in `_`-prefixed folders.
+- FEOD architecture: levels `app`, `pages`, `modules`, `common`, `global`; imports only through an entity's root `index.ts`, direction per the [import matrix](https://fractal-oriented.tech/en/reference/import-matrix). Astro `srcDir` is `src/app`, so routes live in `src/app/pages`; `src/pages` is the FEOD pages level.
 - Everything in the repo (code, comments, docs, commit messages) is in English.
 - Minimal comments: only for non-obvious anti-patterns, one line.
 - Every external source of data, code or inspiration is added to [`CREDITS.md`](CREDITS.md) in the same PR.

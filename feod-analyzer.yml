@@ -1,0 +1,13 @@
+srcDir: src
+outputDir: .feod
+outputFormats: [json]
+excludeDirs: [node_modules, .git, dist, .astro, coverage]
+aliases:
+  "@": src
+tsconfig: tsconfig.json
+levels: [app, pages, modules, common, global]
+segments: [ui, model, api, lib, config, types, test, tests]
+submodules:
+  enabled: true
+  maxDepth: 2
+ignoreRules: []
