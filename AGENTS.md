@@ -30,7 +30,7 @@ All commits and tags are GPG-signed. Never bypass signing.
 
 | Branch | From | Into | Purpose |
 |---|---|---|---|
-| `main` | — | — | Production; every commit is a tagged release. Cloudflare Pages production branch. |
+| `main` | — | — | Production; every commit is a tagged release. Cloudflare Workers Builds production branch. |
 | `develop` | `main` | — | Integration branch; default PR target. |
 | `feature/<issue>-<desc>` | `develop` | `develop` | New functionality, e.g. `feature/12-font-upload`. |
 | `bugfix/<issue>-<desc>` | `develop` | `develop` | Non-urgent fixes. |

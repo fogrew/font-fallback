@@ -11,6 +11,8 @@ Inspired by:
 ## 1. Product scope
 
 ### 1.1 Inputs (web fonts)
+The default entry point is choosing fonts (upload / catalog). Arriving from the bookmarklet is a secondary path and is not emphasized on the first screen.
+
 Delivered incrementally:
 1. **File upload** (woff2/woff/ttf/otf) — fully local, no network. First to ship.
 2. **Google Fonts picker** — catalog JSON generated at build time; font files fetched from `fonts.gstatic.com` (CORS-enabled).
@@ -72,6 +74,10 @@ Both modes:
 - **Font catalog** (cssfontstack analog): table of system fonts × OS/versions with availability and estimated audience coverage; static page per font with metrics and specimen.
 - **Presets** (abacktools analog): curated stacks per category (sans, serif, mono, display, handwriting, system-ui, modern-font-stacks families), each openable in the generator.
 - **Guide**: how descriptors, `unicode-range` and CLS interact.
+- Footer links: Credits page, source repository ([fogrew/font-fallback](https://github.com/fogrew/font-fallback)).
+
+### 1.9 Later (backlog)
+- More OFL font sources besides Google Fonts (Fontsource, Bunny Fonts, independent foundries).
 
 ## 2. Data
 
@@ -99,6 +105,7 @@ Seeds:
 
 ### 3.1 Stack
 - Astro (static output, no adapter, no server), TypeScript strict.
+- Hosting: Cloudflare Workers with static assets only (no Worker script), deployed by Workers Builds from GitHub.
 - Preact + `@preact/signals` for the interactive generator island (`client:load` for generator, `client:visible` elsewhere).
 - Font parsing: fontkit via `@capsizecss/unpack` in a **Web Worker** (woff2 support, cmap for `unicode-range`). Fallback candidate if bundle size is a problem: opentype.js 2.
 - `browserslist` + `baseline-browser-mapping` bundled for the browser (lazy-loaded chunk).
@@ -171,11 +178,11 @@ Pure logic (`fallback-fit`, `font-metrics`, `audience`, `layout-shift` scoring, 
 - **Vitest** (unit + `fast-check` property tests for the solver and range compaction).
 - **Playwright** e2e against `astro preview` (Chromium; WebKit/Firefox if available in CI image).
 - lefthook `commit-msg`: commitlint (Conventional Commits). Changelog generated from commits by git-cliff into Keep a Changelog format.
-- **Cloudflare Pages Git integration** (no GitHub Actions): build command runs everything, so every PR gets a check run + preview URL, and a failing check fails the deployment:
+- **Cloudflare Workers Builds** (no GitHub Actions): the build command runs everything, so every PR gets a check run + preview URL, and a failing check fails the deployment:
   ```
   pnpm run verify   # biome ci → astro check → feod-analyzer → vitest run → astro build → playwright test
   ```
-  Output dir `dist`. Node and pnpm versions pinned via env vars (v3 image does not read `engines`/lockfile version).
+  Deploy: `wrangler deploy` on `main`, `wrangler versions upload` (preview URL) on other branches. `wrangler.jsonc` serves `dist/` as static assets.
 
 ## 5. Phases
 
@@ -183,7 +190,7 @@ Each phase ends deployable with a green PR check.
 
 **Phase 0 — Bootstrap & spikes**
 - Astro + Preact + TS strict, Biome, lefthook, Vitest, Playwright, Paraglide (EN/RU), FEOD skeleton with `index.ts` per entity.
-- Cloudflare Pages project connected; `verify` pipeline running on PRs.
+- Cloudflare Workers Builds connected; `verify` pipeline running on PRs.
 - Spikes (go/no-go):
   - Playwright in the Cloudflare build container (gVisor, Ubuntu 22.04, no root for `apt` deps).
   - `@feod/analyzer` (0.1.x) on `.astro`/`.tsx` sources.
@@ -222,8 +229,8 @@ Each phase ends deployable with a green PR check.
 
 | Risk | Mitigation |
 |---|---|
-| Playwright browsers may not run in Cloudflare's build container | Spike in Phase 0; options: headless shell only, Chromium-only e2e, or a separate e2e check (needs a decision). |
-| Pages build time limit / monthly build quota | Cache `node_modules` and Playwright browsers; keep e2e suite focused. |
+| Playwright browsers may not run in Cloudflare's build container (Workers Builds) | Spike in Phase 0; options: headless shell only, Chromium-only e2e, or a separate e2e check (needs a decision). |
+| Build time limit / monthly build quota | Cache `node_modules` and Playwright browsers; keep e2e suite focused. |
 | `@feod/analyzer` is early (0.1.x) | Biome import restrictions as a second line; pin version. |
 | System font metrics vary by OS version | Store metrics per OS version where they differ; show "measured on" source. |
 | Safari lacks vertical overrides | Explicit residual-shift estimate + `font-size-adjust` strategy. |
