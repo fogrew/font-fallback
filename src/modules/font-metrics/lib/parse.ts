@@ -1,7 +1,9 @@
 import { create } from 'fontkitten';
 import { legacyVerticalMetrics } from './legacy-os2';
-import { type FontMetrics, FontParseError } from './model';
+import { type FontMetrics, FontParseError, MAX_CMAP_ENTRIES } from './model';
 import { validateFontBuffer } from './validate';
+
+const LIMIT_MESSAGE = 'fontkitten-limit:';
 
 function metric(value: number): number {
   if (!Number.isFinite(value)) throw new FontParseError('invalid-font');
@@ -30,7 +32,8 @@ export function parseFontBuffer(buffer: ArrayBuffer): FontMetrics {
       throw new FontParseError('invalid-font');
     }
     const points = font.characterSet;
-    if (points.length === 0 || points.length > 100_000) throw new FontParseError('invalid-font');
+    if (points.length === 0) throw new FontParseError('invalid-font');
+    if (points.length > MAX_CMAP_ENTRIES) throw new FontParseError('too-large');
     for (const point of points) {
       if (
         !Number.isInteger(point) ||
@@ -85,6 +88,9 @@ export function parseFontBuffer(buffer: ArrayBuffer): FontMetrics {
     };
   } catch (error) {
     if (error instanceof FontParseError) throw error;
+    if (error instanceof Error && error.message.startsWith(LIMIT_MESSAGE)) {
+      throw new FontParseError('too-large');
+    }
     throw new FontParseError('invalid-font');
   }
 }

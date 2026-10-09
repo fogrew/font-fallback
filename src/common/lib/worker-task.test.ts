@@ -44,17 +44,34 @@ describe('worker task lifecycle', () => {
     expect(worker.terminate).toHaveBeenCalledOnce();
   });
 
-  it.each(['onerror', 'onmessageerror'] as const)(
-    'rejects %s without leaking a worker',
-    async (event) => {
-      const worker = new TestWorker();
-      const result = runWorkerTask(() => worker, 42, { timeoutMs: 1000 });
-      const handler = worker[event] as (() => void) | null;
-      handler?.();
-      await expect(result).rejects.toMatchObject({ code: 'worker-error' });
-      expect(worker.terminate).toHaveBeenCalledOnce();
-    },
-  );
+  it('rejects onerror, prevents the default error report and releases the worker', async () => {
+    const worker = new TestWorker();
+    const result = runWorkerTask(() => worker, 42, { timeoutMs: 1000 });
+    const event = new ErrorEvent('error', { cancelable: true });
+    (worker.onerror as (event: ErrorEvent) => void)(event);
+    await expect(result).rejects.toMatchObject({ code: 'worker-error' });
+    expect(event.defaultPrevented).toBe(true);
+    expect(worker.terminate).toHaveBeenCalledOnce();
+  });
+
+  it('rejects onmessageerror and releases the worker', async () => {
+    const worker = new TestWorker();
+    const result = runWorkerTask(() => worker, 42, { timeoutMs: 1000 });
+    (worker.onmessageerror as () => void)();
+    await expect(result).rejects.toMatchObject({ code: 'worker-error' });
+    expect(worker.terminate).toHaveBeenCalledOnce();
+  });
+
+  it('rejects a reply that fails the response guard', async () => {
+    const worker = new TestWorker();
+    const result = runWorkerTask<number, string>(() => worker, 42, {
+      timeoutMs: 1000,
+      isResponse: (data): data is string => typeof data === 'string',
+    });
+    worker.reply(7);
+    await expect(result).rejects.toMatchObject({ code: 'worker-error' });
+    expect(worker.terminate).toHaveBeenCalledOnce();
+  });
 
   it('reports worker creation and postMessage failures', async () => {
     await expect(

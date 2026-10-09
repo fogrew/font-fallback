@@ -23,7 +23,7 @@
 
 - [Paraglide JS](https://github.com/opral/paraglide-js) by inlang — message compilation and i18n routing (MIT).
 - [fontkitten](https://github.com/delucis/fontkitten) — local font parsing in a Web Worker (MIT).
-- [fontkitten test fonts](https://github.com/delucis/fontkitten/tree/43c1cfc596292fc59ef3670251a885239c7c625e/packages/fontkitten/test/data) — Source Sans Pro, Fira Sans and Mada fixtures (SIL OFL 1.1; licenses included in `tests/fixtures/fonts`).
+- [fontkitten test fonts](https://github.com/delucis/fontkitten/tree/43c1cfc596292fc59ef3670251a885239c7c625e/packages/fontkitten/test/data) — Source Sans Pro (Adobe), Fira Sans (Carrois Corporate / bBox Type) and Mada (Khaled Hosny) fixtures (SIL OFL 1.1; licenses included in `tests/fixtures/fonts`).
 
 ## Methodology
 

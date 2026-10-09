@@ -44,6 +44,17 @@ describe('font parser client', () => {
     expect(TestWorker.instances).toHaveLength(0);
   });
 
+  it.each([null, 'text', { ok: true }, { ok: false, error: {} }])(
+    'treats a malformed worker reply as a worker error',
+    async (reply) => {
+      vi.stubGlobal('Worker', TestWorker);
+      const pending = createFontParser().parse(input());
+      TestWorker.instances[0]?.reply(reply);
+      await expect(pending).resolves.toEqual({ ok: false, error: { code: 'worker-error' } });
+      expect(TestWorker.instances[0]?.terminate).toHaveBeenCalledOnce();
+    },
+  );
+
   it('returns busy for concurrent requests and keeps the second buffer intact', async () => {
     vi.stubGlobal('Worker', TestWorker);
     const parser = createFontParser();

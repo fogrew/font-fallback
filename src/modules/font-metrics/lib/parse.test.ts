@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { buildFont, buildWoff2 } from './forged';
 import { parseFontBuffer } from './parse';
 
 function fixture(name: string): ArrayBuffer {
@@ -90,6 +91,41 @@ describe('font metrics extraction', () => {
   it.each(['woff', 'woff2'])('rejects excessive declared expansion in %s', (format) => {
     const buffer = fixture(`SourceSansPro-Regular.${format}`);
     new DataView(buffer).setUint32(16, 65 * 1024 * 1024);
+    expect(() => parseFontBuffer(buffer)).toThrow('too-large');
+  });
+
+  it('excludes code points that map to .notdef', () => {
+    const metrics = parseFontBuffer(
+      buildFont(
+        [
+          [0x41, 0x42, 1],
+          [0x50, 0x51, 0],
+        ],
+        4,
+      ),
+    );
+    expect(Array.from(metrics.codePoints)).toEqual([0x41, 0x42, 0x51]);
+    expect(Array.from(metrics.advances)).toEqual([600, 700, 600]);
+  });
+
+  it('rejects a cmap with overlapping groups that expand beyond the code point space', () => {
+    const groups = Array.from({ length: 60 }, () => [0, 0x10ffff, 1] as [number, number, number]);
+    expect(() => parseFontBuffer(buildFont(groups))).toThrow('too-large');
+  });
+
+  it('rejects a cmap with more entries than the extraction limit', () => {
+    expect(() => parseFontBuffer(buildFont([[0, 0x30000, 1]]))).toThrow('too-large');
+  });
+
+  it('rejects a WOFF2 stream that expands beyond its declared size', () => {
+    const buffer = buildWoff2(2048, new Uint8Array(4 * 1024 * 1024));
+    expect(() => parseFontBuffer(buffer)).toThrow('invalid-font');
+  });
+
+  it('rejects a WOFF2 table directory that declares more than the decoded limit', () => {
+    const buffer = buildWoff2(2048, new Uint8Array(2048));
+    const view = new DataView(buffer);
+    for (const [i, byte] of [0xff, 0xff, 0xff, 0x7f].entries()) view.setUint8(49 + i, byte);
     expect(() => parseFontBuffer(buffer)).toThrow('too-large');
   });
 });

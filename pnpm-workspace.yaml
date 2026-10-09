@@ -3,3 +3,5 @@ allowBuilds:
   lefthook: false
 saveExact: true
 minimumReleaseAge: 1440
+patchedDependencies:
+  fontkitten: patches/fontkitten.patch
