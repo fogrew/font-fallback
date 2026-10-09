@@ -47,10 +47,10 @@ describe('worker task lifecycle', () => {
   it('rejects onerror, prevents the default error report and releases the worker', async () => {
     const worker = new TestWorker();
     const result = runWorkerTask(() => worker, 42, { timeoutMs: 1000 });
-    const event = new ErrorEvent('error', { cancelable: true });
-    (worker.onerror as (event: ErrorEvent) => void)(event);
+    const event = { preventDefault: vi.fn() };
+    (worker.onerror as unknown as (event: { preventDefault: () => void }) => void)(event);
     await expect(result).rejects.toMatchObject({ code: 'worker-error' });
-    expect(event.defaultPrevented).toBe(true);
+    expect(event.preventDefault).toHaveBeenCalledOnce();
     expect(worker.terminate).toHaveBeenCalledOnce();
   });
 
