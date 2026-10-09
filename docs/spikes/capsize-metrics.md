@@ -6,7 +6,7 @@ Goal: find which system fonts and scripts have metrics we can rely on.
 
 ## Scripts
 
-Only two subsets exist across the whole collection: `latin` and `thai`. Each font has an `xWidthAvg` per subset (`subsets.latin`, `subsets.thai`) with its own weighting; the latin one uses a fixed Latin letter-frequency table. There is nothing for Cyrillic, Greek, Arabic, CJK, etc., and no way to weight by a target language.
+Only two subsets exist across the whole collection: `latin` and `thai`. Each font has an `xWidthAvg` per subset (`subsets.latin`, `subsets.thai`) weighted separately (the latin one by a fixed Latin letter-frequency table). There is nothing for Cyrillic, Greek, Arabic, CJK, etc., and no way to weight by a target language.
 
 ## System fonts
 

@@ -28,7 +28,7 @@ Use **fontkitten** directly (not `@capsizecss/unpack`), inside a dedicated Web W
 
 ## Worker RPC sketch
 
-Superseded by the implementation in `modules/font-metrics` (#11); see its README. Shape of the result:
+Superseded by the implementation in `modules/font-metrics` (#11, PR #56). The request carries only the buffer (no `id`, `limits` or error `message`). Shape of the result:
 
 ```ts
 type FontParseResult =
@@ -38,17 +38,17 @@ type FontParseResult =
 interface FontMetrics {
   names: { family: string | null; fullName: string | null; postscript: string | null };
   unitsPerEm: number;
-  hhea: { ascent: number; descent: number; lineGap: number };   // descent keeps the font's sign (negative)
+  hhea: { ascent: number; descent: number; lineGap: number };   // descents keep the font's sign
   typo: { ascent: number; descent: number; lineGap: number; useTypoMetrics: boolean } | null;
   win: { ascent: number; descent: number } | null;              // positive descent
   capHeight: number | null;                                     // absent in old OS/2 versions
   xHeight: number | null;
   codePoints: Uint32Array;      // sorted cmap, for unicode-range
-  advances: Float64Array;       // fractional advances are possible in variable fonts
+  advances: Float64Array;
   isVariable: boolean;
 }
 ```
 
 - TrueType collections are rejected as `unsupported-format`.
 - `timeout` is produced by the main-thread watchdog that terminates the worker, never by the worker itself.
-- The typed promise-based client lives in `modules/font-metrics`, not `common/lib`. The size limit and the watchdog cover hostile input; font strings are treated as plain text everywhere.
+- The typed promise-based client lives in `modules/font-metrics`, not `common/lib`. The size limits and the watchdog reduce denial-of-service exposure; decoder allocation hardening is tracked in #55. Font strings are treated as plain text everywhere.
