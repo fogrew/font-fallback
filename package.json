@@ -21,7 +21,7 @@
     "format": "biome format --write .",
     "prepare": "lefthook install || exit 0",
     "lint:arch": "node scripts/lint-arch.ts",
-    "verify": "pnpm lint && pnpm lint:arch && pnpm check && pnpm test && pnpm build",
+    "verify": "pnpm lint && pnpm lint:arch && pnpm check && pnpm test && pnpm build && node scripts/spike-playwright.mjs",
     "test": "pnpm i18n:compile && vitest run",
     "test:watch": "pnpm i18n:compile && vitest",
     "test:e2e": "pnpm build && playwright test && playwright test --config tests/worker/playwright.config.ts",
