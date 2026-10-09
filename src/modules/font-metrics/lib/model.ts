@@ -1,0 +1,42 @@
+export interface VerticalMetrics {
+  ascent: number;
+  descent: number;
+  lineGap: number;
+}
+
+export interface FontMetrics {
+  names: { family: string | null; fullName: string | null; postscript: string | null };
+  unitsPerEm: number;
+  hhea: VerticalMetrics;
+  typo: (VerticalMetrics & { useTypoMetrics: boolean }) | null;
+  win: { ascent: number; descent: number } | null;
+  capHeight: number | null;
+  xHeight: number | null;
+  codePoints: Uint32Array;
+  advances: Float64Array;
+  isVariable: boolean;
+}
+
+export type FontParseErrorCode =
+  | 'too-large'
+  | 'invalid-font'
+  | 'unsupported-format'
+  | 'timeout'
+  | 'worker-error'
+  | 'busy'
+  | 'disposed';
+
+export type FontParseResult =
+  | { ok: true; font: FontMetrics }
+  | { ok: false; error: { code: FontParseErrorCode } };
+
+export const MAX_FONT_BYTES = 10 * 1024 * 1024;
+export const MAX_DECODED_BYTES = 64 * 1024 * 1024;
+export const FONT_PARSE_TIMEOUT_MS = 5000;
+
+export class FontParseError extends Error {
+  constructor(public readonly code: FontParseErrorCode) {
+    super(code);
+    this.name = 'FontParseError';
+  }
+}

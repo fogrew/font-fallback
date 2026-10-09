@@ -175,6 +175,9 @@ importers:
       astro:
         specifier: 7.3.7
         version: 7.3.7(@types/node@26.6.4)(jiti@2.6.1)(yaml@2.9.1)
+      fontkitten:
+        specifier: 1.0.3
+        version: 1.0.3
       preact:
         specifier: 10.29.8
         version: 10.29.8(preact-render-to-string@6.8.0)
