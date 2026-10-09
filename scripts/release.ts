@@ -35,9 +35,6 @@ function main(): void {
   assertReleaseBranch(git('branch', '--show-current'), version);
   if (git('status', '--porcelain') !== '') throw new Error('Working tree must be clean');
 
-  const packagePath = join(process.cwd(), 'package.json');
-  writeFileSync(packagePath, setPackageVersion(readFileSync(packagePath, 'utf8'), version));
-
   const cliff = fileURLToPath(import.meta.resolve('git-cliff/cli'));
   const result = spawnSync(
     process.execPath,
@@ -45,6 +42,9 @@ function main(): void {
     { stdio: 'inherit' },
   );
   if (result.status !== 0) throw new Error('git-cliff failed');
+
+  const packagePath = join(process.cwd(), 'package.json');
+  writeFileSync(packagePath, setPackageVersion(readFileSync(packagePath, 'utf8'), version));
 
   console.log(`\nPrepared v${version}. Review CHANGELOG.md, then:`);
   console.log(`  git commit -am "chore(release): v${version}"`);

@@ -78,7 +78,7 @@ Mapping (`cliff.toml`): `feat` → Added; `refactor`, `perf`, `style` → Change
 Release procedure:
 
 1. `git switch -c release/v<semver> develop`.
-2. `pnpm release <semver>` bumps `package.json` and stamps `CHANGELOG.md` (clean tree and a matching `release/v<semver>` branch required). Review the generated entries.
+2. `pnpm release <semver>` bumps `package.json` and stamps `CHANGELOG.md`, regenerating it from the whole history (clean tree and a matching `release/v<semver>` branch required). Review the generated entries.
 3. Commit `chore(release): v<semver>` (signed) and merge as described under Merging: `main` with `--no-ff`, signed tag `git tag -s v<semver>`, then back into `develop`.
 
 ## Code
