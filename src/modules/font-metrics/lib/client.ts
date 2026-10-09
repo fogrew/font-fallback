@@ -2,6 +2,16 @@ import { runWorkerTask, WorkerTaskError } from '@/common/lib';
 import { FONT_PARSE_TIMEOUT_MS, FontParseError, type FontParseResult } from './model';
 import { validateFontBuffer } from './validate';
 
+function isFontParseResult(data: unknown): data is FontParseResult {
+  if (typeof data !== 'object' || data === null || !('ok' in data)) return false;
+  if (data.ok === true) {
+    const { font } = data as { font?: { codePoints?: unknown; advances?: unknown } };
+    return font?.codePoints instanceof Uint32Array && font.advances instanceof Float64Array;
+  }
+  const { error } = data as { error?: { code?: unknown } };
+  return data.ok === false && typeof error?.code === 'string';
+}
+
 export interface FontParser {
   parse(buffer: ArrayBuffer): Promise<FontParseResult>;
   dispose(): void;
@@ -27,7 +37,12 @@ export function createFontParser(): FontParser {
         return await runWorkerTask<ArrayBuffer, FontParseResult>(
           () => new Worker(new URL('./parse.worker.ts', import.meta.url), { type: 'module' }),
           buffer,
-          { timeoutMs: FONT_PARSE_TIMEOUT_MS, transfer: [buffer], signal: active.signal },
+          {
+            timeoutMs: FONT_PARSE_TIMEOUT_MS,
+            transfer: [buffer],
+            signal: active.signal,
+            isResponse: isFontParseResult,
+          },
         );
       } catch (error) {
         return {

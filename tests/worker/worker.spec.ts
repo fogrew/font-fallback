@@ -28,15 +28,13 @@ test('bundled worker parses all formats, transfers buffers and keeps the main th
   ]) {
     const result = await page.evaluate(async (filename) => {
       const buffer = await (await fetch(`/fonts/${filename}`)).arrayBuffer();
-      const parsing = window.fontParser.parse(buffer);
-      const first = await Promise.race([
-        parsing.then(() => 'parsed'),
-        new Promise<string>((resolve) => setTimeout(() => resolve('responsive'), 0)),
-      ]);
-      const result = await parsing;
+      let ticks = 0;
+      const timer = setInterval(() => ticks++, 2);
+      const result = await window.fontParser.parse(buffer);
+      clearInterval(timer);
       if (!result.ok) throw new Error(result.error.code);
       return {
-        first,
+        ticks,
         transferred: buffer.byteLength === 0,
         name: result.font.names.family,
         unitsPerEm: result.font.unitsPerEm,
@@ -46,7 +44,7 @@ test('bundled worker parses all formats, transfers buffers and keeps the main th
         advanceA: result.font.advances[result.font.codePoints.indexOf(65)],
       };
     }, file);
-    expect(result.first).toBe('responsive');
+    expect(result.ticks).toBeGreaterThanOrEqual(2);
     expect(result.transferred).toBe(true);
     expect(result.typedArrays).toBe(true);
     expect(result.unitsPerEm).toBe(1000);

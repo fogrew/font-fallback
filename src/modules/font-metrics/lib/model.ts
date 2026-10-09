@@ -32,6 +32,8 @@ export type FontParseResult =
 
 export const MAX_FONT_BYTES = 10 * 1024 * 1024;
 export const MAX_DECODED_BYTES = 64 * 1024 * 1024;
+export const MAX_TABLES = 256;
+export const MAX_CMAP_ENTRIES = 100_000;
 export const FONT_PARSE_TIMEOUT_MS = 5000;
 
 export class FontParseError extends Error {

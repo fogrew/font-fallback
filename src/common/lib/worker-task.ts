@@ -13,7 +13,12 @@ export class WorkerTaskError extends Error {
 export function runWorkerTask<Request, Response>(
   createWorker: () => TaskWorker,
   request: Request,
-  options: { timeoutMs: number; transfer?: Transferable[]; signal?: AbortSignal },
+  options: {
+    timeoutMs: number;
+    transfer?: Transferable[];
+    signal?: AbortSignal;
+    isResponse?: (data: unknown) => data is Response;
+  },
 ): Promise<Response> {
   return new Promise((resolve, reject) => {
     if (options.signal?.aborted) {
@@ -40,10 +45,17 @@ export function runWorkerTask<Request, Response>(
     try {
       worker = createWorker();
       worker.onmessage = (event: MessageEvent<Response>) => {
+        if (options.isResponse && !options.isResponse(event.data)) {
+          fail('worker-error');
+          return;
+        }
         cleanup();
         resolve(event.data);
       };
-      worker.onerror = () => fail('worker-error');
+      worker.onerror = (event) => {
+        event.preventDefault();
+        fail('worker-error');
+      };
       worker.onmessageerror = () => fail('worker-error');
       timer = setTimeout(() => fail('timeout'), options.timeoutMs);
       options.signal?.addEventListener('abort', abort, { once: true });
