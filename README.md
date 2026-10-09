@@ -33,5 +33,7 @@ pnpm build
 pnpm check     # typecheck
 pnpm lint      # Biome
 pnpm lint:arch # FEOD boundaries
-pnpm verify    # lint + architecture + typecheck + build (extended in later issues)
+pnpm test      # unit tests (Vitest)
+pnpm test:e2e  # e2e + accessibility (Playwright, axe); first: pnpm exec playwright install chromium
+pnpm verify    # lint + architecture + typecheck + unit tests + build
 ```
