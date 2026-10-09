@@ -226,7 +226,7 @@ Each phase ends deployable with a green PR check.
 |---|---|
 | Playwright browsers may not run in Cloudflare's build container (Workers Builds) | Spike in Phase 0; options: headless shell only, Chromium-only e2e, or a separate e2e check (needs a decision). |
 | Build time limit / monthly build quota | Cache `node_modules` and Playwright browsers; keep e2e suite focused. |
-| `@feod/analyzer` is early (0.1.x), single maintainer, prebuilt binaries without provenance, no `.astro` parsing | Kept with mitigations (#50): exact version pin, sha256 verification of the platform binary against `scripts/feod-analyzer.sha256.json`, execution with a scrubbed environment, own relative-import check for `.astro`, Biome import restrictions as a second line. Revisit if upstream adds provenance or `.astro` support. |
+| `@feod/analyzer` is early (0.1.x), single maintainer, prebuilt binaries without provenance, no `.astro` parsing | Kept with mitigations (#50): exact version pin, sha256 verification of the platform binary against `scripts/feod-analyzer.sha256.json`, execution with a scrubbed environment (it keeps secrets from the analyzer binary, not from the rest of the build command), own relative-import check for `.astro`, Biome import restrictions as a second line. Revisit if upstream adds provenance or `.astro` support. |
 | System font metrics vary by OS version | Store metrics per OS version where they differ; show "measured on" source. |
 | Safari lacks vertical overrides | Explicit residual-shift estimate + `font-size-adjust` strategy. |
 | No precise "% of users have font X" data exists | Estimate from OS availability × browser/OS usage; label as estimate. |

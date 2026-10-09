@@ -1,6 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -16,8 +16,9 @@ const ENV_ALLOWLIST = [
   'TMPDIR',
 ];
 const ENTITY_LEVELS = new Set(['pages', 'modules', 'common']);
+const MAX_ASTRO_BYTES = 1024 * 1024;
 const IMPORT_SPECIFIER =
-  /(?:^|\n)\s*import\s+(?:[^'"\n]*?\sfrom\s+)?['"]([^'"\n]+)['"]|import\(\s*['"]([^'"\n]+)['"]\s*\)/g;
+  /\b(?:import|export)\b[^'"`;]*?\bfrom\s*['"]([^'"\n]+)['"]|\bimport\s*['"]([^'"\n]+)['"]|\bimport(?:\.meta\.glob)?\s*\(\s*['"]([^'"\n]+)['"]/g;
 
 interface Checksums {
   version: string;
@@ -34,7 +35,7 @@ export function scrubbedEnv(env: NodeJS.ProcessEnv, webDist: string): NodeJS.Pro
 
 function entityKey(srcRelativePath: string): string | null {
   const [level, name] = srcRelativePath.split(sep);
-  if (!level || level.startsWith('..')) return null;
+  if (!level || level === '..') return null;
   return ENTITY_LEVELS.has(level) ? `${level}/${name}` : level;
 }
 
@@ -49,8 +50,12 @@ export function findAstroImportViolations(root: string): string[] {
     });
   for (const file of walk(src)) {
     const fileKey = entityKey(relative(src, file));
+    if (statSync(file).size > MAX_ASTRO_BYTES) {
+      violations.push(`${relative(root, file)}: file is too large to scan`);
+      continue;
+    }
     for (const match of readFileSync(file, 'utf8').matchAll(IMPORT_SPECIFIER)) {
-      const specifier = match[1] ?? match[2];
+      const specifier = match[1] ?? match[2] ?? match[3];
       if (!specifier?.startsWith('.')) continue;
       const target = relative(src, resolve(dirname(file), specifier));
       if (entityKey(target) !== fileKey) {

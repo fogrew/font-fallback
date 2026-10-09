@@ -52,6 +52,32 @@ describe('findAstroImportViolations', () => {
     expect(violations.join('\n')).toContain('modules/x/internal/secret');
   });
 
+  it.each([
+    ['multi-line named import', "import {\n  a,\n  b,\n} from '../../modules/x/internal';"],
+    ['export from', "export { a } from '../../modules/x/internal';"],
+    ['export star', "export * from '../../modules/x/internal';"],
+    [
+      'second statement on the line',
+      "import a from './a'; import b from '../../modules/x/internal';",
+    ],
+    ['minified import', "import{a}from'../../modules/x/internal';"],
+    ['side-effect import', "import '../../modules/x/internal';"],
+    ['import.meta.glob', "const m = import.meta.glob('../../modules/x/internal/*.ts');"],
+  ])('flags a cross-entity import written as %s', (_name, line) => {
+    const root = project({
+      'src/pages/home/ui/Home.astro': `---
+${line}
+---
+`,
+    });
+    expect(findAstroImportViolations(root)).toHaveLength(1);
+  });
+
+  it('flags a file too large to scan', () => {
+    const root = project({ 'src/pages/home/ui/Big.astro': ' '.repeat(1024 * 1024 + 1) });
+    expect(findAstroImportViolations(root)[0]).toContain('too large');
+  });
+
   it('ignores alias and package imports', () => {
     const root = project({
       'src/modules/a/ui/A.astro':
