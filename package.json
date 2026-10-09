@@ -24,7 +24,7 @@
     "verify": "pnpm lint && pnpm lint:arch && pnpm check && pnpm test && pnpm build",
     "test": "pnpm i18n:compile && vitest run",
     "test:watch": "pnpm i18n:compile && vitest",
-    "test:e2e": "pnpm build && playwright test",
+    "test:e2e": "pnpm build && playwright test && playwright test --config tests/worker/playwright.config.ts",
     "i18n:compile": "node scripts/i18n-compile.mjs",
     "i18n:add": "node scripts/i18n-add.ts",
     "postinstall": "pnpm i18n:compile"
@@ -33,6 +33,7 @@
     "@astrojs/preact": "6.0.6",
     "@preact/signals": "2.11.3",
     "astro": "7.3.7",
+    "fontkitten": "1.0.3",
     "preact": "10.29.8"
   },
   "devDependencies": {
