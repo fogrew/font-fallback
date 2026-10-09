@@ -2,6 +2,16 @@
 
 Static Astro site that generates metric-adjusted fallback font stacks. Full scope and roadmap: [`docs/plan.md`](docs/plan.md).
 
+## Commands
+
+| Command | Purpose |
+|---|---|
+| `pnpm dev` / `pnpm build` / `pnpm preview` | Astro dev server, static build to `dist/`, serve the build |
+| `pnpm check` | Typecheck (`astro check`) |
+| `pnpm lint` / `pnpm lint:fix` / `pnpm format` | Biome lint + format |
+
+Git hooks (lefthook, installed by `pnpm install`): `pre-commit` runs Biome on staged files (fixes re-staged) and `astro check` in parallel (~5 s); `commit-msg` runs commitlint (~1 s).
+
 ## Work tracking
 
 - All work goes through GitHub issues in `fogrew/font-fallback`. No change without an issue; reference it in the branch name and PR (`Closes #N`).
