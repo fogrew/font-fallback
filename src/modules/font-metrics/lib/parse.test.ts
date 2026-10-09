@@ -134,6 +134,12 @@ describe('font metrics extraction', () => {
     expect(() => font.characterSet).toThrow(/^fontkitten-limit:/);
   });
 
+  it('rejects a cmap declaring more groups than there are code points', () => {
+    const groups = Array.from({ length: 0x110001 }, () => [1, 0, 1] as [number, number, number]);
+    const font = create(new Uint8Array(buildFont(groups)) as Parameters<typeof create>[0]) as Font;
+    expect(() => font.characterSet).toThrow(/^fontkitten-limit:/);
+  });
+
   it('rejects a WOFF2 table directory that declares more than the decoded limit', () => {
     const buffer = buildWoff2(2048, new Uint8Array(2048));
     const view = new DataView(buffer);

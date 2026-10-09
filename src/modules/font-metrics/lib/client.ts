@@ -1,5 +1,10 @@
 import { runWorkerTask, WorkerTaskError } from '@/common/lib';
-import { FONT_PARSE_TIMEOUT_MS, FontParseError, type FontParseResult } from './model';
+import {
+  FONT_PARSE_ERROR_CODES,
+  FONT_PARSE_TIMEOUT_MS,
+  FontParseError,
+  type FontParseResult,
+} from './model';
 import { validateFontBuffer } from './validate';
 
 function isFontParseResult(data: unknown): data is FontParseResult {
@@ -15,11 +20,13 @@ function isFontParseResult(data: unknown): data is FontParseResult {
       typeof font.unitsPerEm === 'number' &&
       typeof font.isVariable === 'boolean' &&
       typeof font.names === 'object' &&
-      typeof font.hhea === 'object'
+      font.names !== null &&
+      typeof font.hhea === 'object' &&
+      font.hhea !== null
     );
   }
   const { error } = data as { error?: { code?: unknown } };
-  return data.ok === false && typeof error?.code === 'string';
+  return data.ok === false && FONT_PARSE_ERROR_CODES.some((code) => code === error?.code);
 }
 
 export interface FontParser {

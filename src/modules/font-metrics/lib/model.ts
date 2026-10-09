@@ -17,14 +17,17 @@ export interface FontMetrics {
   isVariable: boolean;
 }
 
-export type FontParseErrorCode =
-  | 'too-large'
-  | 'invalid-font'
-  | 'unsupported-format'
-  | 'timeout'
-  | 'worker-error'
-  | 'busy'
-  | 'disposed';
+export const FONT_PARSE_ERROR_CODES = [
+  'too-large',
+  'invalid-font',
+  'unsupported-format',
+  'timeout',
+  'worker-error',
+  'busy',
+  'disposed',
+] as const;
+
+export type FontParseErrorCode = (typeof FONT_PARSE_ERROR_CODES)[number];
 
 export type FontParseResult =
   | { ok: true; font: FontMetrics }
