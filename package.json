@@ -20,7 +20,8 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "prepare": "lefthook install || exit 0",
-    "lint:arch": "feod-analyzer analyze . --fail-on warning"
+    "lint:arch": "feod-analyzer analyze . --fail-on warning",
+    "verify": "pnpm lint && pnpm lint:arch && pnpm check && pnpm build"
   },
   "dependencies": {
     "@astrojs/preact": "6.0.6",

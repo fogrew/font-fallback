@@ -9,7 +9,8 @@ Static Astro site that generates metric-adjusted fallback font stacks. Full scop
 | `pnpm dev` / `pnpm build` / `pnpm preview` | Astro dev server, static build to `dist/`, serve the build |
 | `pnpm check` | Typecheck (`astro check`) |
 | `pnpm lint` / `pnpm lint:fix` / `pnpm format` | Biome lint + format |
-| `pnpm lint:arch` | FEOD boundary check (`@feod/analyzer`) |
+| `pnpm lint:arch` | FEOD boundary check (`@feod/analyzer`, `.ts`/`.tsx` only; `.astro` is covered by Biome rules) |
+| `pnpm verify` | Full gate: lint, architecture, typecheck, build. Extended with tests in later issues |
 
 Git hooks (lefthook, installed by `pnpm install`; reinstall with `pnpm exec lefthook install`): `pre-commit` runs Biome on staged files (fixes re-staged), then the FEOD check and `astro check` on the whole working tree (~6 s); `commit-msg` runs commitlint (~1 s).
 

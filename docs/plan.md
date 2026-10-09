@@ -170,7 +170,7 @@ Pure logic (`fallback-fit`, `font-metrics`, `audience`, `layout-shift` scoring, 
 - **pnpm**, **Biome** (lint + format), **lefthook** pre-commit:
   - `biome check --staged --write` (fixes re-staged),
   - `astro check` (typecheck incl. `.astro`),
-  - `feod-analyzer analyze ./src --fail-on error` ([@feod/analyzer](https://fractal-oriented.tech/en/tools/feod-analyzer), MIT) + Biome `noRestrictedImports` patterns for deep imports.
+  - `feod-analyzer analyze . --fail-on warning` ([@feod/analyzer](https://fractal-oriented.tech/en/tools/feod-analyzer), MIT) + Biome `noRestrictedImports` patterns for deep imports.
 - **Vitest** (unit + `fast-check` property tests for the solver and range compaction).
 - **Playwright** e2e against `astro preview` (Chromium; WebKit/Firefox if available in CI image).
 - lefthook `commit-msg`: commitlint (Conventional Commits). Changelog generated from commits by git-cliff into Keep a Changelog format.
@@ -189,7 +189,7 @@ Each phase ends deployable with a green PR check.
 - Cloudflare Workers Builds connected; `verify` pipeline running on PRs.
 - Spikes (go/no-go):
   - Playwright in the Cloudflare build container (gVisor, Ubuntu 22.04, no root for `apt` deps).
-  - `@feod/analyzer` (0.1.x) on `.astro`/`.tsx` sources.
+  - `@feod/analyzer` (0.1.x): parses `.ts`/`.tsx` only, not `.astro` (see issues).
   - fontkit/`@capsizecss/unpack` bundle size and woff2 parsing in a worker.
   - Coverage of `@capsizecss/metrics` for target system fonts and Cyrillic.
 
@@ -227,7 +227,7 @@ Each phase ends deployable with a green PR check.
 |---|---|
 | Playwright browsers may not run in Cloudflare's build container (Workers Builds) | Spike in Phase 0; options: headless shell only, Chromium-only e2e, or a separate e2e check (needs a decision). |
 | Build time limit / monthly build quota | Cache `node_modules` and Playwright browsers; keep e2e suite focused. |
-| `@feod/analyzer` is early (0.1.x) | Biome import restrictions as a second line; pin version. |
+| `@feod/analyzer` is early (0.1.x), single maintainer, prebuilt binaries without provenance, no `.astro` parsing | Exact version pin, Biome import restrictions as a second line, vetting/replacement tracked in an issue; keep build secrets out of the step that runs it. |
 | System font metrics vary by OS version | Store metrics per OS version where they differ; show "measured on" source. |
 | Safari lacks vertical overrides | Explicit residual-shift estimate + `font-size-adjust` strategy. |
 | No precise "% of users have font X" data exists | Estimate from OS availability × browser/OS usage; label as estimate. |
