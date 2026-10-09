@@ -16,6 +16,21 @@ describe('clamp', () => {
     expect(() => clamp(1, 2, 1)).toThrow(RangeError);
   });
 
+  it('throws on NaN arguments', () => {
+    expect(() => clamp(Number.NaN, 0, 1)).toThrow(RangeError);
+    expect(() => clamp(0, Number.NaN, 1)).toThrow(RangeError);
+    expect(() => clamp(0, 0, Number.NaN)).toThrow(RangeError);
+  });
+
+  it('keeps values that are already inside the range', () => {
+    fc.assert(
+      fc.property(fc.double({ noNaN: true }), fc.double({ noNaN: true }), (a, b) => {
+        const [min, max] = a <= b ? [a, b] : [b, a];
+        return clamp(min, min, max) === min && clamp(max, min, max) === max;
+      }),
+    );
+  });
+
   it('always lands within the range', () => {
     fc.assert(
       fc.property(
