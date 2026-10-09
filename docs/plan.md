@@ -182,7 +182,7 @@ Pure logic (`fallback-fit`, `font-metrics`, `audience`, `layout-shift` scoring, 
   ```
   pnpm run verify   # biome ci → astro check → feod-analyzer → vitest run → astro build → playwright test
   ```
-  Deploy: `wrangler deploy` on `main`, `wrangler versions upload` (preview URL) on other branches. `wrangler.jsonc` serves `dist/` as static assets.
+  Deploy: `wrangler deploy` on `main`, `wrangler versions upload` (preview URL) on other branches. `wrangler.jsonc` serves `dist/` as static assets. Node pinned via `.node-version`, pnpm via the `PNPM_VERSION` build variable (the build image default may be older than `packageManager`).
 
 ## 5. Phases
 

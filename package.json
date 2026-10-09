@@ -8,7 +8,7 @@
   "repository": "github:fogrew/font-fallback",
   "packageManager": "pnpm@12.4.2",
   "engines": {
-    "node": ">=24"
+    "node": ">=24.21.0"
   },
   "scripts": {
     "dev": "astro dev",
@@ -18,13 +18,13 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/preact": "^6.0.6",
-    "@preact/signals": "^2.11.3",
-    "astro": "^7.3.7",
-    "preact": "^10.29.8"
+    "@astrojs/preact": "6.0.6",
+    "@preact/signals": "2.11.3",
+    "astro": "7.3.7",
+    "preact": "10.29.8"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
-    "typescript": "^6.0.3"
+    "@astrojs/check": "0.9.10",
+    "typescript": "6.0.3"
   }
 }
