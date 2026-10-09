@@ -8,6 +8,8 @@ Static Astro site that generates metric-adjusted fallback font stacks. Full scop
 |---|---|
 | `pnpm dev` / `pnpm build` / `pnpm preview` | Astro dev server, static build to `dist/`, serve the build |
 | `pnpm check` | Compile messages, then typecheck (`astro check`) |
+| `pnpm changelog` | Regenerate `CHANGELOG.md` (the `Unreleased` section) from Conventional Commits with git-cliff (`cliff.toml`) |
+| `pnpm release <semver>` | On `release/v<semver>`: bump `package.json`, stamp `CHANGELOG.md` with the version; commit and signed tag are manual |
 | `pnpm i18n:add <locale>` | Scaffold a new locale (settings, `messages/<locale>.json` copied from English, catalog entry) |
 | `pnpm i18n:compile` | Regenerate the Paraglide runtime in `src/common/i18n/paraglide/` (gitignored) |
 | `pnpm lint` / `pnpm lint:fix` / `pnpm format` | Biome lint + format |
@@ -70,6 +72,14 @@ Lowercase, hyphen-separated, issue number first.
 ### Changelog — [Keep a Changelog](https://keepachangelog.com/) + conventional changelog
 
 `CHANGELOG.md` is generated from Conventional Commits by git-cliff into Keep a Changelog sections (`Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`) under `Unreleased`, and stamped with the version on each `release/*` branch. Review the generated entries before release.
+
+Mapping (`cliff.toml`): `feat` → Added; `refactor`, `perf`, `style` → Changed; `revert` → Removed; `fix` → Fixed; scope `security` → Security; scope `deprecate` → Deprecated. `docs`, `test`, `build`, `ci`, `chore` are left out. Run `pnpm changelog` to refresh `Unreleased`; the file is regenerated from the whole history, so do not edit it by hand between releases.
+
+Release procedure:
+
+1. `git switch -c release/v<semver> develop`.
+2. `pnpm release <semver>` bumps `package.json` and stamps `CHANGELOG.md` (clean tree and a matching `release/v<semver>` branch required). Review the generated entries.
+3. Commit `chore(release): v<semver>` (signed) and merge as described under Merging: `main` with `--no-ff`, signed tag `git tag -s v<semver>`, then back into `develop`.
 
 ## Code
 
