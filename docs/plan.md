@@ -82,8 +82,8 @@ Both modes:
 ## 2. Data
 
 ### 2.1 Fallback font metrics
-- **[@capsizecss/metrics](https://github.com/seek-oss/capsize/tree/master/packages/metrics)** (MIT, actively maintained): system + Google Fonts metrics, per-subset `xWidthAvg`.
-- Gaps (missing system fonts, missing scripts e.g. Cyrillic x-width) filled by `scripts/extract-metrics.ts`: reads locally installed font files with fontkit and writes metrics JSON. Only metrics are committed, never font files.
+- **[@capsizecss/metrics](https://github.com/seek-oss/capsize/tree/master/packages/metrics)** (MIT): used as a cross-check for Google Fonts and a few system fonts only. It has just `latin`/`thai` subsets and ~20 system fonts ([spike](spikes/capsize-metrics.md)).
+- **Own metrics format**: per face, advances of every code point in supported scripts (Latin, Cyrillic, Greek first) plus vertical metrics, produced by `scripts/extract-metrics.ts` from installed font files. Only metrics are committed, never font files.
 - Optional in-browser enhancement: Local Font Access API (Chromium) to read the user's actual installed fallback fonts.
 
 ### 2.2 OS availability dataset (own JSON, MIT)
@@ -107,7 +107,7 @@ Seeds:
 - Astro (static output, no adapter, no server), TypeScript strict.
 - Hosting: Cloudflare Workers with static assets only (no Worker script), deployed by Workers Builds from GitHub.
 - Preact + `@preact/signals` for the interactive generator island (`client:load` for generator, `client:visible` elsewhere).
-- Font parsing: fontkit via `@capsizecss/unpack` in a **Web Worker** (woff2 support, cmap for `unicode-range`). Fallback candidate if bundle size is a problem: opentype.js 2.
+- Font parsing: **fontkitten** (MIT, ~93 KB gzip, woff2 included) in a **Web Worker**; we compute metrics ourselves from cmap + glyph advances ([spike](spikes/font-parsing.md)).
 - `browserslist` + `baseline-browser-mapping` bundled for the browser (lazy-loaded chunk).
 - i18n: Astro i18n routing (`/en/`, `/ru/`, default locale redirect) + **Paraglide JS 2** for typed, tree-shaken messages.
 
