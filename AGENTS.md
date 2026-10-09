@@ -26,6 +26,10 @@ Git hooks (lefthook, installed by `pnpm install`; reinstall with `pnpm exec left
 - Milestones map to plan phases. Labels: `type:*`, `area:*`, `priority:*`.
 - Scope changes or new findings → new issue (or update the existing one), not silent drift.
 
+## Dependencies
+
+Dependabot (`.github/dependabot.yml`, config only, no Actions) opens one weekly PR with grouped minor and patch updates and individual PRs for majors, against `develop`, with `chore(deps)` commit prefixes and a one-day cooldown matching `minimumReleaseAge`. Exact pins stay exact. `fontkitten` (patched) and `@feod/analyzer` (checksum-pinned) are excluded and updated by hand. Dependency PRs go through the review loop; the security review reads the release notes and the new transitive dependencies in the lockfile.
+
 ## Review loop
 
 Every PR goes through a loop of independent subagent reviews before merge:

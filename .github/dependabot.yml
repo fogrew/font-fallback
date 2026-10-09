@@ -1,0 +1,27 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 1
+    open-pull-requests-limit: 5
+    labels:
+      - type:chore
+      - area:infra
+    commit-message:
+      prefix: chore(deps)
+      prefix-development: chore(deps-dev)
+    groups:
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    ignore:
+      # patched by patches/fontkitten.patch; update by hand
+      - dependency-name: fontkitten
+      # binaries are checksum-pinned in scripts/feod-analyzer.sha256.json; vet by hand
+      - dependency-name: "@feod/analyzer"
