@@ -1,0 +1,236 @@
+# Font Fallback Generator — Implementation Plan
+
+Static Astro site that generates metric-adjusted fallback font stacks for web fonts,
+per target OS/browser audience, with live preview and live layout-shift (CLS) estimation.
+
+Inspired by:
+- [screenspan.net/fallback](https://screenspan.net/fallback) — upload a font, tune descriptors, overlay preview.
+- [abacktools font fallback stack generator](https://abacktools.com/tools/design/font-tools/font-fallback-stack-generator) — curated stack presets per category.
+- [cssfontstack.com](https://cssfontstack.com/) — font availability per OS.
+
+## 1. Product scope
+
+### 1.1 Inputs (web fonts)
+Delivered incrementally:
+1. **File upload** (woff2/woff/ttf/otf) — fully local, no network. First to ship.
+2. **Google Fonts picker** — catalog JSON generated at build time; font files fetched from `fonts.gstatic.com` (CORS-enabled).
+3. **Site import** — hosting is static (no proxy), so:
+   - **Bookmarklet** run on the user's site: collects `@font-face` rules, `document.fonts`, computed `font-family` of key elements (`body`, `h1–h3`, buttons), real text samples and element boxes, fetches same-origin font files, then opens the generator in a new tab and hands the payload over (`window.open` + `postMessage` handshake; clipboard JSON as a fallback). The user lands directly in the tuning UI with their site's fonts, text and structure preloaded for the preview and CLS simulation.
+   - **Direct URL fetch** attempted from the browser; works only when the site sends CORS headers (font files usually do, HTML/CSS usually don't). Failure falls back to the bookmarklet with a clear explanation.
+   - **Paste CSS** (`@font-face` blocks / Google Fonts `<link>` URL).
+
+### 1.2 Audience (OS & browsers)
+- **Browserslist editor** in the browser with presets: `baseline widely available`, `baseline newly available`, `baseline 20XX`, `defaults`, `> 0.5%, last 2 versions`, mobile-only, desktop-only; free-form query with validation and live resolved list.
+- Resolved browsers are mapped to **OS groups**: `ios_saf` → iOS, `safari` → macOS, `and_chr`/`samsung`/`and_ff`/`and_uc` → Android, `chrome`/`edge`/`firefox`/`opera` → Windows/macOS/Linux/ChromeOS (desktop split is configurable).
+- **My stats**: load `browserslist-stats.json` from the user's analytics (see 2.3) to use `in my stats` queries and traffic-weighted coverage.
+- **Manual mode**: user adds/removes OS groups and versions directly, ignoring browserslist.
+- The audience drives: which per-OS fallback selectors are shown, descriptor support warnings, and coverage estimates.
+
+### 1.3 Per-OS fallback selection
+- One column/selector per OS group. Each lists fonts preinstalled on that OS (from our dataset), **ranked by metric similarity** to the web font (x-width avg, cap height, x-height, ascent/descent ratios) with an "auto-pick best" default.
+- Multiple fallbacks per OS allowed (ordered).
+- **Stack resolver**: simulates, per OS, which `local()` face wins given the final `font-family` order (e.g. Arial also exists on macOS, so the macOS pick must come before Arial). Shows conflicts and proposes a reordering.
+- `local()` name variants (full name + PostScript name) emitted per font, since naming differs across OSes.
+
+### 1.4 Auto-fit (every number has auto + manual override)
+Every numeric control = slider + number input + "auto" toggle. Auto values recompute when inputs change; manual edits pin the value until reset.
+
+| Value | Auto-fit method |
+|---|---|
+| `size-adjust` | Ratio of weighted average glyph width (language-specific letter frequencies, per script) of web font vs fallback; optional exact fit against the preview text by measuring rendered width. |
+| `ascent-override` / `descent-override` / `line-gap-override` | Web font vertical metrics (hhea/OS2 per browser rules) divided by fallback `unitsPerEm` and `size-adjust`. |
+| `letter-spacing` / `word-spacing` | Numeric optimizer minimizing line-break mismatches and block height delta on sample text across chosen viewports. Emitted as a "fonts loading" CSS class + Font Loading API snippet (these are not `@font-face` descriptors). |
+| `font-size-adjust` | Computed from x-height/cap-height ratio; offered as the Safari strategy (see 1.6). |
+| Global "Optimize for CLS" | Runs the solver over all pinned/unpinned values to minimize simulated CLS. |
+
+### 1.5 `unicode-range`
+Both modes:
+- **(a) Coverage-limited fallback**: extract the web font's cmap, emit a compact `unicode-range` for each adjusted fallback `@font-face`, so metric overrides apply only to characters the web font actually covers.
+- **(b) Per-script fallback chains**: Latin / Cyrillic / Greek / CJK / Arabic / … each get their own fallback font per OS and their own adjusted `@font-face` with the script's range and per-script fit (Capsize-style per-subset x-width).
+- Range compaction (merge adjacent code points, named presets matching Google Fonts subsets).
+
+### 1.6 Impact & diagnostics (shown live, included in export)
+- **Layout shift (CLS) simulation**, updated live while sliders move (debounced to animation frames):
+  - Preview document rendered in hidden same-origin iframes at preset viewports (360 / 768 / 1280 / custom).
+  - Element boxes collected with fallback vs web font, layout shift score computed per the Layout Instability spec (impact fraction × distance fraction).
+  - Shows score per viewport with Good / Needs improvement / Poor rating (0.1 / 0.25 thresholds), plus line-count delta, block height delta, width delta %, line-break mismatches.
+  - If imported via bookmarklet, uses the site's real text and structure.
+- **Descriptor support matrix** for the selected audience (MDN BCD data). Notably Safari/iOS do not support `ascent-override` / `descent-override` / `line-gap-override` (only `size-adjust` from 17), so the tool shows the expected residual shift there and offers the `font-size-adjust` + fixed `line-height` strategy.
+- **Coverage estimate**: share of the audience whose OS has each fallback preinstalled (usage from browserslist/caniuse data × OS availability dataset).
+- **Loading strategy guidance**: `font-display` choice and its effect on CLS (`optional` = no swap shift), `<link rel="preload" … crossorigin>`, font file size, FOUT/FOIT trade-offs.
+
+### 1.7 Outputs
+- Plain CSS (`@font-face` + `font-family`), CSS custom properties variant.
+- Tailwind v4 `@theme`, Next.js `next/font/local` (`declarations`, `adjustFontFallback: false` + manual fallback), Fontaine / Nuxt Fonts config, Astro Fonts config.
+- Font Loading API snippet for the "fonts loading" class.
+- Preload `<link>` tags.
+- Machine-readable JSON (all inputs, computed metrics, outputs).
+- Impact report (Markdown): CLS per viewport, support matrix, coverage, warnings.
+- Share link: state serialized into URL hash (uploaded font files are kept in IndexedDB locally; link warns they are not shared).
+
+### 1.8 Other pages
+- **Font catalog** (cssfontstack analog): table of system fonts × OS/versions with availability and estimated audience coverage; static page per font with metrics and specimen.
+- **Presets** (abacktools analog): curated stacks per category (sans, serif, mono, display, handwriting, system-ui, modern-font-stacks families), each openable in the generator.
+- **Guide**: how descriptors, `unicode-range` and CLS interact.
+
+## 2. Data
+
+### 2.1 Fallback font metrics
+- **[@capsizecss/metrics](https://github.com/seek-oss/capsize/tree/master/packages/metrics)** (MIT, actively maintained): system + Google Fonts metrics, per-subset `xWidthAvg`.
+- Gaps (missing system fonts, missing scripts e.g. Cyrillic x-width) filled by `scripts/extract-metrics.ts`: reads locally installed font files with fontkit and writes metrics JSON. Only metrics are committed, never font files.
+- Optional in-browser enhancement: Local Font Access API (Chromium) to read the user's actual installed fallback fonts.
+
+### 2.2 OS availability dataset (own JSON, MIT)
+`fonts/<font-id>.json`: names (family, full, PostScript per OS), category, scripts covered, and `availability[os][version] = preinstalled | on-demand | optional-feature | absent`, each entry with a source link.
+
+Seeds:
+- Official vendor lists: Microsoft Learn Windows font lists, Apple "Fonts included with macOS / iOS" pages, AOSP `fonts.xml` (Apache-2.0), default font packages of Ubuntu/Fedora, ChromeOS.
+- [adrg/os-font-list](https://github.com/adrg/os-font-list) (MIT, **unmaintained since Nov 2021**) — one-time import for older Windows/macOS/Linux versions, with attribution; not a dependency.
+- [modern-font-stacks](https://github.com/system-fonts/modern-font-stacks) (CC0, active) — preset stacks and cross-check of availability.
+- Validated by a schema (Valibot/Zod) and unit tests (every entry has a source, no unknown OS ids).
+
+### 2.3 Usage data
+- Browser version usage: `caniuse-lite` via `browserslist` (CC BY 4.0).
+- **Own traffic stats**: the user can load a `browserslist-stats.json` ([custom usage data](https://github.com/browserslist/browserslist#custom-usage-data) schema) produced by `browserslist-plausible`, `browserslist-ga`, `browserslist-ga-export` or by hand. Enables `> N% in my stats` queries and weights all coverage estimates by the user's real traffic. Parsed and validated locally, never uploaded.
+- Desktop OS split for desktop browsers: default from StatCounter (CC BY-SA 3.0, attributed), user-editable.
+- Descriptor support: `@mdn/browser-compat-data` (CC0), compiled to a small JSON at build time.
+
+## 3. Architecture
+
+### 3.1 Stack
+- Astro (static output, no adapter, no server), TypeScript strict.
+- Preact + `@preact/signals` for the interactive generator island (`client:load` for generator, `client:visible` elsewhere).
+- Font parsing: fontkit via `@capsizecss/unpack` in a **Web Worker** (woff2 support, cmap for `unicode-range`). Fallback candidate if bundle size is a problem: opentype.js 2.
+- `browserslist` + `baseline-browser-mapping` bundled for the browser (lazy-loaded chunk).
+- i18n: Astro i18n routing (`/en/`, `/ru/`, default locale redirect) + **Paraglide JS 2** for typed, tree-shaken messages.
+
+### 3.2 FEOD layout
+[FEOD](https://fractal-oriented.tech/en/) levels: `app`, `pages`, `modules`, `common`, `global`. Imports only through each entity's root `index.ts`; direction per the [import matrix](https://fractal-oriented.tech/en/reference/import-matrix).
+
+Astro treats every file in `src/pages` as a route, so the FEOD `pages` level lives there with thin route files; page-private internals sit in `_`-prefixed folders (excluded from routing).
+
+```
+src/
+  app/                    # layouts, global styles/tokens, i18n wiring, head/meta, theme
+    layouts/
+    styles/
+    index.ts
+  pages/                  # FEOD pages level = Astro routes
+    [locale]/
+      index.astro         # generator
+      fonts/index.astro   # catalog
+      fonts/[slug].astro
+      presets.astro
+      guide.astro
+    _generator/           # page composition of modules (not routed)
+    _catalog/
+  modules/
+    font-source/          # web font inputs
+      upload/  google-fonts/  site-import/   # submodules
+    font-metrics/         # parsing worker, metrics, cmap, script detection
+    system-fonts/         # dataset access, similarity ranking, local() names
+    audience/             # browserslist editor, presets, OS mapping, support matrix, coverage
+    fallback-fit/         # fit math, solver, unicode-range builder, stack resolver
+    layout-shift/         # CLS simulation (iframes, box diff, scoring)
+    preview/              # overlay/side-by-side preview, toggles
+    export/               # CSS/Tailwind/Next/Fontaine/Astro/JSON/report generators
+    presets/              # curated stacks
+    project-state/        # signals store, URL hash + IndexedDB persistence
+  common/
+    ui/                   # Button, FitField (slider+number+auto), Select, Tabs, CodeBlock, Disclosure, LiveRegion
+    i18n/                 # Paraglide runtime re-exports, locale helpers
+    lib/                  # math, debounce, typed worker RPC
+  global/                 # env.d.ts, polyfills
+data/                     # fonts/*.json, metrics/*.json, presets.json (+ schemas)
+scripts/                  # extract-metrics, build-google-fonts-catalog, build-bcd-subset, i18n-add-locale
+tests/e2e/
+```
+
+Pure logic (`fallback-fit`, `font-metrics`, `audience`, `layout-shift` scoring, `export`) has no UI dependency and is unit-tested in isolation.
+
+### 3.3 i18n workflow
+- `messages/en.json` is the source of truth; `ru.json` etc. typed against it by Paraglide (missing key = type error).
+- `pnpm i18n:add <locale>` scaffolds the messages file, registers the locale in Paraglide settings and Astro i18n config.
+- Unit test checks key parity and ICU plural forms; e2e smoke runs per locale.
+- Language switcher keeps the current state (URL hash survives).
+
+### 3.4 Accessibility (WCAG 2.2 AA)
+- Native inputs (`<input type="range">` + linked `<input type="number">`), visible labels, units in accessible names.
+- Full keyboard operation, visible focus, logical order, skip link.
+- Live CLS value announced via throttled polite `aria-live` region (only on settle, not every frame).
+- Light/dark via `light-dark()` and `prefers-color-scheme`, respects `prefers-reduced-motion` and `forced-colors`.
+- Preview overlay is not color-only: outline/dash patterns distinguish fallback vs web font.
+- `@axe-core/playwright` checks on every page in both locales and themes.
+
+## 4. Tooling & CI
+
+- **pnpm**, **Biome** (lint + format), **lefthook** pre-commit:
+  - `biome check --staged --write` (fixes re-staged),
+  - `astro check` (typecheck incl. `.astro`),
+  - `feod-analyzer analyze ./src --fail-on error` ([@feod/analyzer](https://fractal-oriented.tech/en/tools/feod-analyzer), MIT) + Biome `noRestrictedImports` patterns for deep imports.
+- **Vitest** (unit + `fast-check` property tests for the solver and range compaction).
+- **Playwright** e2e against `astro preview` (Chromium; WebKit/Firefox if available in CI image).
+- lefthook `commit-msg`: commitlint (Conventional Commits). Changelog generated from commits by git-cliff into Keep a Changelog format.
+- **Cloudflare Pages Git integration** (no GitHub Actions): build command runs everything, so every PR gets a check run + preview URL, and a failing check fails the deployment:
+  ```
+  pnpm run verify   # biome ci → astro check → feod-analyzer → vitest run → astro build → playwright test
+  ```
+  Output dir `dist`. Node and pnpm versions pinned via env vars (v3 image does not read `engines`/lockfile version).
+
+## 5. Phases
+
+Each phase ends deployable with a green PR check.
+
+**Phase 0 — Bootstrap & spikes**
+- Astro + Preact + TS strict, Biome, lefthook, Vitest, Playwright, Paraglide (EN/RU), FEOD skeleton with `index.ts` per entity.
+- Cloudflare Pages project connected; `verify` pipeline running on PRs.
+- Spikes (go/no-go):
+  - Playwright in the Cloudflare build container (gVisor, Ubuntu 22.04, no root for `apt` deps).
+  - `@feod/analyzer` (0.1.x) on `.astro`/`.tsx` sources.
+  - fontkit/`@capsizecss/unpack` bundle size and woff2 parsing in a worker.
+  - Coverage of `@capsizecss/metrics` for target system fonts and Cyrillic.
+
+**Phase 1 — Core engine (no UI)**
+- Font parsing worker, metrics model, fit math, `@font-face`/CSS generator, stack resolver.
+- Unit tests against known reference outputs (Capsize/Fontaine results for e.g. Inter→Arial, Roboto→Arial).
+
+**Phase 2 — MVP generator**
+- Upload input, one fallback, FitFields with auto, overlay + side-by-side preview, CSS output, copy button, EN/RU, a11y baseline.
+
+**Phase 3 — Audience & per-OS fallbacks**
+- Browserslist editor with Baseline presets, `browserslist-stats.json` import, OS mapping, manual mode, per-OS selectors with similarity ranking, stack resolver UI, descriptor support warnings, Safari strategy.
+
+**Phase 4 — Layout shift**
+- CLS simulator, live metric per viewport, letter/word-spacing fit, "Optimize for CLS".
+
+**Phase 5 — `unicode-range`**
+- cmap extraction, coverage-limited ranges, per-script fallback chains with per-script fit.
+
+**Phase 6 — Data & catalog**
+- OS availability dataset + schema + sources, metrics extraction script, catalog pages, coverage estimates.
+
+**Phase 7 — More inputs**
+- Google Fonts picker, site import (bookmarklet, CORS attempt, paste CSS).
+
+**Phase 8 — Presets, exports, sharing**
+- Presets page, all export formats, impact report, share links, persistence.
+
+**Phase 9 — Polish**
+- Full a11y audit, performance (lazy chunks, worker), SEO/meta/OG, guide page, Credits page, README.
+
+## 6. Risks
+
+| Risk | Mitigation |
+|---|---|
+| Playwright browsers may not run in Cloudflare's build container | Spike in Phase 0; options: headless shell only, Chromium-only e2e, or a separate e2e check (needs a decision). |
+| Pages build time limit / monthly build quota | Cache `node_modules` and Playwright browsers; keep e2e suite focused. |
+| `@feod/analyzer` is early (0.1.x) | Biome import restrictions as a second line; pin version. |
+| System font metrics vary by OS version | Store metrics per OS version where they differ; show "measured on" source. |
+| Safari lacks vertical overrides | Explicit residual-shift estimate + `font-size-adjust` strategy. |
+| No precise "% of users have font X" data exists | Estimate from OS availability × browser/OS usage; label as estimate. |
+
+## 7. Credits
+Every external source (data, libraries with notable data, inspiration sites, specs) is listed in [`CREDITS.md`](../CREDITS.md) with its license, and rendered on a Credits page of the site (linked from the footer).
+
+## 8. Open questions
+1. If Playwright cannot run in the Cloudflare build: allow a single GitHub Actions job for e2e only, or run e2e Chromium-only / locally? (resolved by the Phase 0 spike)
