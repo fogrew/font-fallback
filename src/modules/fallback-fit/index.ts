@@ -10,4 +10,12 @@ export {
   type MetricsPolicy,
   type MetricsSource,
 } from './lib/model';
+export { resolveStack } from './lib/stack';
+export {
+  type PlatformResolution,
+  type StackFace,
+  type StackPreference,
+  type StackResolution,
+  StackResolveError,
+} from './lib/stack-model';
 export { languageWeights } from './lib/weights';
