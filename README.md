@@ -17,7 +17,7 @@ Source is organized by [FEOD](https://fractal-oriented.tech/en/) levels under `s
 Rules: imports follow the [import matrix](https://fractal-oriented.tech/en/reference/import-matrix) and go through an entity's root `index.ts`. Enforced by `pnpm lint:arch` ([`@feod/analyzer`](https://fractal-oriented.tech/en/tools/feod-analyzer)) and by Biome `noRestrictedImports` overrides in `biome.json`.
 
 Known limits of the checks:
-- `@feod/analyzer` does not parse `.astro` files; they are covered by the Biome rules only, which match `@/` alias imports. Keep logic in `.ts`/`.tsx` and use `@/` imports in `.astro` files.
+- `@feod/analyzer` does not parse `.astro` files; they are covered by the Biome rules only, which match `@/` alias imports. Relative cross-level imports in `.astro` files are not checked at all (tracked in #50): keep logic in `.ts`/`.tsx` and use `@/` imports in `.astro` files.
 - The Biome rules ban alias imports of an entity's internals, including your own (`@/common/ui/x` from inside `src/common/ui`); inside an entity use relative imports.
 
 Astro treats `src/pages` as the routes folder by default; `srcDir: ./src/app` in `astro.config.mjs` moves routes to `src/app/pages` so that FEOD `pages` can live at `src/pages`.
