@@ -10,7 +10,7 @@ pre-commit:
       run: pnpm exec feod-analyzer analyze . --fail-on warning
     - name: typecheck
       glob: "*.{ts,mts,cts,tsx,astro,json}"
-      run: pnpm exec astro check
+      run: pnpm check
 
 commit-msg:
   jobs:

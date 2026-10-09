@@ -1,7 +1,7 @@
 srcDir: src
 outputDir: .feod
 outputFormats: [json]
-excludeDirs: [node_modules, .git, dist, .astro, coverage]
+excludeDirs: [node_modules, .git, dist, .astro, coverage, paraglide]
 aliases:
   "@": src
 tsconfig: tsconfig.json

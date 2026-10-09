@@ -1,0 +1,63 @@
+---
+import { type Locale, localeName, locales, localizeHref, messagesFor } from '@/common/i18n';
+
+interface Props {
+  current: Locale;
+  path: string;
+}
+
+const { current, path } = Astro.props;
+const t = messagesFor(current);
+---
+
+<nav aria-label={t.locale_switcher_label()}>
+  <ul>
+    {
+      locales.map((locale) => (
+        <li>
+          <a
+            href={localizeHref(path, { locale })}
+            data-locale-link
+            hreflang={locale}
+            lang={locale}
+            aria-current={locale === current ? 'true' : undefined}
+          >
+            {localeName(locale)}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
+
+<style>
+  ul {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  a {
+    display: inline-block;
+    min-block-size: 2rem;
+    min-inline-size: 2rem;
+    padding: 0.25rem 0.5rem;
+    line-height: 1.5;
+  }
+</style>
+
+<script>
+  const links = document.querySelectorAll<HTMLAnchorElement>('a[data-locale-link]');
+  for (const link of links) {
+    link.dataset.base = link.getAttribute('href') ?? '';
+  }
+  const syncHash = () => {
+    for (const link of links) {
+      link.href = (link.dataset.base ?? '') + location.hash;
+    }
+  };
+  syncHash();
+  addEventListener('hashchange', syncHash);
+</script>

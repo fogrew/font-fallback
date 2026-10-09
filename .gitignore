@@ -14,3 +14,4 @@ playwright/.cache/
 .DS_Store
 *.tsbuildinfo
 .feod/
+src/common/i18n/paraglide/

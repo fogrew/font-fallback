@@ -22,6 +22,13 @@ Known limits of the checks:
 
 Astro treats `src/pages` as the routes folder by default; `srcDir: ./src/app` in `astro.config.mjs` moves routes to `src/app/pages` so that FEOD `pages` can live at `src/pages`.
 
+## Internationalization
+
+[Paraglide JS](https://inlang.com/m/gerre34r/library-inlang-paraglideJs) compiles `messages/<locale>.json` into typed message functions (`src/common/i18n/paraglide/`, generated, gitignored). All locales are URL-prefixed (`/en/`, `/ru/`); `/` redirects to the browser's language, falling back to English.
+
+- Use messages through `messagesFor(locale)` from `@/common/i18n`; a missing translation key is a TypeScript error (`catalog.ts`) and a failing unit test.
+- Add a language: `pnpm i18n:add <locale>`, then translate `messages/<locale>.json` and run `pnpm lint:fix`. Language names in the switcher come from `Intl.DisplayNames`.
+
 ## Development
 
 Requires Node 24 (`.node-version`) and pnpm (`packageManager` in `package.json`).

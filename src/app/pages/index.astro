@@ -1,8 +1,23 @@
 ---
-import { HomePage } from '@/pages/home';
-import BaseLayout from '../layouts/BaseLayout.astro';
+import { baseLocale, localizeHref } from '@/common/i18n';
+
+const target = localizeHref('/', { locale: baseLocale });
 ---
 
-<BaseLayout title="Font Fallback">
-  <HomePage />
-</BaseLayout>
+<html lang={baseLocale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content={`0; url=${target}`} />
+    <link rel="canonical" href={target} />
+    <title>Font Fallback</title>
+  </head>
+  <body>
+    <a href={target}>Font Fallback</a>
+    <script>
+      import { localizeHref, pickLocale } from '@/common/i18n';
+
+      location.replace(localizeHref('/', { locale: pickLocale(navigator.languages) }) + location.hash);
+    </script>
+  </body>
+</html>

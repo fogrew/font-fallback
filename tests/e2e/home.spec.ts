@@ -1,15 +1,43 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-test('home page renders the heading', async ({ page }) => {
+const wcagTags = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
+
+for (const locale of ['en', 'ru']) {
+  test(`${locale}: renders with the right language`, async ({ page }) => {
+    await page.goto(`/${locale}/`);
+    await expect(page.locator('html')).toHaveAttribute('lang', locale);
+    await expect(page.getByRole('heading', { level: 1, name: 'Font Fallback' })).toBeVisible();
+  });
+
+  test(`${locale}: has no detectable accessibility violations`, async ({ page }) => {
+    await page.goto(`/${locale}/`);
+    const results = await new AxeBuilder({ page }).withTags(wcagTags).analyze();
+    expect(results.violations).toEqual([]);
+  });
+}
+
+test('root redirects to the locale matching the browser language', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'ru-RU' });
+  const page = await context.newPage();
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1, name: 'Font Fallback' })).toBeVisible();
+  await expect(page).toHaveURL(/\/ru\/$/);
+  await context.close();
 });
 
-test('home page has no detectable accessibility violations', async ({ page }) => {
+test('root falls back to the default locale', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'de-DE' });
+  const page = await context.newPage();
   await page.goto('/');
-  const results = await new AxeBuilder({ page })
-    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-    .analyze();
-  expect(results.violations).toEqual([]);
+  await expect(page).toHaveURL(/\/en\/$/);
+  await context.close();
+});
+
+test('language switcher keeps the page and the URL hash', async ({ page }) => {
+  await page.goto('/en/#section');
+  const nav = page.getByRole('navigation', { name: 'Language' });
+  await expect(nav.getByRole('link', { name: 'English' })).toHaveAttribute('aria-current', 'true');
+  await nav.getByRole('link', { name: 'Русский' }).click();
+  await expect(page).toHaveURL(/\/ru\/#section$/);
+  await expect(page.getByRole('navigation', { name: 'Язык' })).toBeVisible();
 });

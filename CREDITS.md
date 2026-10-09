@@ -19,6 +19,10 @@
 | [MDN browser-compat-data](https://github.com/mdn/browser-compat-data) | `@font-face` descriptor support | CC0-1.0 |
 | [StatCounter Global Stats](https://gs.statcounter.com/) | Default desktop OS share | CC BY-SA 3.0 |
 
+## Tooling
+
+- [Paraglide JS](https://github.com/opral/paraglide-js) by inlang — message compilation and i18n routing (MIT).
+
 ## Methodology
 
 - [FEOD — Fractal Entity Oriented Design](https://fractal-oriented.tech/) — project architecture.

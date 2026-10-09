@@ -1,3 +1,13 @@
+---
+import { type Locale, messagesFor } from '@/common/i18n';
+
+interface Props {
+  locale: Locale;
+}
+
+const t = messagesFor(Astro.props.locale);
+---
+
 <main>
-  <h1>Font Fallback</h1>
+  <h1>{t.home_heading()}</h1>
 </main>

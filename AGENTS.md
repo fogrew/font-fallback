@@ -7,7 +7,9 @@ Static Astro site that generates metric-adjusted fallback font stacks. Full scop
 | Command | Purpose |
 |---|---|
 | `pnpm dev` / `pnpm build` / `pnpm preview` | Astro dev server, static build to `dist/`, serve the build |
-| `pnpm check` | Typecheck (`astro check`) |
+| `pnpm check` | Compile messages, then typecheck (`astro check`) |
+| `pnpm i18n:add <locale>` | Scaffold a new locale (settings, `messages/<locale>.json` copied from English, catalog entry) |
+| `pnpm i18n:compile` | Regenerate the Paraglide runtime in `src/common/i18n/paraglide/` (gitignored) |
 | `pnpm lint` / `pnpm lint:fix` / `pnpm format` | Biome lint + format |
 | `pnpm lint:arch` | FEOD boundary check (`@feod/analyzer`, `.ts`/`.tsx` only; `.astro` is covered by Biome rules) |
 | `pnpm test` / `pnpm test:watch` | Vitest unit and property tests (`src/**/*.test.ts`) |
@@ -75,5 +77,5 @@ Lowercase, hyphen-separated, issue number first.
 - Everything in the repo (code, comments, docs, commit messages) is in English.
 - Minimal comments: only for non-obvious anti-patterns, one line.
 - Every external source of data, code or inspiration is added to [`CREDITS.md`](CREDITS.md) in the same PR.
-- UI strings only via i18n messages; `messages/en.json` is the source of truth.
+- UI strings only via i18n messages (`messages/<locale>.json`, English is the source of truth); in components use `messagesFor(locale)` from `@/common/i18n` and pass `locale` explicitly (pages are prerendered, so the global locale must not be relied on). Never hardcode user-visible text.
 - Accessibility target: WCAG 2.2 AA.

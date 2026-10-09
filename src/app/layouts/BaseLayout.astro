@@ -1,18 +1,26 @@
 ---
+import { getTextDirection, type Locale, messagesFor } from '@/common/i18n';
+import { LocaleSwitcher } from '@/modules/locale-switcher';
+
 interface Props {
-  title: string;
+  locale: Locale;
+  path: string;
 }
 
-const { title } = Astro.props;
+const { locale, path } = Astro.props;
+const t = messagesFor(locale);
 ---
 
-<html lang="en">
+<html lang={locale} dir={getTextDirection(locale)}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
+    <title>{t.app_title()}</title>
   </head>
   <body>
+    <header>
+      <LocaleSwitcher current={locale} {path} />
+    </header>
     <slot />
   </body>
 </html>

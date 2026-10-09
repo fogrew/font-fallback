@@ -1,0 +1,6 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+  "app_title": "Font Fallback",
+  "home_heading": "Font Fallback",
+  "locale_switcher_label": "Язык"
+}
