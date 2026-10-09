@@ -10,7 +10,7 @@ Static Astro site that generates metric-adjusted fallback font stacks. Full scop
 | `pnpm check` | Typecheck (`astro check`) |
 | `pnpm lint` / `pnpm lint:fix` / `pnpm format` | Biome lint + format |
 
-Git hooks (lefthook, installed by `pnpm install`): `pre-commit` runs Biome on staged files (fixes re-staged) and `astro check` in parallel (~5 s); `commit-msg` runs commitlint (~1 s).
+Git hooks (lefthook, installed by `pnpm install`; reinstall with `pnpm exec lefthook install`): `pre-commit` runs Biome on staged files (fixes re-staged), then `astro check` on the whole working tree (~5 s); `commit-msg` runs commitlint (~1 s).
 
 ## Work tracking
 

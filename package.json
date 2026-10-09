@@ -19,7 +19,7 @@
     "lint": "biome check --error-on-warnings .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "prepare": "lefthook install"
+    "prepare": "lefthook install || exit 0"
   },
   "dependencies": {
     "@astrojs/preact": "6.0.6",
