@@ -8,12 +8,12 @@ Goal: pick a parser for woff2/woff/ttf/otf that runs in a worker and exposes `OS
 |---|---|---|---|---|
 | License | MIT | MIT | MIT | MIT |
 | Browser bundle (min / gzip) | 357 / 145 KB | 244 / 95 KB | 241 / 93 KB | 240 / 66 KB |
-| woff2 | yes | yes | yes | no, needs an external decompressor (wawoff2 is ~1.2 MB of WASM glue) |
+| woff2 | yes | yes | yes | no, needs an external decompressor (wawoff2's decompress-only binding is ~323 KB) |
 | woff / ttf / otf | yes | yes | yes | yes |
 | cmap + per-glyph advances | yes | no (aggregated metrics only) | yes (fontkit-compatible API) | yes |
 | `OS/2`, `hhea`, names | yes | yes | yes | yes |
 
-Measured on Inter (latin 23 KB, cyrillic 7.5 KB) and Noto Sans JP variable (CJK subset, 81 KB), Node 26: parse + average advance over the whole cmap takes 4–20 ms (first call includes woff2 decompression).
+Measured on Inter (latin 23 KB, cyrillic 7.5 KB) and Noto Sans JP variable (CJK subset, 81 KB), Node 26: parse + average advance over the whole cmap takes 3–36 ms (first call includes woff2 decompression).
 
 ## Findings
 
@@ -28,25 +28,27 @@ Use **fontkitten** directly (not `@capsizecss/unpack`), inside a dedicated Web W
 
 ## Worker RPC sketch
 
+Superseded by the implementation in `modules/font-metrics` (#11); see its README. Shape of the result:
+
 ```ts
-// requests (transferable ArrayBuffer in, structured-clone result out)
-type ParseRequest = { id: number; buffer: ArrayBuffer; limits?: { maxBytes: number } };
-type ParseResponse =
-  | { id: number; ok: true; font: FontMetrics }
-  | { id: number; ok: false; error: { code: 'too-large' | 'invalid-font' | 'timeout'; message: string } };
+type FontParseResult =
+  | { ok: true; font: FontMetrics }
+  | { ok: false; error: { code: 'too-large' | 'invalid-font' | 'unsupported-format' | 'timeout' | 'worker-error' | 'busy' | 'disposed' } };
 
 interface FontMetrics {
-  names: { family: string; fullName: string; postscript: string };
+  names: { family: string | null; fullName: string | null; postscript: string | null };
   unitsPerEm: number;
-  hhea: { ascent: number; descent: number; lineGap: number };
-  typo: { ascent: number; descent: number; lineGap: number; useTypoMetrics: boolean };
-  win: { ascent: number; descent: number };
-  capHeight: number;
-  xHeight: number;
+  hhea: { ascent: number; descent: number; lineGap: number };   // descent keeps the font's sign (negative)
+  typo: { ascent: number; descent: number; lineGap: number; useTypoMetrics: boolean } | null;
+  win: { ascent: number; descent: number } | null;              // positive descent
+  capHeight: number | null;                                     // absent in old OS/2 versions
+  xHeight: number | null;
   codePoints: Uint32Array;      // sorted cmap, for unicode-range
-  advances: Uint16Array;        // advance per code point, same order
+  advances: Float64Array;       // fractional advances are possible in variable fonts
   isVariable: boolean;
 }
 ```
 
-The main thread wraps this in a typed promise-based client (`common/lib`, #11). Size limit and a watchdog timeout (terminate and respawn the worker) cover hostile input; font strings are treated as plain text everywhere.
+- TrueType collections are rejected as `unsupported-format`.
+- `timeout` is produced by the main-thread watchdog that terminates the worker, never by the worker itself.
+- The typed promise-based client lives in `modules/font-metrics`, not `common/lib`. The size limit and the watchdog cover hostile input; font strings are treated as plain text everywhere.

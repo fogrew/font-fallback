@@ -190,8 +190,7 @@ Each phase ends deployable with a green PR check.
 - Spikes (go/no-go):
   - Playwright in the Cloudflare build container (gVisor, Ubuntu 22.04, no root for `apt` deps).
   - `@feod/analyzer` (0.1.x): parses `.ts`/`.tsx` only, not `.astro` (see issues).
-  - fontkit/`@capsizecss/unpack` bundle size and woff2 parsing in a worker.
-  - Coverage of `@capsizecss/metrics` for target system fonts and Cyrillic.
+  - Done: font parsing in a worker (fontkitten, own metrics format) and `@capsizecss/metrics` coverage; results in `docs/spikes/`.
 
 **Phase 1 — Core engine (no UI)**
 - Font parsing worker, metrics model, fit math, `@font-face`/CSS generator, stack resolver.
