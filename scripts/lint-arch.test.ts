@@ -61,6 +61,7 @@ describe('findAstroImportViolations', () => {
       "import a from './a'; import b from '../../modules/x/internal';",
     ],
     ['minified import', "import{a}from'../../modules/x/internal';"],
+    ['bare parent directory', "import a from '../..';"],
     ['side-effect import', "import '../../modules/x/internal';"],
     ['comment with an apostrophe', "import {\n  // it's\n  a,\n} from '../../modules/x/internal';"],
     ['template literal', 'const m = import(`../../modules/x/' + 'name`);'],

@@ -17,7 +17,7 @@ const ENV_ALLOWLIST = [
 ];
 const ENTITY_LEVELS = new Set(['pages', 'modules', 'common']);
 const MAX_ASTRO_BYTES = 1024 * 1024;
-const RELATIVE_PATH_LITERAL = /['"`](\.{1,2}\/[^'"`\n]*)/g;
+const RELATIVE_PATH_LITERAL = /['"`](\.{1,2}\/[^'"`\n]*|\.{1,2}(?=['"`]))/g;
 
 interface Checksums {
   version: string;
