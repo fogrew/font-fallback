@@ -39,3 +39,5 @@
 - [CSS Fonts Level 5](https://drafts.csswg.org/css-fonts-5/#descdef-font-face-size-adjust) — scaling metric overrides and nonnegative descriptors.
 - [Capsize core](https://github.com/seek-oss/capsize/blob/master/packages/core/src/createFontStack.ts) (MIT) and [Fontaine](https://github.com/unjs/fontaine/blob/main/packages/fontaine/src/css.ts) (MIT) — fit formulas; frozen Capsize 4.1.3 reference outputs with metrics 4.3.0.
 - [FreeType SFNT metrics selection](https://github.com/freetype/freetype/blob/master/src/sfnt/sfobjs.c) — explicit `freetype` vertical metric policy (FreeType License / GPLv2).
+- [CSSOM string serialization](https://drafts.csswg.org/cssom/#serialize-a-string) — CSS string escaping, extended to escape `<` for HTML style embedding.
+- [CSS Fonts Level 4](https://drafts.csswg.org/css-fonts-4/#src-desc) and [Level 5](https://drafts.csswg.org/css-fonts-5/#descdef-font-face-size-adjust) — quoted family/local names and metric descriptors.
