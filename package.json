@@ -20,7 +20,7 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "prepare": "lefthook install || exit 0",
-    "lint:arch": "feod-analyzer analyze . --fail-on warning",
+    "lint:arch": "node scripts/lint-arch.ts",
     "verify": "pnpm lint && pnpm lint:arch && pnpm check && pnpm test && pnpm build",
     "test": "pnpm i18n:compile && vitest run",
     "test:watch": "pnpm i18n:compile && vitest",

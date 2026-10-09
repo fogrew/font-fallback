@@ -1,0 +1,11 @@
+{
+  "version": "0.1.1",
+  "binaries": {
+    "darwin-arm64": "c2b68ae50281558881a2917acc0daa9653ba48ac07aac8b1c07120b88da3e906",
+    "darwin-x64": "75224e09f35075c15fde3183e2aa458bc684d54a7c2ab3edbafface5e1d5becb",
+    "linux-arm64": "230d4aa2819da1a4d80f9fa718c69d286adfd0a07ffe84562d551302e183f767",
+    "linux-x64": "569537e86fdeb8345cdb0c7e72bd73e8c856f478b992d44f06605f11b21b3b61",
+    "win32-arm64": "354a01d3953d229e2c3be76554dcbc18b7b4927b40f543e540b3cbe49ea2b629",
+    "win32-x64": "ed0230605dd511626e87e18af9e1426cf472acd880ad7495e08e66d533edccd2"
+  }
+}
