@@ -5,8 +5,18 @@ import { validateFontBuffer } from './validate';
 function isFontParseResult(data: unknown): data is FontParseResult {
   if (typeof data !== 'object' || data === null || !('ok' in data)) return false;
   if (data.ok === true) {
-    const { font } = data as { font?: { codePoints?: unknown; advances?: unknown } };
-    return font?.codePoints instanceof Uint32Array && font.advances instanceof Float64Array;
+    const { font } = data as { font?: Record<string, unknown> };
+    return (
+      typeof font === 'object' &&
+      font !== null &&
+      font.codePoints instanceof Uint32Array &&
+      font.advances instanceof Float64Array &&
+      font.codePoints.length === font.advances.length &&
+      typeof font.unitsPerEm === 'number' &&
+      typeof font.isVariable === 'boolean' &&
+      typeof font.names === 'object' &&
+      typeof font.hhea === 'object'
+    );
   }
   const { error } = data as { error?: { code?: unknown } };
   return data.ok === false && typeof error?.code === 'string';

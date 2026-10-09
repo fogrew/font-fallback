@@ -28,13 +28,19 @@ test('bundled worker parses all formats, transfers buffers and keeps the main th
   ]) {
     const result = await page.evaluate(async (filename) => {
       const buffer = await (await fetch(`/fonts/${filename}`)).arrayBuffer();
-      let ticks = 0;
-      const timer = setInterval(() => ticks++, 2);
+      let last = performance.now();
+      let maxGap = 0;
+      const timer = setInterval(() => {
+        const now = performance.now();
+        maxGap = Math.max(maxGap, now - last);
+        last = now;
+      }, 5);
       const result = await window.fontParser.parse(buffer);
       clearInterval(timer);
+      maxGap = Math.max(maxGap, performance.now() - last);
       if (!result.ok) throw new Error(result.error.code);
       return {
-        ticks,
+        maxGap,
         transferred: buffer.byteLength === 0,
         name: result.font.names.family,
         unitsPerEm: result.font.unitsPerEm,
@@ -44,7 +50,7 @@ test('bundled worker parses all formats, transfers buffers and keeps the main th
         advanceA: result.font.advances[result.font.codePoints.indexOf(65)],
       };
     }, file);
-    expect(result.ticks).toBeGreaterThanOrEqual(2);
+    expect(result.maxGap).toBeLessThan(100);
     expect(result.transferred).toBe(true);
     expect(result.typedArrays).toBe(true);
     expect(result.unitsPerEm).toBe(1000);

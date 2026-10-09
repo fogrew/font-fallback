@@ -23,9 +23,11 @@ function name(value: string | null): string | null {
 
 export function parseFontBuffer(buffer: ArrayBuffer): FontMetrics {
   validateFontBuffer(buffer);
+  let created: unknown;
   try {
     // fontkitten accepts Uint8Array at runtime but declares the Node Buffer type.
     const font = create(new Uint8Array(buffer) as Parameters<typeof create>[0]);
+    created = font;
     if (font.isCollection) throw new FontParseError('unsupported-format');
     const unitsPerEm = font.unitsPerEm;
     if (!Number.isInteger(unitsPerEm) || unitsPerEm < 16 || unitsPerEm > 16384) {
@@ -88,7 +90,10 @@ export function parseFontBuffer(buffer: ArrayBuffer): FontMetrics {
     };
   } catch (error) {
     if (error instanceof FontParseError) throw error;
-    if (error instanceof Error && error.message.startsWith(LIMIT_MESSAGE)) {
+    // fontkitten swallows table decoding errors; the patched WOFF2 decoder keeps the limit error.
+    const cause =
+      (created as { _decompressError?: unknown } | undefined)?._decompressError ?? error;
+    if (cause instanceof Error && cause.message.startsWith(LIMIT_MESSAGE)) {
       throw new FontParseError('too-large');
     }
     throw new FontParseError('invalid-font');

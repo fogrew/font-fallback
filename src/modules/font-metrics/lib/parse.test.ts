@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
+import { create, type Font } from 'fontkitten';
 import { describe, expect, it } from 'vitest';
-import { buildFont, buildWoff2 } from './forged';
+import { buildFont, buildWoff2 } from './forged.test-util';
 import { parseFontBuffer } from './parse';
 
 function fixture(name: string): ArrayBuffer {
@@ -117,9 +118,20 @@ describe('font metrics extraction', () => {
     expect(() => parseFontBuffer(buildFont([[0, 0x30000, 1]]))).toThrow('too-large');
   });
 
-  it('rejects a WOFF2 stream that expands beyond its declared size', () => {
+  it('caps the WOFF2 Brotli output at the declared size', () => {
     const buffer = buildWoff2(2048, new Uint8Array(4 * 1024 * 1024));
-    expect(() => parseFontBuffer(buffer)).toThrow('invalid-font');
+    expect(() => parseFontBuffer(buffer)).toThrow('too-large');
+    const font = create(new Uint8Array(buffer) as Parameters<typeof create>[0]) as Font;
+    expect(() => font.unitsPerEm).toThrow();
+    expect((font as { _decompressError?: Error })._decompressError?.message).toMatch(
+      /^fontkitten-limit:/,
+    );
+  });
+
+  it('caps cmap range expansion inside the decoder', () => {
+    const groups = Array.from({ length: 60 }, () => [0, 0x10ffff, 1] as [number, number, number]);
+    const font = create(new Uint8Array(buildFont(groups)) as Parameters<typeof create>[0]) as Font;
+    expect(() => font.characterSet).toThrow(/^fontkitten-limit:/);
   });
 
   it('rejects a WOFF2 table directory that declares more than the decoded limit', () => {
