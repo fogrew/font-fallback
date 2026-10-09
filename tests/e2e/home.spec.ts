@@ -25,6 +25,14 @@ test('root redirects to the locale matching the browser language', async ({ brow
   await context.close();
 });
 
+test('root redirect keeps the URL hash', async ({ browser }) => {
+  const context = await browser.newContext({ locale: 'ru-RU' });
+  const page = await context.newPage();
+  await page.goto('/#section');
+  await expect(page).toHaveURL(/\/ru\/#section$/);
+  await context.close();
+});
+
 test('root falls back to the default locale', async ({ browser }) => {
   const context = await browser.newContext({ locale: 'de-DE' });
   const page = await context.newPage();

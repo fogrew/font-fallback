@@ -6,6 +6,10 @@ describe('pickLocale', () => {
     expect(pickLocale(['ru-RU', 'en'])).toBe('ru');
   });
 
+  it('is case-insensitive', () => {
+    expect(pickLocale(['RU'])).toBe('ru');
+  });
+
   it('skips unsupported languages', () => {
     expect(pickLocale(['de', 'ru'])).toBe('ru');
   });

@@ -6,7 +6,8 @@ interface Props {
   path: string;
 }
 
-const { current, path } = Astro.props;
+const { current } = Astro.props;
+const path = Astro.props.path.endsWith('/') ? Astro.props.path : `${Astro.props.path}/`;
 const t = messagesFor(current);
 ---
 

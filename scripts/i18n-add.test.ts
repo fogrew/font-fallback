@@ -40,6 +40,13 @@ describe('addLocale', () => {
     expect(catalog).toContain("'pt-BR': pt_BR");
   });
 
+  it('avoids reserved words as import names', () => {
+    addLocale(root, 'in');
+    const catalog = readFileSync(join(root, 'src/common/i18n/catalog.ts'), 'utf8');
+    expect(catalog).toContain("import in_ from '../../../messages/in.json';");
+    expect(catalog).toContain("'in': in_");
+  });
+
   it('rejects invalid tags and duplicates', () => {
     expect(() => addLocale(root, 'EN_us')).toThrow(/not a valid locale tag/);
     expect(() => addLocale(root, 'ru')).toThrow(/already exists/);

@@ -32,7 +32,7 @@ Every PR goes through a loop of independent subagent reviews before merge:
 2. **Security review** — untrusted input (font files, URLs, bookmarklet payloads, `postMessage`, stats JSON), XSS, CSP, dependency risks.
 3. **Requirements review** — implementation vs the issue's acceptance criteria and `docs/plan.md`.
 
-Fix findings, re-run the reviews, repeat until all three are clean. Unresolved or deferred findings become issues.
+Reviewers that run builds or probes use an isolated git worktree (`isolation: "worktree"`); remove it afterwards with `git worktree remove --force` (leftover worktrees under `.claude/` break Biome with nested-config errors). Fix findings, re-run the reviews, repeat until all three are clean. Unresolved or deferred findings become issues.
 
 ## Git
 

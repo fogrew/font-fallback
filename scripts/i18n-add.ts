@@ -1,8 +1,10 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const LOCALE_TAG = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
 const JSON_IMPORT = /^import .+ from '\.\.\/\.\.\/\.\.\/messages\/.+\.json';$/gm;
+const RESERVED_WORDS = new Set(['do', 'for', 'if', 'in', 'let', 'new', 'try', 'var']);
 const CATALOGS = /(export const catalogs = \{)([^}]*)(\} satisfies)/;
 
 export function addLocale(root: string, locale: string): void {
@@ -32,8 +34,9 @@ export function addLocale(root: string, locale: string): void {
     throw new Error(`Unexpected structure of ${catalogPath}`);
   }
 
-  const identifier = locale.replaceAll('-', '_');
-  const key = locale.includes('-') ? `'${locale}': ${identifier}` : identifier;
+  const sanitized = locale.replaceAll('-', '_');
+  const identifier = RESERVED_WORDS.has(sanitized) ? `${sanitized}_` : sanitized;
+  const key = identifier === locale ? identifier : `'${locale}': ${identifier}`;
   const insertAt = (lastImport.index ?? 0) + lastImport[0].length;
   const withImport = `${catalog.slice(0, insertAt)}\nimport ${identifier} from '../../../messages/${locale}.json';${catalog.slice(insertAt)}`;
   const withEntry = withImport.replace(CATALOGS, (_, open, entries, close) => {
@@ -48,7 +51,7 @@ export function addLocale(root: string, locale: string): void {
   writeFileSync(catalogPath, withEntry);
 }
 
-if (process.argv[1] && import.meta.url.endsWith(process.argv[1].replaceAll('\\', '/'))) {
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   const locale = process.argv[2];
   if (!locale) {
     console.error('Usage: pnpm i18n:add <locale>');
