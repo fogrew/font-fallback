@@ -62,6 +62,9 @@ describe('findAstroImportViolations', () => {
     ],
     ['minified import', "import{a}from'../../modules/x/internal';"],
     ['side-effect import', "import '../../modules/x/internal';"],
+    ['comment with an apostrophe', "import {\n  // it's\n  a,\n} from '../../modules/x/internal';"],
+    ['template literal', 'const m = import(`../../modules/x/' + 'name`);'],
+    ['glob with an array', "const m = import.meta.glob(['./a.ts', '../../modules/x/*.ts']);"],
     ['import.meta.glob', "const m = import.meta.glob('../../modules/x/internal/*.ts');"],
   ])('flags a cross-entity import written as %s', (_name, line) => {
     const root = project({

@@ -17,8 +17,7 @@ const ENV_ALLOWLIST = [
 ];
 const ENTITY_LEVELS = new Set(['pages', 'modules', 'common']);
 const MAX_ASTRO_BYTES = 1024 * 1024;
-const IMPORT_SPECIFIER =
-  /\b(?:import|export)\b[^'"`;]*?\bfrom\s*['"]([^'"\n]+)['"]|\bimport\s*['"]([^'"\n]+)['"]|\bimport(?:\.meta\.glob)?\s*\(\s*['"]([^'"\n]+)['"]/g;
+const RELATIVE_PATH_LITERAL = /['"`](\.{1,2}\/[^'"`\n]*)/g;
 
 interface Checksums {
   version: string;
@@ -54,13 +53,13 @@ export function findAstroImportViolations(root: string): string[] {
       violations.push(`${relative(root, file)}: file is too large to scan`);
       continue;
     }
-    for (const match of readFileSync(file, 'utf8').matchAll(IMPORT_SPECIFIER)) {
-      const specifier = match[1] ?? match[2] ?? match[3];
+    for (const match of readFileSync(file, 'utf8').matchAll(RELATIVE_PATH_LITERAL)) {
+      const specifier = match[1];
       if (!specifier?.startsWith('.')) continue;
       const target = relative(src, resolve(dirname(file), specifier));
       if (entityKey(target) !== fileKey) {
         violations.push(
-          `${relative(root, file)}: relative import "${specifier}" leaves its entity; use the public API alias`,
+          `${relative(root, file)}: relative path "${specifier}" leaves its entity; use the public API alias`,
         );
       }
     }
