@@ -32,6 +32,14 @@ Every PR goes through a loop of independent subagent reviews before merge:
 2. **Security review** — untrusted input (font files, URLs, bookmarklet payloads, `postMessage`, stats JSON), XSS, CSP, dependency risks.
 3. **Requirements review** — implementation vs the issue's acceptance criteria and `docs/plan.md`.
 
+### Perimeter
+
+Each review verifies the contract of *this* change, not the internals of third-party dependencies. Stay within the changed files and their direct integration points. Do not read library source in `node_modules` — dependency vetting and residual risks are tracked in their own issues. Do not re-run checks another review already ran unless the result is in doubt. Every review is bounded and ends with a verdict, even when some items stay unverified.
+
+Security review scope:
+- **In:** limit enforcement and how violations surface; worker/browser isolation (no network, DOM, `eval`, dynamic import); `postMessage` request matching and target/origin; transferable-buffer safety; committed fixtures and their licenses; exclusion of test-only inputs from the production build; dependency inventory (`pnpm audit`, exact pins).
+- **Out:** line-by-line audit of vendored parsers, e.g. fontkitten internals (#50, #55).
+
 Reviewers that run builds or probes use an isolated git worktree (`isolation: "worktree"`); remove it afterwards with `git worktree remove --force` (leftover worktrees under `.claude/` break Biome with nested-config errors). Fix findings, re-run the reviews, repeat until all three are clean. Unresolved or deferred findings become issues.
 
 ## Git
