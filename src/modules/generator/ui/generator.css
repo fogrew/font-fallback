@@ -103,7 +103,7 @@
 .ff-preview__outline {
   color: transparent;
   -webkit-text-stroke: 1px var(--ff-accent);
-  text-decoration: underline dotted;
+  text-decoration: underline dotted var(--ff-accent) 2px;
   text-underline-offset: 0.15em;
 }
 .ff-generator .ff-code__body {
@@ -133,15 +133,16 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .ff-preview figure {
-    transition: opacity 0.15s ease-out;
+@media (forced-colors: active) {
+  .ff-preview__outline {
+    -webkit-text-stroke: 0;
+    text-decoration-color: CanvasText;
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .ff-preview figure {
-    transition: none;
-  }
+.ff-preview__label {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--ff-space-2);
 }
 
 .ff-drop__row {
@@ -164,8 +165,7 @@
 
 @media (min-width: 64rem) and (min-height: 40rem) {
   .ff-generator__results {
-    grid-template-rows: auto minmax(0, 1fr);
-    overflow: hidden;
+    grid-template-rows: auto minmax(10rem, 1fr);
   }
   .ff-generator__results > .ff-generator__section {
     grid-template-rows: auto auto minmax(0, 1fr);

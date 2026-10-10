@@ -125,3 +125,21 @@ test('preview does not animate when reduced motion is requested', async ({ page 
   await page.locator('input[type="file"]').setInputFiles(sourceSans);
   await expect(page.getByRole('figure').first()).toHaveCSS('transition-duration', '0s');
 });
+
+test('a tall preview keeps the CSS block reachable', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"]').setInputFiles(sourceSans);
+  const preview = page.getByRole('region', { name: 'Preview' });
+  await preview.getByLabel('Text size').fill('72');
+  await preview.getByLabel('Line height').fill('2');
+  await preview
+    .getByLabel('Sample text')
+    .fill('The quick brown fox jumps over the lazy dog '.repeat(4));
+  const code = page.getByRole('region', { name: 'Generated CSS' });
+  await code.scrollIntoViewIfNeeded();
+  await expect(code).toBeInViewport();
+  const box = await code.boundingBox();
+  expect(box?.height).toBeGreaterThan(40);
+});

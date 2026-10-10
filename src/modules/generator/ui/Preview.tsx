@@ -59,9 +59,10 @@ export function Preview({
           onChange={(value) => setMode(value as Mode)}
         />
         <div class="ff-field">
-          <label for="ff-preview-size">
-            {t.preview_size_label()}: {size}px
-          </label>
+          <div class="ff-preview__label">
+            <label for="ff-preview-size">{t.preview_size_label()}</label>
+            <output for="ff-preview-size">{size}px</output>
+          </div>
           <input
             id="ff-preview-size"
             type="range"
@@ -72,9 +73,10 @@ export function Preview({
           />
         </div>
         <div class="ff-field">
-          <label for="ff-preview-line">
-            {t.preview_line_height_label()}: {lineHeight}
-          </label>
+          <div class="ff-preview__label">
+            <label for="ff-preview-line">{t.preview_line_height_label()}</label>
+            <output for="ff-preview-line">{lineHeight}</output>
+          </div>
           <input
             id="ff-preview-line"
             type="range"
