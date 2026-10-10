@@ -1,4 +1,5 @@
 import { browserName } from './names';
+import type { WeightedEntry } from './os';
 import type { UsageStats } from './stats';
 
 export const MAX_QUERY_LENGTH = 512;
@@ -10,7 +11,14 @@ export interface BrowserGroup {
 }
 
 export type Resolution =
-  | { ok: true; groups: BrowserGroup[]; count: number; dataDate: string; coverage?: number }
+  | {
+      ok: true;
+      groups: BrowserGroup[];
+      entries: WeightedEntry[];
+      count: number;
+      dataDate: string;
+      coverage?: number;
+    }
   | { ok: false; code: 'empty' | 'too-long' | 'invalid' | 'no-match'; detail: string };
 
 export async function resolveQuery(query: string, stats?: UsageStats): Promise<Resolution> {
@@ -41,6 +49,7 @@ export async function resolveQuery(query: string, stats?: UsageStats): Promise<R
   return {
     ok: true,
     groups: [...groups.values()],
+    entries: weigh(entries, stats ? flatten(stats) : (browserslist.usage.global ?? {})),
     count: entries.length,
     dataDate: latestReleaseDate(browserslist.data),
     ...(stats ? { coverage: browserslist.coverage(entries, stats) } : {}),
@@ -58,4 +67,26 @@ function latestReleaseDate(
     }
   }
   return new Date(latest * 1000).toISOString().slice(0, 10);
+}
+
+function flatten(stats: UsageStats): Record<string, number> {
+  const table: Record<string, number> = {};
+  for (const [browser, versions] of Object.entries(stats)) {
+    for (const [version, share] of Object.entries(versions)) table[`${browser} ${version}`] = share;
+  }
+  return table;
+}
+
+function weigh(entries: string[], table: Record<string, number | undefined>): WeightedEntry[] {
+  return entries.map((entry) => {
+    const direct = table[entry];
+    if (direct !== undefined) return { entry, usage: direct };
+    const space = entry.indexOf(' ');
+    const id = entry.slice(0, space);
+    const usage = entry
+      .slice(space + 1)
+      .split('-')
+      .reduce((sum, version) => sum + (table[`${id} ${version}`] ?? 0), 0);
+    return { entry, usage };
+  });
 }

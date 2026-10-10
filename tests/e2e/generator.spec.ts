@@ -243,3 +243,28 @@ test('imported usage statistics enable "in my stats" queries and report ignored 
   await expect(page.getByLabel('Browserslist query')).toHaveValue('baseline widely available');
   await expect(page.getByRole('link', { name: 'browserslist-ga', exact: true })).toBeVisible();
 });
+
+test('system shares follow the desktop split and the manual mode', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.getByText('Audience (browsers)').click();
+  await page.getByLabel('Browserslist query').fill('safari 17, ios_saf 17.0-17.1');
+  const shares = page.getByRole('list', { name: 'Estimated audience by system' });
+  await expect(shares).toContainText('macOS');
+  await expect(shares).toContainText('iOS and iPadOS');
+  await expect(shares).not.toContainText('Windows');
+
+  await page.getByLabel('Browserslist query').fill('firefox 120');
+  await expect(shares).toContainText('Windows');
+  await page.getByLabel('Windows').fill('10');
+  await expect(page.getByText(/must be non-negative and add up to 100%/)).toBeVisible();
+  await page.getByRole('button', { name: 'Reset to defaults' }).click();
+  await expect(page.getByText('Total: 100%')).toBeVisible();
+
+  await page.getByLabel('Choose systems manually').check();
+  await expect(page.getByText('Enter a weight for at least one system.')).toBeVisible();
+  await page.getByLabel('Android').fill('3');
+  await page.getByLabel('iOS and iPadOS').fill('1');
+  await expect(shares).toContainText('75');
+  await expect(shares).not.toContainText('Windows');
+});

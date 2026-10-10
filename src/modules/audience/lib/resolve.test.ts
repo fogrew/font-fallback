@@ -49,3 +49,13 @@ describe('resolveQuery', () => {
     expect(presetFor('chrome 120')).toBeUndefined();
   });
 });
+
+describe('resolved usage weights', () => {
+  it('weighs entries with global usage, summing joined iOS ranges', async () => {
+    const result = await resolveQuery('chrome 120, ios_saf 17.0-17.1');
+    if (!result.ok) throw new Error('expected a resolution');
+    const ios = result.entries.find((item) => item.entry.startsWith('ios_saf'));
+    expect(ios?.usage).toBeGreaterThan(0);
+    expect(result.entries.find((item) => item.entry === 'chrome 120')?.usage).toBeGreaterThan(0);
+  });
+});

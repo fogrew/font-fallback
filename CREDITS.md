@@ -17,7 +17,7 @@
 | [caniuse-lite](https://github.com/browserslist/caniuse-lite) / [Can I use](https://caniuse.com/) | Browser usage data | CC BY 4.0 |
 | [baseline-browser-mapping](https://github.com/web-platform-dx/baseline-browser-mapping) | Baseline queries | Apache-2.0 |
 | [MDN browser-compat-data](https://github.com/mdn/browser-compat-data) | `@font-face` descriptor support | CC0-1.0 |
-| [StatCounter Global Stats](https://gs.statcounter.com/) | Default desktop OS share | CC BY-SA 3.0 |
+| [StatCounter Global Stats](https://gs.statcounter.com/) via [Wikipedia: Usage share of operating systems](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems) | Default desktop OS split (worldwide desktop, June 2026: Windows 62.16%, macOS 14.58%, Linux 3.09%, ChromeOS 1.42%, unknown 18.75% redistributed proportionally) | CC BY-SA 3.0 |
 | [Capsize unpack 4.0.1](https://github.com/seek-oss/capsize/tree/master/packages/unpack) | English/Latin frequency weights, sampled from English Wikinews abstracts | MIT; underlying Wikinews content CC BY 2.5 |
 | [UD Russian GSD](https://github.com/UniversalDependencies/UD_Russian-GSD/tree/0f34b7362ac3c3facd1d6ff4b876d241bb15793e) by Ryan McDonald, Vitaly Nikolaev and Olga Lyashevskaya | Cyrillic character counts derived from 3,850 training sentences; corpus text is not shipped | CC BY-SA 4.0 |
 

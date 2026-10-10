@@ -44,3 +44,30 @@
   flex-wrap: wrap;
   gap: var(--ff-space-2);
 }
+.ff-audience__os {
+  display: grid;
+  gap: var(--ff-space-2);
+  padding-block-start: var(--ff-space-2);
+  border-block-start: 1px solid var(--ff-border);
+}
+.ff-audience__os h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+.ff-audience fieldset {
+  display: grid;
+  gap: var(--ff-space-1);
+  margin: 0;
+  padding: var(--ff-space-2);
+  border: 1px solid var(--ff-border);
+  border-radius: var(--ff-radius);
+}
+.ff-audience__split label {
+  display: grid;
+  gap: var(--ff-space-2);
+  grid-template-columns: minmax(6rem, 1fr) minmax(5rem, 8rem);
+  align-items: center;
+}
+.ff-audience__split p {
+  margin: 0;
+}

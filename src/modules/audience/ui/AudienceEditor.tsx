@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Button, Disclosure, Select } from '@/common/ui';
+import type { OsShares } from '../lib/os';
 import { DEFAULT_QUERY, MY_STATS_PRESET, PRESETS, presetFor } from '../lib/presets';
 import { MAX_QUERY_LENGTH, type Resolution, resolveQuery } from '../lib/resolve';
 import {
@@ -10,6 +11,7 @@ import {
   type StatsResult,
   type UsageStats,
 } from '../lib/stats';
+import { OsPanel } from './OsPanel';
 import './audience.css';
 
 const CUSTOM = 'custom';
@@ -24,7 +26,13 @@ const STATS_FORMAT = 'https://github.com/browserslist/browserslist#custom-usage-
 type State = Resolution | { loading: true } | { failed: true };
 type StatsInfo = Extract<StatsResult, { ok: true }>;
 
-export function AudienceEditor({ locale }: { locale: Locale }) {
+export function AudienceEditor({
+  locale,
+  onShares,
+}: {
+  locale: Locale;
+  onShares?: ((shares: OsShares) => void) | undefined;
+}) {
   const t = messagesFor(locale);
   const inputId = useId();
   const messageId = useId();
@@ -161,6 +169,11 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
             ))}
           </ul>
         )}
+        <OsPanel
+          locale={locale}
+          entries={'ok' in state && state.ok ? state.entries : undefined}
+          onChange={onShares}
+        />
         <div class="ff-audience__stats">
           <div class="ff-audience__actions" ref={actions}>
             <Button onClick={() => fileInput.current?.click()}>{t.audience_stats_import()}</Button>
