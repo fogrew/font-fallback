@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "bcdVersion": "8.1.5",
+  "features": {
+    "size-adjust": {
+      "chrome": "92",
+      "edge": "92",
+      "firefox": "92",
+      "safari": "17",
+      "opera": "78",
+      "ie": false,
+      "and_chr": "92",
+      "and_ff": "92",
+      "ios_saf": "17",
+      "samsung": "16.0",
+      "android": "92",
+      "op_mob": false
+    },
+    "ascent-override": {
+      "chrome": "87",
+      "edge": "87",
+      "firefox": "89",
+      "safari": false,
+      "opera": "73",
+      "ie": false,
+      "and_chr": "87",
+      "and_ff": "89",
+      "ios_saf": false,
+      "samsung": "14.0",
+      "android": "87",
+      "op_mob": "62"
+    },
+    "descent-override": {
+      "chrome": "87",
+      "edge": "87",
+      "firefox": "89",
+      "safari": false,
+      "opera": "73",
+      "ie": false,
+      "and_chr": "87",
+      "and_ff": "89",
+      "ios_saf": false,
+      "samsung": "14.0",
+      "android": "87",
+      "op_mob": "62"
+    },
+    "line-gap-override": {
+      "chrome": "87",
+      "edge": "87",
+      "firefox": "89",
+      "safari": false,
+      "opera": "73",
+      "ie": false,
+      "and_chr": "87",
+      "and_ff": "89",
+      "ios_saf": false,
+      "samsung": "14.0",
+      "android": "87",
+      "op_mob": "62"
+    },
+    "font-size-adjust": {
+      "chrome": "127",
+      "edge": "127",
+      "firefox": "3",
+      "safari": "16.4",
+      "opera": "113",
+      "ie": false,
+      "and_chr": "127",
+      "and_ff": "4",
+      "ios_saf": "16.4",
+      "samsung": "28.0",
+      "android": "127",
+      "op_mob": "84"
+    },
+    "unicode-range": {
+      "chrome": "1",
+      "edge": "12",
+      "firefox": "36",
+      "safari": "3.1",
+      "opera": "15",
+      "ie": "9",
+      "and_chr": "18",
+      "and_ff": "36",
+      "ios_saf": "3",
+      "samsung": "1.0",
+      "android": "4.4",
+      "op_mob": "14"
+    }
+  }
+}

@@ -353,3 +353,26 @@ test('a system can have several ordered fallbacks', async ({ page }) => {
   await expect(second).toHaveCount(0);
   await expect(page.getByText(/Windows \(\d+%\): Segoe UI$/)).toBeVisible();
 });
+
+test('descriptor support is listed and the Safari strategy extends the CSS', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  const code = page.getByRole('region', { name: 'Generated CSS' });
+  const strategy = page.getByRole('checkbox', { name: /Safari strategy/ });
+  await expect(strategy).toBeChecked();
+  await expect(code).toContainText('font-size-adjust');
+  await expect(code).toContainText('line-height: 1.4');
+
+  await page.getByLabel('Line height', { exact: true }).last().fill('1.6');
+  await expect(code).toContainText('line-height: 1.6');
+  await strategy.uncheck();
+  await expect(code).not.toContainText('font-size-adjust');
+
+  await page.getByText('Audience (browsers)').click();
+  const support = page.getByRole('list', { name: 'Descriptor support' });
+  await expect(support).toContainText('size-adjust');
+  await expect(support).toContainText('ascent-override');
+  await expect(support).toContainText('Safari on iOS');
+  await expect(page.getByText(/MDN browser-compat-data/)).toBeVisible();
+});

@@ -202,3 +202,11 @@
   display: flex;
   gap: var(--ff-space-1);
 }
+
+.ff-generator__strategy {
+  display: grid;
+  gap: var(--ff-space-2);
+}
+.ff-generator__strategy p {
+  margin: 0;
+}

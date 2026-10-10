@@ -1,7 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Button, CodeBlock, FitField, type FitValue, LiveRegion, Select } from '@/common/ui';
-import { AudienceEditor, type OsShares } from '@/modules/audience';
+import {
+  AudienceEditor,
+  descriptorSupport,
+  lacksVerticalOverrides,
+  type OsShares,
+  type WeightedEntry,
+} from '@/modules/audience';
 import { CssExportError } from '@/modules/export';
 import { StackResolveError } from '@/modules/fallback-fit';
 import {
@@ -21,6 +27,7 @@ import {
   rankFor,
   systemsWithFonts,
 } from '../lib/per-os';
+import { aspectOf, safariStrategyCss } from '../lib/safari';
 import { FontUpload } from './FontUpload';
 import { Preview } from './Preview';
 import './generator.css';
@@ -72,6 +79,9 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [kind, setKind] = useState<Category>('sans-serif');
   const [language, setLanguage] = useState<Language>('en');
   const [shares, setShares] = useState<OsShares>();
+  const [entries, setEntries] = useState<WeightedEntry[]>();
+  const [safari, setSafari] = useState<boolean>();
+  const [lineHeight, setLineHeight] = useState(1.4);
   const [activeOs, setActiveOs] = useState<OsId>();
   const [picks, setPicks] = useState<Partial<Record<OsId, string[]>>>({});
   const [editId, setEditId] = useState<string>();
@@ -234,6 +244,12 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
       if (!(failure instanceof CssExportError)) throw failure;
     }
   }
+
+  const vertical = entries ? lacksVerticalOverrides(descriptorSupport(entries)) : 0;
+  const aspect = selected ? aspectOf(selected.metrics) : null;
+  const safariOn = aspect !== null && (safari ?? vertical >= 1);
+  const safariCss =
+    safariOn && aspect !== null && lineHeight > 0 ? safariStrategyCss(aspect, lineHeight) : '';
 
   const systemName = (os: OsId) => t[`audience_os_${os}`]();
   const percent = (value: number) =>
@@ -461,7 +477,12 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
             )}
           </section>
         )}
-        <AudienceEditor locale={locale} onShares={setShares} active={fonts.length > 0} />
+        <AudienceEditor
+          locale={locale}
+          onShares={setShares}
+          onEntries={setEntries}
+          active={fonts.length > 0}
+        />
       </div>
       <div class="ff-generator__results">
         {output && selected && previewPick && adjustment ? (
@@ -537,10 +558,49 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
             <section class="ff-generator__section" aria-labelledby="ff-css-heading">
               <h2 id="ff-css-heading">{t.css_heading()}</h2>
               <p class="ff-muted">{t.fit_latin_note()}</p>
+              <div class="ff-generator__strategy">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={safariOn}
+                    disabled={aspect === null}
+                    onChange={(event) => setSafari(event.currentTarget.checked)}
+                  />{' '}
+                  {t.safari_strategy_label()}
+                </label>
+                {safariOn && (
+                  <div class="ff-field">
+                    <label for="ff-safari-line-height">{t.safari_line_height_label()}</label>
+                    <input
+                      id="ff-safari-line-height"
+                      class="ff-input"
+                      type="number"
+                      min={0.8}
+                      max={3}
+                      step={0.05}
+                      value={lineHeight}
+                      onInput={(event) => {
+                        const next = event.currentTarget.valueAsNumber;
+                        if (Number.isFinite(next)) setLineHeight(Math.min(3, Math.max(0.8, next)));
+                      }}
+                    />
+                  </div>
+                )}
+                {aspect === null && <p class="ff-muted">{t.safari_no_xheight()}</p>}
+                {aspect !== null && safari === undefined && vertical >= 1 && (
+                  <p class="ff-muted">
+                    {t.safari_recommended({
+                      percent: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
+                        vertical,
+                      ),
+                    })}
+                  </p>
+                )}
+              </div>
               <CodeBlock
                 locale={locale}
                 label={t.css_code_label()}
-                code={`${output.fontFaces}\n\n${output.fontFamily}`}
+                code={[output.fontFaces, output.fontFamily, safariCss].filter(Boolean).join('\n\n')}
               />
             </section>
           </>

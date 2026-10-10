@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Button, Disclosure, Select } from '@/common/ui';
-import type { OsShares } from '../lib/os';
+import type { OsShares, WeightedEntry } from '../lib/os';
 import { DEFAULT_QUERY, MY_STATS_PRESET, PRESETS, presetFor } from '../lib/presets';
 import { MAX_QUERY_LENGTH, type Resolution, resolveQuery } from '../lib/resolve';
 import {
@@ -12,6 +12,7 @@ import {
   type UsageStats,
 } from '../lib/stats';
 import { OsPanel } from './OsPanel';
+import { SupportMatrix } from './SupportMatrix';
 import './audience.css';
 
 const CUSTOM = 'custom';
@@ -29,10 +30,12 @@ type StatsInfo = Extract<StatsResult, { ok: true }>;
 export function AudienceEditor({
   locale,
   onShares,
+  onEntries,
   active = false,
 }: {
   locale: Locale;
   active?: boolean;
+  onEntries?: ((entries: WeightedEntry[] | undefined) => void) | undefined;
   onShares?: ((shares: OsShares) => void) | undefined;
 }) {
   const t = messagesFor(locale);
@@ -92,6 +95,10 @@ export function AudienceEditor({
     setQuery(MY_STATS_PRESET.query);
   };
 
+  const resolvedEntries = 'ok' in state && state.ok ? state.entries : undefined;
+  useEffect(() => {
+    onEntries?.(resolvedEntries);
+  }, [resolvedEntries, onEntries]);
   const invalid = 'ok' in state && !state.ok;
   const errors = {
     empty: t.audience_error_empty(),
@@ -176,6 +183,10 @@ export function AudienceEditor({
           entries={'ok' in state && state.ok ? state.entries : undefined}
           onChange={onShares}
         />
+        <div class="ff-audience__os">
+          <h3>{t.support_heading()}</h3>
+          <SupportMatrix locale={locale} entries={resolvedEntries} />
+        </div>
         <div class="ff-audience__stats">
           <div class="ff-audience__actions" ref={actions}>
             <Button onClick={() => fileInput.current?.click()}>{t.audience_stats_import()}</Button>

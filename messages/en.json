@@ -140,5 +140,16 @@
   "plan_remove": "Remove",
   "fit_edit_label": "Adjust values of",
   "plan_added": "Fallback added.",
-  "plan_removed": "Fallback removed."
+  "plan_removed": "Fallback removed.",
+  "support_heading": "Descriptor support",
+  "support_row": "{percent}% of the audience",
+  "support_unsupported": "Not supported in: {browsers}.",
+  "support_unknown": "No data for: {browsers}.",
+  "support_manual": "Browser support is available for browser queries only; the manual system mode has no browser data.",
+  "support_vertical_note": "{percent}% of your audience ignores ascent, descent and line-gap overrides, so line boxes can still shift there.",
+  "support_source": "Browser compatibility data: MDN browser-compat-data {version}. A feature counts as supported from the first release with it enabled by default.",
+  "safari_strategy_label": "Safari strategy: match the x-height and fix the line height",
+  "safari_line_height_label": "Line height",
+  "safari_no_xheight": "This font has no x-height, so the Safari strategy is unavailable.",
+  "safari_recommended": "{percent}% of your audience lacks the vertical overrides; the strategy is on by default."
 }

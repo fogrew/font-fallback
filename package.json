@@ -29,6 +29,7 @@
     "release": "node scripts/release.ts",
     "i18n:compile": "node scripts/i18n-compile.mjs",
     "i18n:add": "node scripts/i18n-add.ts",
+    "compat:build": "node scripts/compat/build-descriptors.ts",
     "os-fonts:import": "node scripts/os-fonts/import.ts",
     "os-fonts:metrics": "node scripts/os-fonts/extract-metrics.mjs",
     "postinstall": "pnpm i18n:compile"
@@ -50,6 +51,7 @@
     "@feod/analyzer": "0.1.1",
     "@inlang/paraglide-js": "2.26.0",
     "@inlang/plugin-message-format": "4.4.5",
+    "@mdn/browser-compat-data": "8.1.5",
     "@playwright/test": "1.64.0",
     "fast-check": "4.10.2",
     "git-cliff": "2.14.2",
