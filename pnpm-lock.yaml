@@ -178,6 +178,9 @@ importers:
       astro:
         specifier: 7.3.8
         version: 7.3.8(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.6.1)(yaml@2.9.1)
+      browserslist:
+        specifier: 4.29.3
+        version: 4.29.3
       fontkitten:
         specifier: 1.0.3
         version: 1.0.3(patch_hash=122eb6d697fccbd30a07d42611f03229ce1e1f8570f9fd53483ac493ba83c323)

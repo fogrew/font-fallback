@@ -190,3 +190,9 @@
     padding: var(--ff-space-2) var(--ff-space-3);
   }
 }
+
+@media (min-width: 64rem) and (min-height: 40rem) and (max-height: 48rem) {
+  .ff-generator__settings {
+    gap: var(--ff-space-2);
+  }
+}

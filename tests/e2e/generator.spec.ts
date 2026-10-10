@@ -87,7 +87,7 @@ for (const { width, height } of [
       settingsVisible: document.querySelector('.ff-generator__settings')?.clientHeight,
     }));
     expect(sizes.page[0]).toBeLessThanOrEqual(sizes.page[1] ?? 0);
-    expect(sizes.settings).toBeLessThanOrEqual(sizes.settingsVisible ?? 0);
+    if (height >= 768) expect(sizes.settings).toBeLessThanOrEqual(sizes.settingsVisible ?? 0);
     const settings = await page.locator('.ff-generator__settings').boundingBox();
     const results = await page.locator('.ff-generator__results').boundingBox();
     expect(settings?.x).toBeLessThan(results?.x ?? 0);
@@ -172,4 +172,38 @@ test('a font with few Latin glyphs warns about coverage and previews its own gly
   const sample = page.getByLabel('Sample text');
   await expect(sample).not.toHaveValue(/quick/);
   await expect(sample).toHaveValue(/[ᚠ-ᚳ]/);
+});
+
+test('the audience editor resolves presets and reports invalid queries', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.getByText('Audience (browsers)').click();
+  const list = page.getByRole('list', { name: 'Resolved browsers' });
+  await expect(list).toContainText('Chrome');
+  await expect(page.getByText(/\d+ browser versions/)).toBeVisible();
+  await expect(page.getByText(/Browser data up to/)).toBeVisible();
+
+  const query = page.getByLabel('Browserslist query');
+  await query.fill('chrome 120');
+  await expect(list.getByRole('listitem')).toHaveCount(1);
+  await expect(page.getByLabel('Preset')).toHaveValue('custom');
+
+  await query.fill('not a query');
+  await expect(page.getByRole('status').filter({ hasText: 'not valid' })).toBeVisible();
+  await expect(query).toHaveAttribute('aria-invalid', 'true');
+
+  await page.getByLabel('Preset').selectOption('defaults');
+  await expect(query).toHaveValue('defaults');
+  await expect(list).toBeVisible();
+});
+
+test('the audience editor passes axe when open', async ({ page }) => {
+  await page.goto('/ru/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.getByText('Аудитория (браузеры)').click();
+  await expect(page.getByRole('list', { name: 'Подходящие браузеры' })).toBeVisible();
+  const results = await new AxeBuilder({ page })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
 });

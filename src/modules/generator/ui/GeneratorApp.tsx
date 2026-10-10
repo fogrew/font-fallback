@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Button, CodeBlock, FitField, type FitValue, LiveRegion, Select } from '@/common/ui';
+import { AudienceEditor } from '@/modules/audience';
 import { CssExportError } from '@/modules/export';
 import type { SystemFont } from '@/modules/fallback-fit';
 import {
@@ -230,6 +231,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
             ))}
           </section>
         )}
+        <AudienceEditor locale={locale} />
       </div>
       <div class="ff-generator__results">
         {output && selected && candidate && adjustment ? (

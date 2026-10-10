@@ -35,6 +35,7 @@
     "@astrojs/preact": "6.0.6",
     "@preact/signals": "2.11.3",
     "astro": "7.3.8",
+    "browserslist": "4.29.3",
     "fontkitten": "1.0.3",
     "preact": "10.29.8"
   },

@@ -1,0 +1,58 @@
+import { browserName } from './names';
+
+export const MAX_QUERY_LENGTH = 512;
+
+export interface BrowserGroup {
+  id: string;
+  name: string;
+  versions: string[];
+}
+
+export type Resolution =
+  | { ok: true; groups: BrowserGroup[]; count: number; dataDate: string }
+  | { ok: false; code: 'empty' | 'too-long' | 'invalid'; detail: string };
+
+export async function resolveQuery(query: string): Promise<Resolution> {
+  const text = query.trim();
+  if (text === '') return { ok: false, code: 'empty', detail: '' };
+  if (text.length > MAX_QUERY_LENGTH) return { ok: false, code: 'too-long', detail: '' };
+  const { default: browserslist } = await import('browserslist');
+  let entries: string[];
+  try {
+    entries = browserslist(text, { path: false, ignoreUnknownVersions: true });
+  } catch (failure) {
+    const detail = failure instanceof Error ? failure.message : String(failure);
+    return { ok: false, code: 'invalid', detail: detail.slice(0, 300) };
+  }
+  const groups = new Map<string, BrowserGroup>();
+  for (const entry of entries) {
+    const space = entry.indexOf(' ');
+    const id = space < 0 ? entry : entry.slice(0, space);
+    const version = space < 0 ? '' : entry.slice(space + 1);
+    let group = groups.get(id);
+    if (!group) {
+      group = { id, name: browserName(id), versions: [] };
+      groups.set(id, group);
+    }
+    group.versions.push(version);
+  }
+  return {
+    ok: true,
+    groups: [...groups.values()],
+    count: entries.length,
+    dataDate: latestReleaseDate(browserslist.data),
+  };
+}
+
+function latestReleaseDate(
+  data: Record<string, { releaseDate: Record<string, number | null | undefined> } | undefined>,
+): string {
+  let latest = 0;
+  for (const browser of Object.values(data)) {
+    if (!browser) continue;
+    for (const seconds of Object.values(browser.releaseDate)) {
+      if (seconds && seconds > latest) latest = seconds;
+    }
+  }
+  return new Date(latest * 1000).toISOString().slice(0, 10);
+}
