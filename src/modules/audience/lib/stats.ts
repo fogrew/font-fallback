@@ -38,13 +38,15 @@ export function parseStats(text: string, known: KnownData): StatsResult {
   let seen = 0;
   let entries = 0;
   for (const [browser, versions] of Object.entries(parsed)) {
-    if (!isRecord(versions)) {
-      return { ok: false, code: 'wrong-shape', detail: label(browser) };
-    }
     const knownVersions = BROWSER_ID.test(browser) ? known[browser]?.versions : undefined;
     if (!knownVersions) {
       unknownBrowsers.push(label(browser));
+      seen += 1;
+      if (seen > MAX_STATS_ENTRIES) return { ok: false, code: 'too-many', detail: '' };
       continue;
+    }
+    if (!isRecord(versions)) {
+      return { ok: false, code: 'wrong-shape', detail: label(browser) };
     }
     const kept: Record<string, number> = Object.create(null);
     for (const [version, share] of Object.entries(versions)) {

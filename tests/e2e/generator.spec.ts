@@ -239,6 +239,7 @@ test('imported usage statistics enable "in my stats" queries and report ignored 
   await expect(page.getByLabel('Preset')).toHaveValue('mystats');
 
   await page.getByRole('button', { name: 'Remove my statistics' }).click();
+  await expect(page.getByRole('button', { name: 'Import browserslist-stats.json' })).toBeFocused();
   await expect(page.getByLabel('Browserslist query')).toHaveValue('baseline widely available');
   await expect(page.getByRole('link', { name: 'browserslist-ga', exact: true })).toBeVisible();
 });

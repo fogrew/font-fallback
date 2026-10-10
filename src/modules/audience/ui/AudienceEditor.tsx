@@ -29,6 +29,7 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
   const inputId = useId();
   const messageId = useId();
   const fileInput = useRef<HTMLInputElement>(null);
+  const actions = useRef<HTMLDivElement>(null);
   const [opened, setOpened] = useState(false);
   const [query, setQuery] = useState<string>(DEFAULT_QUERY);
   const [state, setState] = useState<State>({ loading: true });
@@ -130,7 +131,14 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
             <>
               <strong>{t.audience_resolved({ count: state.count })}</strong>
               {state.coverage !== undefined && (
-                <span>{t.audience_coverage({ percent: state.coverage.toFixed(1) })}</span>
+                <span>
+                  {t.audience_coverage({
+                    percent: new Intl.NumberFormat(locale, {
+                      minimumFractionDigits: 1,
+                      maximumFractionDigits: 1,
+                    }).format(state.coverage),
+                  })}
+                </span>
               )}
               <span class="ff-muted">
                 {t.audience_data_date({
@@ -154,13 +162,14 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
           </ul>
         )}
         <div class="ff-audience__stats">
-          <div class="ff-audience__actions">
+          <div class="ff-audience__actions" ref={actions}>
             <Button onClick={() => fileInput.current?.click()}>{t.audience_stats_import()}</Button>
             {stats && (
               <Button
                 onClick={() => {
                   setStats(undefined);
-                  if (query.includes('my stats')) setQuery(DEFAULT_QUERY);
+                  if (/my stats/i.test(query)) setQuery(DEFAULT_QUERY);
+                  actions.current?.querySelector('button')?.focus();
                 }}
               >
                 {t.audience_stats_remove()}
@@ -195,13 +204,19 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
             )
           </p>
           <div role="status">
-            {statsError && <p class="ff-error">{statsError}</p>}
+            {statsError && (
+              <p class="ff-error" role="alert">
+                {statsError}
+              </p>
+            )}
             {stats && (
               <>
                 <p>{t.audience_stats_loaded({ count: stats.entries })}</p>
                 {stats.unknownBrowsers.length > 0 && (
                   <p class="ff-muted">
-                    {t.audience_stats_unknown_browsers({ list: stats.unknownBrowsers.join(', ') })}
+                    {t.audience_stats_unknown_browsers({
+                      list: stats.unknownBrowsers.slice(0, 5).join(', '),
+                    })}
                   </p>
                 )}
                 {stats.unknownVersions.length > 0 && (
