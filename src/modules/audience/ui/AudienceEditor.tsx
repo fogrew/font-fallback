@@ -10,13 +10,7 @@ const DEBOUNCE_MS = 250;
 
 type State = Resolution | { loading: true } | { failed: true };
 
-export function AudienceEditor({
-  locale,
-  onResolved,
-}: {
-  locale: Locale;
-  onResolved?: (resolution: Resolution) => void;
-}) {
+export function AudienceEditor({ locale }: { locale: Locale }) {
   const t = messagesFor(locale);
   const inputId = useId();
   const messageId = useId();
@@ -29,11 +23,7 @@ export function AudienceEditor({
     let current = true;
     const timer = setTimeout(() => {
       resolveQuery(query).then(
-        (resolution) => {
-          if (!current) return;
-          setState(resolution);
-          onResolved?.(resolution);
-        },
+        (resolution) => current && setState(resolution),
         () => current && setState({ failed: true }),
       );
     }, DEBOUNCE_MS);
@@ -41,13 +31,14 @@ export function AudienceEditor({
       current = false;
       clearTimeout(timer);
     };
-  }, [opened, query, onResolved]);
+  }, [opened, query]);
 
   const invalid = 'ok' in state && !state.ok;
   const errors = {
     empty: t.audience_error_empty(),
     'too-long': t.audience_error_too_long(),
     invalid: t.audience_error_invalid(),
+    'no-match': t.audience_error_no_match(),
   };
 
   return (

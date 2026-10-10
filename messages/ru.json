@@ -82,5 +82,8 @@
   "audience_error_invalid": "Запрос некорректен:",
   "audience_resolved": "Версий браузеров: {count}",
   "audience_data_date": "Данные о браузерах на {date}",
-  "audience_list_label": "Подходящие браузеры"
+  "audience_list_label": "Подходящие браузеры",
+  "audience_preset_baseline2023": "Baseline 2023",
+  "audience_preset_usage": "Более 0,5% пользователей, последние 2 версии",
+  "audience_error_no_match": "Этому запросу не соответствует ни одна версия браузера."
 }

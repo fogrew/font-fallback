@@ -24,6 +24,14 @@ describe('resolveQuery', () => {
     expect(invalid).toMatchObject({ ok: false, code: 'invalid' });
   });
 
+  it('reports unknown versions and queries without matches', async () => {
+    expect(await resolveQuery('chrome 1')).toMatchObject({ ok: false, code: 'invalid' });
+    expect(await resolveQuery('chrome 120 and firefox 121')).toMatchObject({
+      ok: false,
+      code: 'no-match',
+    });
+  });
+
   it('cannot read the file system for config or extends queries', async () => {
     expect(await resolveQuery('extends some-config')).toMatchObject({ ok: false, code: 'invalid' });
   });

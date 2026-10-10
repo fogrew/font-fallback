@@ -10,7 +10,7 @@ export interface BrowserGroup {
 
 export type Resolution =
   | { ok: true; groups: BrowserGroup[]; count: number; dataDate: string }
-  | { ok: false; code: 'empty' | 'too-long' | 'invalid'; detail: string };
+  | { ok: false; code: 'empty' | 'too-long' | 'invalid' | 'no-match'; detail: string };
 
 export async function resolveQuery(query: string): Promise<Resolution> {
   const text = query.trim();
@@ -19,11 +19,12 @@ export async function resolveQuery(query: string): Promise<Resolution> {
   const { default: browserslist } = await import('browserslist');
   let entries: string[];
   try {
-    entries = browserslist(text, { path: false, ignoreUnknownVersions: true });
+    entries = browserslist(text, { path: false });
   } catch (failure) {
     const detail = failure instanceof Error ? failure.message : String(failure);
     return { ok: false, code: 'invalid', detail: detail.slice(0, 300) };
   }
+  if (entries.length === 0) return { ok: false, code: 'no-match', detail: '' };
   const groups = new Map<string, BrowserGroup>();
   for (const entry of entries) {
     const space = entry.indexOf(' ');

@@ -1,6 +1,8 @@
 export const PRESETS = [
   { id: 'widely', query: 'baseline widely available', label: 'audience_preset_widely' },
   { id: 'newly', query: 'baseline newly available', label: 'audience_preset_newly' },
+  { id: 'baseline2023', query: 'baseline 2023', label: 'audience_preset_baseline2023' },
+  { id: 'usage', query: '> 0.5%, last 2 versions', label: 'audience_preset_usage' },
   { id: 'defaults', query: 'defaults', label: 'audience_preset_defaults' },
   {
     id: 'desktop',

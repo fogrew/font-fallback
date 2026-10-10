@@ -82,5 +82,8 @@
   "audience_error_invalid": "This query is not valid:",
   "audience_resolved": "{count} browser versions",
   "audience_data_date": "Browser data up to {date}",
-  "audience_list_label": "Resolved browsers"
+  "audience_list_label": "Resolved browsers",
+  "audience_preset_baseline2023": "Baseline 2023",
+  "audience_preset_usage": "Over 0.5% usage, last 2 versions",
+  "audience_error_no_match": "No browser versions match this query."
 }
