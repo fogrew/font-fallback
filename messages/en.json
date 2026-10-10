@@ -138,5 +138,7 @@
   "fallback_font_n": "Fallback font {n}",
   "plan_add": "Add fallback",
   "plan_remove": "Remove",
-  "fit_edit_label": "Adjust values of"
+  "fit_edit_label": "Adjust values of",
+  "plan_added": "Fallback added.",
+  "plan_removed": "Fallback removed."
 }

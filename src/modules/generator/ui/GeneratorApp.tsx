@@ -3,6 +3,7 @@ import { type Locale, messagesFor } from '@/common/i18n';
 import { Button, CodeBlock, FitField, type FitValue, LiveRegion, Select } from '@/common/ui';
 import { AudienceEditor, type OsShares } from '@/modules/audience';
 import { CssExportError } from '@/modules/export';
+import { StackResolveError } from '@/modules/fallback-fit';
 import {
   createFontParser,
   type FontMetrics,
@@ -33,6 +34,7 @@ interface LoadedFont {
 
 const MAX_FONTS = 8;
 const MIN_SHARE = 1;
+const MAX_FACES = 16;
 const ALL_SYSTEMS = ['windows', 'macos', 'ios', 'android', 'linux', 'chromeos'] as const;
 
 type Field = keyof Overrides;
@@ -73,6 +75,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [activeOs, setActiveOs] = useState<OsId>();
   const [picks, setPicks] = useState<Partial<Record<OsId, string[]>>>({});
   const [editId, setEditId] = useState<string>();
+  const [focusSlot, setFocusSlot] = useState<number>();
   const [values, setValues] = useState<Record<string, Values>>({});
   const [savedOrder, setSavedOrder] = useState<{ key: string; value: string[] }>();
   const [planNote, setPlanNote] = useState('');
@@ -80,6 +83,11 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [error, setError] = useState('');
   const [announcement, setAnnouncement] = useState('');
   useEffect(() => () => parser.current?.dispose(), []);
+  useEffect(() => {
+    if (focusSlot === undefined) return;
+    document.querySelector<HTMLElement>(`[data-slot="${focusSlot}"] select`)?.focus();
+    setFocusSlot(undefined);
+  }, [focusSlot]);
 
   const addFiles = async (files: File[]) => {
     if (files.length === 0 || busy) return;
@@ -194,7 +202,13 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     chosen.map((item) => [item.os, item.faceId, item.share]),
   ]);
   const order = savedOrder?.key === orderKey ? savedOrder.value : undefined;
-  const plan = chosen.length > 0 ? planStack(chosen, order) : undefined;
+  const faceIds = new Set(chosen.map((item) => item.faceId));
+  let plan: ReturnType<typeof planStack> | undefined;
+  try {
+    plan = chosen.length > 0 ? planStack(chosen, order) : undefined;
+  } catch (failure) {
+    if (!(failure instanceof StackResolveError)) throw failure;
+  }
   const previewPick = currentPick ?? chosen[0]?.candidate;
 
   let output: ReturnType<typeof buildCss> | undefined;
@@ -311,7 +325,10 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                   value: os,
                   label: `${systemName(os)} (${percent(shares?.[os] ?? 0)}%)`,
                 }))}
-                onChange={(value) => setActiveOs(value as OsId)}
+                onChange={(value) => {
+                  setActiveOs(value as OsId);
+                  setEditId(undefined);
+                }}
               />
               <Select
                 label={t.fit_language_label()}
@@ -341,7 +358,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
               />
             </div>
             {currentList.map((pick, index) => (
-              <div class="ff-generator__row" key={pick.id}>
+              <div class="ff-generator__row" key={`${current}-${index}`} data-slot={index}>
                 <Select
                   label={t.fallback_font_n({ n: index + 1 })}
                   value={pick.id}
@@ -361,32 +378,43 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                     }
                   }}
                 />
-                {index === currentList.length - 1 && (
-                  <Button
-                    disabled={currentCandidates.length <= currentList.length}
-                    onClick={() => {
-                      const next = currentCandidates.find(
-                        (item) => !currentList.some((other) => other.id === item.id),
-                      );
-                      if (next) setList(current, [...currentList, next]);
-                    }}
-                  >
-                    {t.plan_add()}
-                  </Button>
-                )}
-                {currentList.length > 1 && (
-                  <Button
-                    aria-label={`${t.plan_remove()}: ${t.fallback_font_n({ n: index + 1 })}`}
-                    onClick={() =>
-                      setList(
-                        current,
-                        currentList.filter((item) => item.id !== pick.id),
-                      )
-                    }
-                  >
-                    {t.plan_remove()}
-                  </Button>
-                )}
+                <div class="ff-generator__buttons">
+                  {index === currentList.length - 1 && (
+                    <Button
+                      disabled={
+                        currentCandidates.length <= currentList.length ||
+                        (faceIds.size >= MAX_FACES &&
+                          !currentCandidates.every((item) => faceIds.has(item.id)))
+                      }
+                      onClick={() => {
+                        const next = currentCandidates.find(
+                          (item) => !currentList.some((other) => other.id === item.id),
+                        );
+                        if (!next) return;
+                        setList(current, [...currentList, next]);
+                        setPlanNote(t.plan_added());
+                        setFocusSlot(currentList.length);
+                      }}
+                    >
+                      {t.plan_add()}
+                    </Button>
+                  )}
+                  {currentList.length > 1 && (
+                    <Button
+                      aria-label={`${t.plan_remove()}: ${t.fallback_font_n({ n: index + 1 })}`}
+                      onClick={() => {
+                        setList(
+                          current,
+                          currentList.filter((item) => item.id !== pick.id),
+                        );
+                        setPlanNote(t.plan_removed());
+                        setFocusSlot(Math.max(0, index - 1));
+                      }}
+                    >
+                      {t.plan_remove()}
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
             {currentList.length > 1 && currentPick && (

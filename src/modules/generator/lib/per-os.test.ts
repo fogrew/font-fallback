@@ -112,6 +112,24 @@ describe('planStack', () => {
     expect(plan.resolution.blockedBy).toBe('cycle');
   });
 
+  it('throws a typed error beyond the face limit instead of crashing later', () => {
+    const many = rankFor(font(ascii, 520), 'windows', 'en').candidates.map((item) => ({
+      os: 'windows' as const,
+      share: 10,
+      faceId: item.id,
+    }));
+    const more = ['android', 'macos', 'linux'].flatMap((os) =>
+      rankFor(font(ascii, 520), os as 'android', 'en').candidates.map((item) => ({
+        os: os as 'android',
+        share: 5,
+        faceId: item.id,
+      })),
+    );
+    const faces = new Set([...many, ...more].map((pick) => pick.faceId));
+    if (faces.size > 16) expect(() => planStack([...many, ...more])).toThrow();
+    else expect(planStack([...many, ...more]).order.length).toBe(faces.size);
+  });
+
   it('ignores an order that does not list the same faces', () => {
     const plan = planStack([{ os: 'android', share: 1, faceId: 'roboto' }], ['nope']);
     expect(plan.order).toEqual(['roboto']);

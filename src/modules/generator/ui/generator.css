@@ -195,6 +195,10 @@
 .ff-generator__row {
   display: grid;
   gap: var(--ff-space-2);
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
+}
+.ff-generator__buttons {
+  display: flex;
+  gap: var(--ff-space-1);
 }
