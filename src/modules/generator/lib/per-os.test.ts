@@ -82,6 +82,36 @@ describe('planStack', () => {
     expect(plan.resolution.suggestion).toBeNull();
   });
 
+  it('models every rank per system and proposes an order satisfying all of them', () => {
+    const picks = [
+      { os: 'windows' as const, share: 60, faceId: 'segoe-ui' },
+      { os: 'windows' as const, share: 60, faceId: 'arial' },
+      { os: 'macos' as const, share: 30, faceId: 'helvetica' },
+    ];
+    const plan = planStack(picks);
+    expect(plan.order).toEqual(['segoe-ui', 'arial', 'helvetica']);
+    const shadowed = plan.resolution.platforms.filter((item) => item.status === 'shadowed');
+    expect(shadowed.map((item) => item.platform)).toEqual(['macos']);
+    expect(plan.resolution.suggestion?.order).toEqual(['segoe-ui', 'helvetica', 'arial']);
+    const fixed = planStack(picks, plan.resolution.suggestion?.order);
+    expect(fixed.resolution.platforms.map((item) => item.platform)).toEqual([
+      'windows',
+      'windows#2',
+      'macos',
+    ]);
+    expect(fixed.resolution.platforms.every((item) => item.status === 'matched')).toBe(true);
+  });
+
+  it('reports a cycle when two systems rank the same fonts in opposite order', () => {
+    const plan = planStack([
+      { os: 'windows', share: 60, faceId: 'arial' },
+      { os: 'windows', share: 60, faceId: 'georgia' },
+      { os: 'macos', share: 30, faceId: 'georgia' },
+      { os: 'macos', share: 30, faceId: 'arial' },
+    ]);
+    expect(plan.resolution.blockedBy).toBe('cycle');
+  });
+
   it('ignores an order that does not list the same faces', () => {
     const plan = planStack([{ os: 'android', share: 1, faceId: 'roboto' }], ['nope']);
     expect(plan.order).toEqual(['roboto']);

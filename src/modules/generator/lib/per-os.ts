@@ -149,6 +149,10 @@ export interface Plan {
   resolution: StackResolution;
 }
 
+export function rankKey(os: string, rank: number): string {
+  return rank === 0 ? os : `${os}#${rank + 1}`;
+}
+
 export function planStack(picks: readonly SystemPick[], order?: readonly string[]): Plan {
   const ranked = [...picks].sort((a, b) => b.share - a.share);
   const defaults = [...new Set(ranked.map((pick) => pick.faceId))];
@@ -159,19 +163,25 @@ export function planStack(picks: readonly SystemPick[], order?: readonly string[
     new Set(order).size === order.length;
   const finalOrder = valid ? [...order] : defaults;
   const byId = new Map(fonts().map((font) => [font.id, font]));
-  const faces = finalOrder.map((id) => ({
-    id,
-    availableOn: (['windows', 'macos', 'ios', 'android', 'linux', 'chromeos'] as const).filter(
-      (os) => {
+
+  const bySystem = new Map<OsId, string[]>();
+  for (const pick of picks) bySystem.set(pick.os, [...(bySystem.get(pick.os) ?? []), pick.faceId]);
+
+  const availability = new Map<string, string[]>(finalOrder.map((id) => [id, []]));
+  const preferences: { platform: string; preferredFace: string }[] = [];
+  for (const [os, list] of bySystem) {
+    for (const [rank, faceId] of list.entries()) {
+      const key = rankKey(os, rank);
+      preferences.push({ platform: key, preferredFace: faceId });
+      const earlier = new Set(list.slice(0, rank));
+      for (const id of finalOrder) {
         const font = byId.get(id);
-        return font ? presentOn(font.dataset, os) : false;
-      },
-    ),
-  }));
-  const seen = new Set<string>();
-  const preferences = ranked
-    .filter((pick) => !seen.has(pick.os) && seen.add(pick.os))
-    .map((pick) => ({ platform: pick.os, preferredFace: pick.faceId }));
+        if (font && presentOn(font.dataset, os) && !earlier.has(id))
+          availability.get(id)?.push(key);
+      }
+    }
+  }
+  const faces = finalOrder.map((id) => ({ id, availableOn: availability.get(id) ?? [] }));
   return { order: finalOrder, resolution: resolveStack(faces, preferences) };
 }
 

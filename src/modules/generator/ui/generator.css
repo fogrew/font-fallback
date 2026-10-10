@@ -191,3 +191,10 @@
   padding: 0;
   border: 0;
 }
+
+.ff-generator__row {
+  display: grid;
+  gap: var(--ff-space-2);
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: end;
+}

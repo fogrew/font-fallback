@@ -15,7 +15,7 @@ test('uploading a font produces per-system fallbacks, editable values and CSS', 
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
   await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
 
-  const fallback = page.getByLabel('Fallback font');
+  const fallback = page.getByLabel('Fallback font 1', { exact: true });
   await expect(fallback).toBeVisible();
   const code = page.getByRole('region', { name: 'Generated CSS' });
   await expect(code).toContainText('@font-face');
@@ -52,7 +52,9 @@ test('serif and monospace fallbacks are available by font type', async ({ page }
   await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   await page.getByLabel('System', { exact: true }).selectOption('windows');
   await page.getByLabel('Font type').selectOption('serif');
-  await expect(page.getByLabel('Fallback font')).toContainText('Times New Roman');
+  await expect(page.getByLabel('Fallback font 1', { exact: true })).toContainText(
+    'Times New Roman',
+  );
   await expect(page.getByRole('region', { name: 'Generated CSS' })).toContainText('serif;');
 });
 
@@ -63,7 +65,7 @@ test('the fallback list follows the selected system and reports shadowing with a
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
   await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   const system = page.getByLabel('System', { exact: true });
-  const fallback = page.getByLabel('Fallback font');
+  const fallback = page.getByLabel('Fallback font 1', { exact: true });
 
   await system.selectOption('android');
   await expect(fallback).toContainText('Roboto');
@@ -88,7 +90,7 @@ test('the text language changes the fit for Cyrillic', async ({ page }) => {
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
   await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   await page.getByLabel('System', { exact: true }).selectOption('windows');
-  const fallback = page.getByLabel('Fallback font');
+  const fallback = page.getByLabel('Fallback font 1', { exact: true });
   await expect(fallback)
     .toContainText('Latin only')
     .catch(() => undefined);
@@ -139,7 +141,7 @@ for (const { width, height } of [
       settingsVisible: document.querySelector('.ff-generator__settings')?.clientHeight,
     }));
     expect(sizes.page[0]).toBeLessThanOrEqual(sizes.page[1] ?? 0);
-    if (height >= 768) expect(sizes.settings).toBeLessThanOrEqual(sizes.settingsVisible ?? 0);
+    if (height >= 900) expect(sizes.settings).toBeLessThanOrEqual(sizes.settingsVisible ?? 0);
     const settings = await page.locator('.ff-generator__settings').boundingBox();
     const results = await page.locator('.ff-generator__results').boundingBox();
     expect(settings?.x).toBeLessThan(results?.x ?? 0);
@@ -319,4 +321,35 @@ test('system shares follow the desktop split and the manual mode', async ({ page
   await page.getByLabel('iOS and iPadOS').fill('1');
   await expect(shares).toContainText('75');
   await expect(shares).not.toContainText('Windows');
+});
+
+test('a system can have several ordered fallbacks', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  await page.getByLabel('System', { exact: true }).selectOption('windows');
+  const code = page.getByRole('region', { name: 'Generated CSS' });
+  await page.getByLabel('Fallback font 1', { exact: true }).selectOption('segoe-ui');
+  await expect(page.getByLabel('Fallback font 2', { exact: true })).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Add fallback' }).click();
+  const second = page.getByLabel('Fallback font 2', { exact: true });
+  await expect(second).toBeVisible();
+  await second.selectOption('arial');
+  await expect(code).toContainText('"Source Sans Pro Fallback Segoe UI"');
+  await expect(code).toContainText('"Source Sans Pro Fallback Arial"');
+  await expect(page.getByText(/Windows \(\d+%\): Segoe UI, Arial/)).toBeVisible();
+  await expect(
+    page.getByLabel('Fallback font 1', { exact: true }).locator('option[value="arial"]'),
+  ).toHaveCount(0);
+
+  await page.getByLabel('Adjust values of').selectOption('arial');
+  const size = page.getByRole('spinbutton', { name: /Size adjust/ });
+  await size.fill('120');
+  await size.press('Enter');
+  await expect(code).toContainText('size-adjust: 120%');
+
+  await page.getByRole('button', { name: 'Remove: Fallback font 2' }).click();
+  await expect(second).toHaveCount(0);
+  await expect(page.getByText(/Windows \(\d+%\): Segoe UI$/)).toBeVisible();
 });

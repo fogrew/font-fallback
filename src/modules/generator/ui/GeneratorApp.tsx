@@ -71,7 +71,8 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [language, setLanguage] = useState<Language>('en');
   const [shares, setShares] = useState<OsShares>();
   const [activeOs, setActiveOs] = useState<OsId>();
-  const [picks, setPicks] = useState<Partial<Record<OsId, string>>>({});
+  const [picks, setPicks] = useState<Partial<Record<OsId, string[]>>>({});
+  const [editId, setEditId] = useState<string>();
   const [values, setValues] = useState<Record<string, Values>>({});
   const [savedOrder, setSavedOrder] = useState<{ key: string; value: string[] }>();
   const [planNote, setPlanNote] = useState('');
@@ -152,16 +153,20 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     return { result, noCoverage };
   }, [selected, systems, language]);
 
-  const pickFor = (os: OsId): Candidate | undefined => {
-    const list = (rankings.result[os]?.candidates ?? []).filter((item) => item.category === kind);
-    return list.find((item) => item.id === picks[os]) ?? list[0];
+  const candidatesOf = (os: OsId): Candidate[] =>
+    (rankings.result[os]?.candidates ?? []).filter((item) => item.category === kind);
+  const listFor = (os: OsId): Candidate[] => {
+    const all = candidatesOf(os);
+    const explicit = (picks[os] ?? []).flatMap((id) => all.find((item) => item.id === id) ?? []);
+    return explicit.length > 0 ? explicit : all.slice(0, 1);
   };
 
   const current = activeOs && systems.includes(activeOs) ? activeOs : systems[0];
-  const currentPick = current ? pickFor(current) : undefined;
-  const currentList = current
-    ? (rankings.result[current]?.candidates ?? []).filter((item) => item.category === kind)
-    : [];
+  const currentList = current ? listFor(current) : [];
+  const currentCandidates = current ? candidatesOf(current) : [];
+  const currentPick = currentList.find((item) => item.id === editId) ?? currentList[0];
+  const setList = (os: OsId, next: Candidate[]) =>
+    setPicks((all) => ({ ...all, [os]: next.map((item) => item.id) }));
   const coverage = Math.min(
     1,
     ...Object.values(rankings.result).map((ranking) => ranking?.coverage ?? 1),
@@ -177,10 +182,11 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     return manual;
   };
 
-  const chosen = systems.flatMap((os) => {
-    const pick = pickFor(os);
-    return pick && shares ? [{ os, share: shares[os], faceId: pick.id, candidate: pick }] : [];
-  });
+  const chosen = systems.flatMap((os) =>
+    shares
+      ? listFor(os).map((pick) => ({ os, share: shares[os], faceId: pick.id, candidate: pick }))
+      : [],
+  );
   const orderKey = JSON.stringify([
     selected?.id,
     language,
@@ -228,7 +234,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
       : shadowed
           .map((item) =>
             t.plan_shadowed({
-              system: systemName(item.platform as OsId),
+              system: systemName(item.platform.split('#')[0] as OsId),
               winner: familyOf(item.winner ?? ''),
               font: familyOf(item.preferredFace),
             }),
@@ -330,22 +336,67 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 onChange={(value) => {
                   setKind(value as Category);
                   setPicks({});
+                  setEditId(undefined);
                 }}
               />
-              {currentPick && (
+            </div>
+            {currentList.map((pick, index) => (
+              <div class="ff-generator__row" key={pick.id}>
                 <Select
-                  label={t.fallback_font_label()}
-                  value={currentPick.id}
-                  options={currentList.map((item) => ({
-                    value: item.id,
-                    label: optionLabel(item),
-                  }))}
+                  label={t.fallback_font_n({ n: index + 1 })}
+                  value={pick.id}
+                  options={currentCandidates
+                    .filter(
+                      (item) =>
+                        item.id === pick.id || !currentList.some((other) => other.id === item.id),
+                    )
+                    .map((item) => ({ value: item.id, label: optionLabel(item) }))}
                   onChange={(value) => {
-                    setPicks((all) => ({ ...all, [current]: value }));
+                    const replacement = currentCandidates.find((item) => item.id === value);
+                    if (replacement) {
+                      setList(
+                        current,
+                        currentList.map((item) => (item.id === pick.id ? replacement : item)),
+                      );
+                    }
                   }}
                 />
-              )}
-            </div>
+                {index === currentList.length - 1 && (
+                  <Button
+                    disabled={currentCandidates.length <= currentList.length}
+                    onClick={() => {
+                      const next = currentCandidates.find(
+                        (item) => !currentList.some((other) => other.id === item.id),
+                      );
+                      if (next) setList(current, [...currentList, next]);
+                    }}
+                  >
+                    {t.plan_add()}
+                  </Button>
+                )}
+                {currentList.length > 1 && (
+                  <Button
+                    aria-label={`${t.plan_remove()}: ${t.fallback_font_n({ n: index + 1 })}`}
+                    onClick={() =>
+                      setList(
+                        current,
+                        currentList.filter((item) => item.id !== pick.id),
+                      )
+                    }
+                  >
+                    {t.plan_remove()}
+                  </Button>
+                )}
+              </div>
+            ))}
+            {currentList.length > 1 && currentPick && (
+              <Select
+                label={t.fit_edit_label()}
+                value={currentPick.id}
+                options={currentList.map((item) => ({ value: item.id, label: item.family }))}
+                onChange={setEditId}
+              />
+            )}
             {currentPick ? (
               <>
                 {currentPick.coverage < 0.95 && (
@@ -406,13 +457,16 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                   {t.plan_heading()}
                 </h2>
                 <ul>
-                  {chosen.map((item) => (
-                    <li key={item.os}>
+                  {[...new Set(chosen.map((item) => item.os))].map((os) => (
+                    <li key={os}>
                       <span>
                         {t.plan_system_font({
-                          system: systemName(item.os),
-                          share: percent(item.share),
-                          font: item.candidate.family,
+                          system: systemName(os),
+                          share: percent(shares?.[os] ?? 0),
+                          font: chosen
+                            .filter((item) => item.os === os)
+                            .map((item) => item.candidate.family)
+                            .join(', '),
                         })}
                       </span>
                     </li>
@@ -421,7 +475,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 {shadowed.map((item) => (
                   <p key={item.platform} class="ff-error">
                     {t.plan_shadowed({
-                      system: systemName(item.platform as OsId),
+                      system: systemName(item.platform.split('#')[0] as OsId),
                       winner: familyOf(item.winner ?? ''),
                       font: familyOf(item.preferredFace),
                     })}

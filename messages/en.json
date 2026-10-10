@@ -134,5 +134,9 @@
   "plan_uncovered": "No font data yet for {systems} ({share}% of the audience).",
   "fit_font_latin_only": "Latin only",
   "fit_font_partial": "This font covers {percent}% of the glyphs in your font.",
-  "plan_fixed": "Fallback order updated."
+  "plan_fixed": "Fallback order updated.",
+  "fallback_font_n": "Fallback font {n}",
+  "plan_add": "Add fallback",
+  "plan_remove": "Remove",
+  "fit_edit_label": "Adjust values of"
 }
