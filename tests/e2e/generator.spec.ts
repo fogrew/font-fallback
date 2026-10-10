@@ -376,3 +376,26 @@ test('descriptor support is listed and the Safari strategy extends the CSS', asy
   await expect(support).toContainText('Safari on iOS');
   await expect(page.getByText(/MDN browser-compat-data/)).toBeVisible();
 });
+
+test('the layout shift simulation reports a score per viewport and accepts a custom width', async ({
+  page,
+}) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  const section = page.getByRole('region', { name: 'Layout shift' });
+  const table = section.getByRole('table');
+  await expect(table.getByRole('row')).toHaveCount(4);
+  await expect(table.getByRole('rowheader', { name: '360px' })).toBeVisible();
+  await expect(table).toContainText(/(Good|Needs improvement|Poor)/);
+  await expect(section.getByRole('alert')).toHaveCount(0);
+
+  await section.getByLabel('Extra viewport width (px)').fill('1920');
+  await expect(table.getByRole('row')).toHaveCount(5);
+  await expect(table.getByRole('rowheader', { name: '1920px' })).toBeVisible();
+  await section.getByLabel('Extra viewport width (px)').fill('100');
+  await expect(section.getByLabel('Extra viewport width (px)')).toHaveAttribute(
+    'aria-invalid',
+    'true',
+  );
+});

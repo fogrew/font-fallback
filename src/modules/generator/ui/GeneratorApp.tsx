@@ -17,9 +17,10 @@ import {
   type FontParser,
   MAX_FONT_BYTES,
 } from '@/modules/font-metrics';
+import { LayoutShiftPanel, type PanelInput } from '@/modules/layout-shift';
 import type { Category, OsId } from '@/modules/os-fonts';
 import { isNoCoverage, LOW_COVERAGE, sampleText } from '../lib/compute';
-import { adjustmentOf, buildCss, type Overrides } from '../lib/css';
+import { adjustmentOf, buildCss, fallbackFamilyName, type Overrides } from '../lib/css';
 import {
   type Candidate,
   type Language,
@@ -222,6 +223,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   }
   const previewPick = currentPick ?? chosen[0]?.candidate;
 
+  let simulation: PanelInput | undefined;
   let output: ReturnType<typeof buildCss> | undefined;
   let adjustment: Overrides | undefined;
   if (selected && plan && previewPick) {
@@ -241,6 +243,17 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     try {
       const family = selected.metrics.names.family?.trim().slice(0, 200) || 'Custom font';
       output = buildCss(family, faces, kind);
+      if (selected) {
+        simulation = {
+          webBytes: selected.bytes,
+          fallbackFontFaces: output.fontFaces,
+          fallbackFamilies: faces.map((face) =>
+            fallbackFamilyName(family, face.family, faces.length),
+          ),
+          generic: kind,
+          language,
+        };
+      }
     } catch (failure) {
       if (!(failure instanceof CssExportError)) throw failure;
     }
@@ -559,6 +572,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 )}
               </section>
             )}
+            <LayoutShiftPanel locale={locale} input={simulation} />
             <section class="ff-generator__section" aria-labelledby="ff-css-heading">
               <h2 id="ff-css-heading">{t.css_heading()}</h2>
               <p class="ff-muted">{t.fit_latin_note()}</p>

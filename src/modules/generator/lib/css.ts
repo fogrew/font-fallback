@@ -24,12 +24,19 @@ export function adjustmentOf(adjustment: FitAdjustment, overrides: Partial<Overr
   };
 }
 
+export function fallbackFamilyName(
+  targetFamily: string,
+  family: string,
+  faceCount: number,
+): string {
+  return faceCount === 1 ? `${targetFamily} Fallback` : `${targetFamily} Fallback ${family}`;
+}
+
 export function buildCss(targetFamily: string, faces: readonly CssFace[], generic: Category) {
   return generateFallbackCss({
     targetFamily,
     fallbacks: faces.map((face) => ({
-      family:
-        faces.length === 1 ? `${targetFamily} Fallback` : `${targetFamily} Fallback ${face.family}`,
+      family: fallbackFamilyName(targetFamily, face.family, faces.length),
       localNames: face.localNames,
       adjustment: face.adjustment,
     })),

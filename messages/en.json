@@ -151,5 +151,19 @@
   "safari_strategy_label": "Safari strategy: match the x-height and fix the line height",
   "safari_line_height_label": "Line height",
   "safari_no_xheight": "This font has no x-height, so the Safari strategy is unavailable.",
-  "safari_recommended": "{percent}% of your audience lacks the vertical overrides; the strategy is on by default."
+  "safari_recommended": "{percent}% of your audience lacks the vertical overrides; the strategy is on by default.",
+  "cls_heading": "Layout shift",
+  "cls_note": "Measured on this device with a sample page: the fallback fonts first, then the web font, like a font swap.",
+  "cls_custom_label": "Extra viewport width (px)",
+  "cls_running": "Measuring…",
+  "cls_failed": "The layout shift could not be measured.",
+  "cls_viewport": "Viewport",
+  "cls_score": "Score",
+  "cls_lines": "Lines",
+  "cls_height": "Page height",
+  "cls_mismatches": "Changed line breaks",
+  "cls_rating_good": "Good",
+  "cls_rating_needs": "Needs improvement",
+  "cls_rating_poor": "Poor",
+  "cls_announcement": "Layout shift at {width}px: {score}, {rating}."
 }
