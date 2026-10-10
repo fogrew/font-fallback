@@ -1,62 +1,56 @@
 import { describe, expect, it } from 'vitest';
-import type { FontMetrics } from '@/modules/font-metrics';
-import { isNoCoverage, rankFallbacks, sampleText } from './compute';
+import { isNoCoverage, sampleText } from './compute';
 import { adjustmentOf, buildCss } from './css';
-
-function font(codePoints: number[], advance: number): FontMetrics {
-  return {
-    names: { family: 'Test', fullName: 'Test', postscript: 'Test' },
-    unitsPerEm: 1000,
-    hhea: { ascent: 900, descent: -200, lineGap: 0 },
-    typo: null,
-    win: null,
-    capHeight: null,
-    xHeight: null,
-    codePoints: Uint32Array.from(codePoints),
-    advances: Float64Array.from(codePoints, () => advance),
-    isVariable: false,
-  };
-}
+import { font } from './font.test-util';
+import { rankFor } from './per-os';
 
 const ascii = Array.from({ length: 95 }, (_, index) => 0x20 + index);
 
-describe('rankFallbacks', () => {
-  it('ranks the fallback with the closest width first and scales by the width ratio', () => {
-    const { candidates, coverage } = rankFallbacks(font(ascii, 520));
-    expect(coverage).toBeGreaterThan(0.99);
-    const arial = candidates.find((candidate) => candidate.font.id === 'arial');
-    expect(arial?.adjustment.sizeAdjust).toBeCloseTo(0.52 / (913 / 2048), 6);
-    const sans = candidates
-      .filter((candidate) => candidate.font.genericFamily === 'sans-serif')
-      .map((candidate) => Math.abs(Math.log(candidate.adjustment.sizeAdjust)));
-    expect(sans).toEqual([...sans].sort((a, b) => a - b));
-    expect(
-      candidates.slice(0, sans.length).every((item) => item.font.genericFamily === 'sans-serif'),
-    ).toBe(true);
-    expect(candidates.at(-1)?.font.genericFamily).toBe('monospace');
-  });
-
-  it('reports a font without Latin glyphs', () => {
-    expect.assertions(1);
-    try {
-      rankFallbacks(font([0x410, 0x411], 600));
-    } catch (error) {
-      expect(isNoCoverage(error)).toBe(true);
-    }
-  });
-});
-
 describe('buildCss', () => {
-  it('applies manual overrides over the automatic values', () => {
-    const { candidates } = rankFallbacks(font(ascii, 520));
+  it('applies manual overrides and names a single face "Fallback"', () => {
+    const { candidates } = rankFor(font(ascii, 520), 'windows', 'en');
     const [best] = candidates;
     if (!best) throw new Error('no candidates');
     const adjustment = adjustmentOf(best.adjustment, { sizeAdjust: 1.05 });
     expect(adjustment.sizeAdjust).toBe(1.05);
     expect(adjustment.ascentOverride).toBe(best.adjustment.ascentOverride);
-    const css = buildCss('Test', best.font, adjustment);
+    const css = buildCss(
+      'Test',
+      [{ family: best.family, localNames: best.localNames, adjustment }],
+      best.category,
+    );
     expect(css.fontFaces).toContain('size-adjust: 105%');
     expect(css.fontFamily).toContain('"Test Fallback"');
+  });
+
+  it('names several faces after their fonts', () => {
+    const adjustment = {
+      sizeAdjust: 1,
+      ascentOverride: 1,
+      descentOverride: 0.2,
+      lineGapOverride: 0,
+    };
+    const css = buildCss(
+      'Test',
+      [
+        { family: 'Arial', localNames: ['Arial'], adjustment },
+        { family: 'Roboto', localNames: ['Roboto'], adjustment },
+      ],
+      'sans-serif',
+    );
+    expect(css.fontFamily).toContain('"Test Fallback Arial"');
+    expect(css.fontFamily).toContain('"Test Fallback Roboto"');
+  });
+});
+
+describe('isNoCoverage', () => {
+  it('flags a font without any glyph in the language', () => {
+    expect.assertions(1);
+    try {
+      rankFor(font([0x16a0, 0x16a1], 600), 'windows', 'en');
+    } catch (error) {
+      expect(isNoCoverage(error)).toBe(true);
+    }
   });
 });
 

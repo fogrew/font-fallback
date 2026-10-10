@@ -5,10 +5,12 @@ import { Button } from '@/common/ui';
 export function FontUpload({
   locale,
   busy,
+  compact,
   onFiles,
 }: {
   locale: Locale;
   busy: boolean;
+  compact: boolean;
   onFiles: (files: File[]) => void;
 }) {
   const t = messagesFor(locale);
@@ -51,7 +53,7 @@ export function FontUpload({
           event.currentTarget.value = '';
         }}
       />
-      <p class="ff-muted">{t.upload_local()}</p>
+      {!compact && <p class="ff-muted">{t.upload_local()}</p>}
     </section>
   );
 }

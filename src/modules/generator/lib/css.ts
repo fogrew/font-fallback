@@ -1,11 +1,18 @@
 import { generateFallbackCss } from '@/modules/export';
-import type { FitAdjustment, SystemFont } from '@/modules/fallback-fit';
+import type { FitAdjustment } from '@/modules/fallback-fit';
+import type { Category } from '@/modules/os-fonts';
 
 export interface Overrides {
   sizeAdjust: number;
   ascentOverride: number;
   descentOverride: number;
   lineGapOverride: number;
+}
+
+export interface CssFace {
+  family: string;
+  localNames: readonly string[];
+  adjustment: Overrides;
 }
 
 export function adjustmentOf(adjustment: FitAdjustment, overrides: Partial<Overrides>): Overrides {
@@ -17,10 +24,15 @@ export function adjustmentOf(adjustment: FitAdjustment, overrides: Partial<Overr
   };
 }
 
-export function buildCss(targetFamily: string, font: SystemFont, adjustment: Overrides) {
+export function buildCss(targetFamily: string, faces: readonly CssFace[], generic: Category) {
   return generateFallbackCss({
     targetFamily,
-    fallbacks: [{ family: `${targetFamily} Fallback`, localNames: font.localNames, adjustment }],
-    genericFamily: font.genericFamily,
+    fallbacks: faces.map((face) => ({
+      family:
+        faces.length === 1 ? `${targetFamily} Fallback` : `${targetFamily} Fallback ${face.family}`,
+      localNames: face.localNames,
+      adjustment: face.adjustment,
+    })),
+    genericFamily: generic,
   });
 }

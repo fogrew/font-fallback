@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Select } from '@/common/ui';
-import type { SystemFont } from '@/modules/fallback-fit';
+import type { Category } from '@/modules/os-fonts';
 import { buildCss, type Overrides } from '../lib/css';
 
 const PREVIEW_FAMILY = 'ff-preview-web';
@@ -17,7 +17,7 @@ export function Preview({
 }: {
   locale: Locale;
   bytes: ArrayBuffer;
-  fallback: SystemFont;
+  fallback: { family: string; localNames: readonly string[]; category: Category };
   adjustment: Overrides;
   defaultSample: string;
 }) {
@@ -46,7 +46,11 @@ export function Preview({
       document.fonts.delete(face);
     };
   }, [bytes]);
-  const css = buildCss(PREVIEW_FAMILY, fallback, adjustment);
+  const css = buildCss(
+    PREVIEW_FAMILY,
+    [{ family: fallback.family, localNames: fallback.localNames, adjustment }],
+    fallback.category,
+  );
   useEffect(() => {
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(css.fontFaces);
