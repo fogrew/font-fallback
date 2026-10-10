@@ -1,10 +1,19 @@
+function stripTags(text: string): string {
+  let result = text;
+  let previous: string;
+  do {
+    previous = result;
+    result = result.replace(/<[^<>]*>/g, '');
+  } while (result !== previous);
+  return result.replace(/[<>]/g, '');
+}
+
 const decode = (text: string) =>
-  text
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&quot;/g, '"')
+  stripTags(text)
     .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&amp;/g, '&')
     .trim();
 
 export interface WindowsFamilies {

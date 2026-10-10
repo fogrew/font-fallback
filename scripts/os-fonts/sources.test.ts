@@ -75,6 +75,16 @@ describe('Apple system fonts', () => {
   });
 });
 
+describe('Windows family names', () => {
+  it('strips nested tags and decodes entities exactly once', () => {
+    const html =
+      '<h2 id="fonts-included-in-feature-on-demand-fod-packages">x</h2><table><tr><td><a>Ar<b>ial</b></a></td></tr><tr><td>&lt;scr<script>ipt</td></tr><tr><td>A &amp;quot; B</td></tr></table>';
+    const { preinstalled, onDemand } = parseWindowsFontList(html);
+    expect([...preinstalled]).toEqual([]);
+    expect([...onDemand]).toEqual(['Arial', '&lt;script', 'A &quot; B']);
+  });
+});
+
 describe('other sources', () => {
   it('rejects a Windows page without the Feature On Demand heading', () => {
     expect(() => parseWindowsFontList('<table></table>')).toThrow();
