@@ -14,7 +14,7 @@ for (const locale of ['en', 'ru']) {
     await page.goto(`/${locale}/`);
     await expect(page.getByRole('contentinfo').getByRole('link')).toHaveAttribute(
       'href',
-      'https://github.com/fogrew/font-fallback',
+      'https://github.com/fogrew/fontstay.dev',
     );
   });
 

@@ -74,7 +74,7 @@ Both modes:
 - **Font catalog** (cssfontstack analog): table of system fonts × OS/versions with availability and estimated audience coverage; static page per font with metrics and specimen.
 - **Presets** (abacktools analog): curated stacks per category (sans, serif, mono, display, handwriting, system-ui, modern-font-stacks families), each openable in the generator.
 - **Guide**: how descriptors, `unicode-range` and CLS interact.
-- Footer links: Credits page, source repository ([fogrew/font-fallback](https://github.com/fogrew/font-fallback)).
+- Footer links: Credits page, source repository ([fogrew/fontstay.dev](https://github.com/fogrew/fontstay.dev)).
 
 ### 1.9 Later (backlog)
 - More OFL font sources besides Google Fonts (Fontsource, Bunny Fonts, independent foundries).

@@ -22,7 +22,7 @@ Git hooks (lefthook, installed by `pnpm install`; reinstall with `pnpm exec left
 
 ## Work tracking
 
-- All work goes through GitHub issues in `fogrew/font-fallback`. No change without an issue; reference it in the branch name and PR (`Closes #N`).
+- All work goes through GitHub issues in `fogrew/fontstay.dev`. No change without an issue; reference it in the branch name and PR (`Closes #N`).
 - Milestones map to plan phases. Labels: `type:*`, `area:*`, `priority:*`.
 - Scope changes or new findings → new issue (or update the existing one), not silent drift.
 

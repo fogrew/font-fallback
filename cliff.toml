@@ -19,7 +19,7 @@ body = """
 - {% if commit.scope %}**{{ commit.scope }}:** {% endif %}\
 {{ commit.message | split(pat="\n") | first | upper_first | trim }}\
 {% if commit.breaking %} **BREAKING**{% endif %} \
-([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/fogrew/font-fallback/commit/{{ commit.id }}))\
+([`{{ commit.id | truncate(length=7, end="") }}`](https://github.com/fogrew/fontstay.dev/commit/{{ commit.id }}))\
 {% endfor %}
 {% endfor %}
 """
@@ -27,15 +27,15 @@ footer = """
 {% for release in releases -%}
 {% if release.version -%}
 {% if release.previous.version -%}
-[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/fogrew/font-fallback/compare/{{ release.previous.version }}...{{ release.version }}
+[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/fogrew/fontstay.dev/compare/{{ release.previous.version }}...{{ release.version }}
 {% else -%}
-[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/fogrew/font-fallback/releases/tag/{{ release.version }}
+[{{ release.version | trim_start_matches(pat="v") }}]: https://github.com/fogrew/fontstay.dev/releases/tag/{{ release.version }}
 {% endif -%}
 {% else -%}
 {% if release.previous.version -%}
-[Unreleased]: https://github.com/fogrew/font-fallback/compare/{{ release.previous.version }}...HEAD
+[Unreleased]: https://github.com/fogrew/fontstay.dev/compare/{{ release.previous.version }}...HEAD
 {% else -%}
-[Unreleased]: https://github.com/fogrew/font-fallback/commits/develop
+[Unreleased]: https://github.com/fogrew/fontstay.dev/commits/develop
 {% endif -%}
 {% endif -%}
 {% endfor %}

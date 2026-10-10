@@ -1,11 +1,11 @@
 {
-  "name": "font-fallback",
+  "name": "fontstay",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "description": "Generator of metric-adjusted fallback font stacks with live preview and CLS estimation",
   "license": "MIT",
-  "repository": "github:fogrew/font-fallback",
+  "repository": "github:fogrew/fontstay.dev",
   "packageManager": "pnpm@12.4.2",
   "engines": {
     "node": ">=24.21.0"
