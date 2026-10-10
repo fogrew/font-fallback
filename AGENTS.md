@@ -32,13 +32,16 @@ Dependabot (`.github/dependabot.yml`, config only, no Actions) opens one weekly 
 
 ## Review loop
 
-Every PR goes through a loop of independent subagent reviews before merge:
+Review effort scales with risk:
 
-1. **Code review** — correctness, readability, FEOD boundaries, tests.
-2. **Security review** — untrusted input (font files, URLs, bookmarklet payloads, `postMessage`, stats JSON), XSS, CSP, dependency risks.
-3. **Requirements review** — implementation vs the issue's acceptance criteria and `docs/plan.md`.
+- **Untrusted input** (font parsing, URL or CSS import, bookmarklet payloads, `postMessage`, stats JSON, CSP and headers): independent subagent reviews, run in parallel, repeated until clean:
+  1. **Code review** — correctness, readability, FEOD boundaries, tests.
+  2. **Security review** — hostile input, XSS, CSP, dependency risks.
+  3. **Requirements review** — implementation vs the issue's acceptance criteria and `docs/plan.md`.
+- **Other code** (engine, UI, generators): one reviewer covering the three angles, one round plus a re-check of the fixes.
+- **Docs, config and chore PRs**: no agent review; pre-commit hooks and the Cloudflare build check them.
 
-Reviewers that run builds or probes use an isolated git worktree (`isolation: "worktree"`); remove it afterwards with `git worktree remove --force` (leftover worktrees under `.claude/` break Biome with nested-config errors). Fix findings, re-run the reviews, repeat until all three are clean. Unresolved or deferred findings become issues.
+Reviewers that only read code work in an already installed checkout (no `pnpm install`, no worktree). Reviewers that run builds or probes use an isolated git worktree (`isolation: "worktree"`); remove it afterwards with `git worktree remove --force` (leftover worktrees under `.claude/` break Biome with nested-config errors). Unresolved or deferred findings become issues.
 
 ## Git
 
