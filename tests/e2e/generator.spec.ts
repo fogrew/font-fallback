@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
 import { buildFont } from '../../src/modules/font-metrics/lib/forged.test-util';
+import { expect, test } from './fixtures';
 
 const fonts = new URL('../fixtures/fonts/', import.meta.url).pathname.replace(
   /^\/([A-Za-z]:)/,

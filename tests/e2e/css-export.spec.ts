@@ -1,5 +1,5 @@
-import { expect, test } from '@playwright/test';
 import { generateFallbackCss } from '../../src/modules/export';
+import { expect, test } from './fixtures';
 
 const adjustment = {
   sizeAdjust: 1.071194,

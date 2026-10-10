@@ -1,0 +1,40 @@
+# Security headers and CSP
+
+The app reads font files that users choose and builds CSS and previews from them, so the page runs under a strict Content Security Policy and a baseline set of response headers.
+
+## How it is delivered
+
+- **`public/_headers`** is served by Cloudflare Workers static assets (production and previews) and carries the headers that cannot live in a `<meta>` tag.
+- **Astro CSP** (`security.csp` in `astro.config.mjs`) emits a `<meta http-equiv="content-security-policy">` per page with SHA-256 hashes for every inline script and style it generates, plus our extra directives. A browser enforces the header policy and the meta policy together, so the header deliberately omits `script-src` and `style-src`.
+
+## Policy
+
+| Directive or header | Value | Why |
+|---|---|---|
+| `default-src` | `'self'` | Nothing is loaded from other origins. |
+| `script-src`, `style-src` | `'self'` plus Astro's hashes | No `'unsafe-inline'` and no `'unsafe-eval'`. |
+| `worker-src` | `'self' blob:` | The font parser worker is a same-origin bundled module. |
+| `font-src` | `'self' blob: data:` | Uploaded fonts are loaded from bytes in memory. |
+| `connect-src` | `'self'` | No network access to other origins. |
+| `img-src` | `'self' data: blob:` | |
+| `object-src`, `base-uri` | `'none'` | |
+| `form-action` | `'self'` | |
+| `frame-ancestors` | `'none'` (header only) | Not valid in a meta tag. The page cannot be framed. |
+| `X-Content-Type-Options` | `nosniff` | |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=()` | Only features supported by all major browsers, to avoid console noise. |
+| `Cross-Origin-Opener-Policy` | `same-origin` | |
+| `Cross-Origin-Resource-Policy` | `same-origin` | |
+| `Cache-Control` on `/_astro/*` | `public, max-age=31536000, immutable` | Build output is content-hashed. |
+
+## Rules for code
+
+- No inline `<style>` elements or `style` attributes in HTML at build time; dynamic CSS goes through `CSSStyleSheet` and `document.adoptedStyleSheets` (see `Preview.tsx`), and per-element styles through the CSSOM.
+- No `eval`, no inline event handlers, no `dangerouslySetInnerHTML`.
+- New origins, `blob:` or `data:` sources, or any `'unsafe-*'` keyword must be justified in the PR and listed in the table above.
+- The same-origin iframes planned for the CLS simulator work under `frame-ancestors 'none'` only if they are same-origin documents loaded by the app itself, since the policy forbids framing by other sites, not by the app.
+- The service worker planned in #78 must be allowed by the policy and served with `Cache-Control: no-cache`.
+
+## Testing
+
+`tests/e2e/serve.mjs` serves `dist/` with `public/_headers` applied the way Cloudflare does, and every e2e test fails if the page reports a CSP violation (`securitypolicyviolation`). `tests/e2e/security-headers.spec.ts` checks the headers and the policy's shape.

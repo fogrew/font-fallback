@@ -14,7 +14,7 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `pnpm preview --port ${port}`,
+    command: `node tests/e2e/serve.mjs ${port}`,
     url: `http://localhost:${port}`,
     reuseExistingServer: !process.env.CI,
   },

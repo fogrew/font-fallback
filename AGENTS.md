@@ -26,6 +26,10 @@ Git hooks (lefthook, installed by `pnpm install`; reinstall with `pnpm exec left
 - Milestones map to plan phases. Labels: `type:*`, `area:*`, `priority:*`.
 - Scope changes or new findings → new issue (or update the existing one), not silent drift.
 
+## Security headers
+
+The page runs under a strict CSP plus baseline headers (`public/_headers` and Astro's hashed CSP); see [`docs/security.md`](docs/security.md). Do not add inline `<style>` elements, inline event handlers or `'unsafe-*'` sources; relaxations need a justification in the PR. E2E tests run against `tests/e2e/serve.mjs`, which applies `_headers`, and fail on any CSP violation.
+
 ## Dependencies
 
 Dependabot (`.github/dependabot.yml`, config only, no Actions) opens one weekly PR with grouped minor and patch updates and individual PRs for majors, against `develop`, with `chore(deps)` commit prefixes and a one-day cooldown matching `minimumReleaseAge`. Exact pins stay exact. `fontkitten` (patched) and `@feod/analyzer` (checksum-pinned) are excluded and updated by hand. Dependency PRs go through the review loop; the security review reads the release notes and the new transitive dependencies in the lockfile.

@@ -7,6 +7,20 @@ export default defineConfig({
   srcDir: './src/app',
   trailingSlash: 'always',
   integrations: [preact()],
+  security: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "worker-src 'self' blob:",
+        "font-src 'self' blob: data:",
+        "connect-src 'self'",
+        "img-src 'self' data: blob:",
+        "object-src 'none'",
+        "base-uri 'none'",
+        "form-action 'self'",
+      ],
+    },
+  },
   vite: {
     plugins: [paraglideVitePlugin(paraglideOptions)],
   },

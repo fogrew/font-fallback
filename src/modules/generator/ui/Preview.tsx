@@ -47,13 +47,20 @@ export function Preview({
     };
   }, [bytes]);
   const css = buildCss(PREVIEW_FAMILY, fallback, adjustment);
+  useEffect(() => {
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(css.fontFaces);
+    document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
+    return () => {
+      document.adoptedStyleSheets = document.adoptedStyleSheets.filter((item) => item !== sheet);
+    };
+  }, [css.fontFaces]);
   const shared = { fontSize: `${size}px`, lineHeight: String(lineHeight) };
   const webStyle = { ...shared, fontFamily: `"${PREVIEW_FAMILY}", sans-serif` };
   const fallbackStyle = { ...shared, fontFamily: `"${PREVIEW_FAMILY} Fallback", sans-serif` };
   return (
     <section class="ff-preview" aria-labelledby="ff-preview-heading">
       <h2 id="ff-preview-heading">{t.preview_heading()}</h2>
-      <style>{css.fontFaces}</style>
       {loadFailed && (
         <p class="ff-error" role="alert">
           {t.preview_load_failed()}

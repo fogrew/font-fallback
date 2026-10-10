@@ -25,6 +25,7 @@
 
 - [Paraglide JS](https://github.com/opral/paraglide-js) by inlang — message compilation and i18n routing (MIT).
 - [Dependabot](https://docs.github.com/en/code-security/dependabot) — automated dependency update PRs (GitHub, config only).
+- [Cloudflare Workers static assets headers](https://developers.cloudflare.com/workers/static-assets/headers/) and [Astro Content Security Policy](https://docs.astro.build/en/reference/configuration-reference/#securitycsp) — `_headers` delivery and hashed CSP; [MDN CSP](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP) and [Permissions-Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy) — policy design.
 - [git-cliff](https://github.com/orhun/git-cliff) — changelog generation from Conventional Commits (MIT OR Apache-2.0).
 - [fontkitten](https://github.com/delucis/fontkitten) — local font parsing in a Web Worker (MIT).
 - [fontkitten test fonts](https://github.com/delucis/fontkitten/tree/43c1cfc596292fc59ef3670251a885239c7c625e/packages/fontkitten/test/data) — Source Sans Pro (Adobe), Fira Sans (Carrois Corporate / bBox Type) and Mada (Khaled Hosny) fixtures (SIL OFL 1.1; licenses included in `tests/fixtures/fonts`).

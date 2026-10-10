@@ -1,0 +1,87 @@
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
+import { createServer } from 'node:http';
+import { extname, join, normalize, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const root = fileURLToPath(new URL('../../dist/', import.meta.url));
+const port = Number(process.argv[2] ?? 4321);
+
+const types = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.ttf': 'font/ttf',
+  '.otf': 'font/otf',
+};
+
+function parseHeaders(source) {
+  const rules = [];
+  for (const line of source.split(/\r?\n/)) {
+    if (line.trim() === '' || line.startsWith('#')) continue;
+    if (!/^\s/.test(line)) {
+      const escaped = line.trim().replace(/[.+?^${}()|[\]\\]/g, '\\$&');
+      rules.push({ pattern: new RegExp(`^${escaped.replaceAll('*', '.*')}$`), headers: [] });
+    } else {
+      const separator = line.indexOf(':');
+      rules
+        .at(-1)
+        ?.headers.push([line.slice(0, separator).trim(), line.slice(separator + 1).trim()]);
+    }
+  }
+  return rules;
+}
+
+const headerFile = join(root, '_headers');
+const rules = existsSync(headerFile) ? parseHeaders(readFileSync(headerFile, 'utf8')) : [];
+
+function headersFor(pathname) {
+  const result = {};
+  for (const rule of rules) {
+    if (!rule.pattern.test(pathname)) continue;
+    for (const [name, value] of rule.headers) {
+      const key = name.toLowerCase();
+      result[key] = result[key] ? `${result[key]}, ${value}` : value;
+    }
+  }
+  return result;
+}
+
+function resolveFile(pathname) {
+  const target = normalize(join(root, decodeURIComponent(pathname)));
+  if (target !== root.slice(0, -1) && !target.startsWith(root)) return null;
+  if (existsSync(target) && statSync(target).isFile()) return target;
+  const index = join(target, 'index.html');
+  return existsSync(index) ? index : null;
+}
+
+createServer((request, response) => {
+  const { pathname } = new URL(request.url ?? '/', 'http://localhost');
+  const file = resolveFile(pathname);
+  const isDirectory =
+    file?.endsWith(`${sep}index.html`) &&
+    !pathname.endsWith('/') &&
+    !pathname.endsWith('index.html');
+  if (file && isDirectory) {
+    response.writeHead(308, { location: `${pathname}/` });
+    response.end();
+    return;
+  }
+  if (!file) {
+    response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' });
+    response.end('Not found');
+    return;
+  }
+  response.writeHead(200, {
+    'content-type': types[extname(file)] ?? 'application/octet-stream',
+    'cache-control': 'public, max-age=0, must-revalidate',
+    ...headersFor(pathname),
+  });
+  createReadStream(file).pipe(response);
+}).listen(port, '::');
