@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Button } from './Button';
 import { LiveRegion } from './LiveRegion';
@@ -15,6 +15,11 @@ export function CodeBlock({
   const t = messagesFor(locale);
   const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   const [pending, setPending] = useState(false);
+  useEffect(() => {
+    if (status !== 'copied') return;
+    const timer = setTimeout(() => setStatus('idle'), 4000);
+    return () => clearTimeout(timer);
+  }, [status]);
   const copy = async () => {
     setPending(true);
     setStatus('idle');
@@ -31,7 +36,7 @@ export function CodeBlock({
     <div class="ff-code">
       <div class="ff-code__header">
         <span>{label}</span>
-        <Button disabled={pending} onClick={copy}>
+        <Button disabled={pending} onClick={copy} aria-label={`${t.ui_copy_code()}: ${label}`}>
           {t.ui_copy_code()}
         </Button>
       </div>
@@ -41,10 +46,12 @@ export function CodeBlock({
           <code>{code}</code>
         </pre>
       </section>
-      {status === 'failed' && <p class="ff-error">{t.ui_copy_failed()}</p>}
-      <LiveRegion>
-        {status === 'copied' ? t.ui_copied() : status === 'failed' ? t.ui_copy_failed() : ''}
-      </LiveRegion>
+      {status === 'failed' && (
+        <p class="ff-error" role="alert">
+          {t.ui_copy_failed()}
+        </p>
+      )}
+      <LiveRegion>{status === 'copied' ? t.ui_copied() : ''}</LiveRegion>
     </div>
   );
 }

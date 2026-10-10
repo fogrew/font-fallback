@@ -4,6 +4,8 @@
   "home_heading": "Font Fallback",
   "locale_switcher_label": "Язык",
   "ui_auto": "Авто",
+  "ui_slider_suffix": "ползунок",
+  "ui_number_suffix": "числовое поле",
   "ui_skip_content": "Перейти к содержимому",
   "ui_reset_auto": "Сбросить в авто",
   "ui_copy_code": "Копировать код",

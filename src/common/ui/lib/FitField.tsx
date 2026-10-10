@@ -30,7 +30,7 @@ export function FitField({
 }: FitFieldProps) {
   const id = useId();
   const t = messagesFor(locale);
-  const current = displayedFitValue(value, autoValue);
+  const current = displayedFitValue(value, autoValue, { min, max });
   const [draft, setDraft] = useState(String(current));
   const editing = useRef(false);
   useEffect(() => {
@@ -42,7 +42,7 @@ export function FitField({
     const next = input.valueAsNumber;
     if (Number.isFinite(next)) {
       const bounded = Math.min(max, Math.max(min, next));
-      pin(bounded);
+      if (bounded !== current) pin(bounded);
       setDraft(String(bounded));
     } else setDraft(String(current));
   };
@@ -53,7 +53,7 @@ export function FitField({
       </legend>
       <div class="ff-fit__inputs">
         <label class="ff-sr-only" for={`${id}-slider`}>
-          {label} ({unit})
+          {label} ({unit}), {t.ui_slider_suffix()}
         </label>
         <input
           id={`${id}-slider`}
@@ -62,10 +62,11 @@ export function FitField({
           max={max}
           step={step}
           value={current}
+          aria-valuetext={`${current} ${unit}`}
           onInput={(event) => pin(event.currentTarget.valueAsNumber)}
         />
         <label class="ff-sr-only" for={`${id}-number`}>
-          {label} ({unit})
+          {label} ({unit}), {t.ui_number_suffix()}
         </label>
         <input
           id={`${id}-number`}

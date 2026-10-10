@@ -11,6 +11,14 @@ describe('fit value controls', () => {
     expect(displayedFitValue(value, 120)).toBe(120);
   });
 
+  it('clamps automatic values into the bounds and falls back to the minimum for nonfinite ones', () => {
+    const bounds = { min: 50, max: 150 };
+    expect(displayedFitValue({ mode: 'auto' }, 200, bounds)).toBe(150);
+    expect(displayedFitValue({ mode: 'auto' }, 10, bounds)).toBe(50);
+    expect(displayedFitValue({ mode: 'auto' }, Number.NaN, bounds)).toBe(50);
+    expect(displayedFitValue({ mode: 'auto' }, Number.POSITIVE_INFINITY, bounds)).toBe(50);
+  });
+
   it.each([NaN, Infinity, -Infinity])('rejects nonfinite manual values %s', (value) => {
     expect(() => pinFitValue(value)).toThrow('Invalid fit value');
   });

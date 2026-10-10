@@ -5,8 +5,16 @@ export function pinFitValue(value: number): FitValue {
   return { mode: 'manual', value };
 }
 
-export function displayedFitValue(value: FitValue, autoValue: number): number {
+export interface FitBounds {
+  min: number;
+  max: number;
+}
+
+export function displayedFitValue(value: FitValue, autoValue: number, bounds?: FitBounds): number {
   const result = value.mode === 'auto' ? autoValue : value.value;
-  if (!Number.isFinite(result)) throw new Error('Invalid fit value');
-  return result;
+  if (!bounds) {
+    if (!Number.isFinite(result)) throw new Error('Invalid fit value');
+    return result;
+  }
+  return Number.isFinite(result) ? Math.min(bounds.max, Math.max(bounds.min, result)) : bounds.min;
 }

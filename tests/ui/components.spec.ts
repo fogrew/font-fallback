@@ -109,6 +109,16 @@ test('number drafts support sequential typing, decimals, empty drafts and bounds
   await expect(number).toHaveValue('200');
 });
 
+test('tabbing through the number field without editing keeps automatic mode', async ({ page }) => {
+  await openFixture(page);
+  const auto = page.getByRole('checkbox', { name: 'Auto' });
+  await expect(auto).toBeChecked();
+  const number = page.getByRole('spinbutton', { name: 'Size adjust (%)' });
+  await number.focus();
+  await number.press('Tab');
+  await expect(auto).toBeChecked();
+});
+
 test('the first keyboard stop skips the header to the single main landmark', async ({ page }) => {
   await openFixture(page);
   await page.keyboard.press('Tab');
@@ -138,7 +148,7 @@ test('copy uses the clipboard and reports permission failures accessibly', async
     }),
   );
   await page.getByRole('button', { name: 'Copy code' }).click();
-  await expect(page.getByRole('status')).toHaveText(
+  await expect(page.getByRole('alert')).toHaveText(
     'Copy failed. Select and copy the code manually.',
   );
 });

@@ -4,6 +4,8 @@
   "home_heading": "Font Fallback",
   "locale_switcher_label": "Language",
   "ui_auto": "Auto",
+  "ui_slider_suffix": "slider",
+  "ui_number_suffix": "number input",
   "ui_skip_content": "Skip to content",
   "ui_reset_auto": "Reset to auto",
   "ui_copy_code": "Copy code",
