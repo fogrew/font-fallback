@@ -112,7 +112,7 @@ export function rankFor(web: FontMetrics, os: OsId, language: Language): Ranking
           localNames: font.localNames,
           category: font.category,
           adjustment: result,
-          coverage: Math.min(1, result.coverage / own.coverage),
+          coverage: own.coverage > 0 ? Math.min(1, result.coverage / own.coverage) : 0,
           latinOnly: false,
         });
       } else if (font.latinWidthEm !== null && language === 'en') {
