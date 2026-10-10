@@ -1,4 +1,4 @@
-# Font Fallback
+# fontstay.dev
 
 Generator of metric-adjusted fallback font stacks with live preview and layout-shift (CLS) estimation. Static [Astro](https://astro.build) site. Scope and roadmap: [`docs/plan.md`](docs/plan.md). Contribution rules: [`AGENTS.md`](AGENTS.md).
 

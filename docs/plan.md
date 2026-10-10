@@ -1,4 +1,4 @@
-# Font Fallback Generator — Implementation Plan
+# fontstay.dev — Implementation Plan
 
 Static Astro site that generates metric-adjusted fallback font stacks for web fonts,
 per target OS/browser audience, with live preview and live layout-shift (CLS) estimation.

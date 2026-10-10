@@ -1,5 +1,5 @@
 ---
-import { getTextDirection, type Locale, messagesFor } from '@/common/i18n';
+import { getTextDirection, type Locale, locales, localizeHref, messagesFor } from '@/common/i18n';
 import { LocaleSwitcher } from '@/modules/locale-switcher';
 import '../styles/tokens.css';
 
@@ -10,6 +10,8 @@ interface Props {
 
 const { locale, path } = Astro.props;
 const t = messagesFor(locale);
+const canonical = new URL(localizeHref(path, { locale }), Astro.site);
+const indexable = !process.env.WORKERS_CI_BRANCH || process.env.WORKERS_CI_BRANCH === 'main';
 ---
 
 <html lang={locale} dir={getTextDirection(locale)}>
@@ -17,6 +19,11 @@ const t = messagesFor(locale);
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{t.app_title()}</title>
+    <link rel="canonical" href={canonical} />
+    {locales.map((code) => (
+      <link rel="alternate" hreflang={code} href={new URL(localizeHref(path, { locale: code }), Astro.site)} />
+    ))}
+    {!indexable && <meta name="robots" content="noindex" />}
   </head>
   <body>
     <a class="ff-skip-link" href="#main-content">{t.ui_skip_content()}</a>

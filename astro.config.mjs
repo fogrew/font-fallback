@@ -4,6 +4,7 @@ import { defineConfig } from 'astro/config';
 import { paraglideOptions } from './paraglide.config.mjs';
 
 export default defineConfig({
+  site: 'https://fontstay.dev',
   srcDir: './src/app',
   trailingSlash: 'always',
   integrations: [preact()],

@@ -7,7 +7,7 @@ for (const locale of ['en', 'ru']) {
   test(`${locale}: renders with the right language`, async ({ page }) => {
     await page.goto(`/${locale}/`);
     await expect(page.locator('html')).toHaveAttribute('lang', locale);
-    await expect(page.getByRole('heading', { level: 1, name: 'Font Fallback' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'fontstay.dev' })).toBeVisible();
   });
 
   test(`${locale}: footer links to the repository`, async ({ page }) => {

@@ -1,7 +1,7 @@
 {
   "$schema": "https://inlang.com/schema/inlang-message-format",
-  "app_title": "Font Fallback",
-  "home_heading": "Font Fallback",
+  "app_title": "fontstay.dev",
+  "home_heading": "fontstay.dev",
   "locale_switcher_label": "Язык",
   "footer_source": "Исходный код на GitHub",
   "ui_auto": "Авто",
