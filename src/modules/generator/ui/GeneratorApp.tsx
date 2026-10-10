@@ -2,7 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Button, CodeBlock, FitField, type FitValue, LiveRegion, Select } from '@/common/ui';
 import { CssExportError } from '@/modules/export';
-import { createFontParser, type FontMetrics, type FontParser } from '@/modules/font-metrics';
+import type { SystemFont } from '@/modules/fallback-fit';
+import {
+  createFontParser,
+  type FontMetrics,
+  type FontParser,
+  MAX_FONT_BYTES,
+} from '@/modules/font-metrics';
 import { isNoCoverage, rankFallbacks } from '../lib/compute';
 import { adjustmentOf, buildCss, type Overrides } from '../lib/css';
 import { FontUpload } from './FontUpload';
@@ -15,6 +21,8 @@ interface LoadedFont {
   metrics: FontMetrics;
   bytes: ArrayBuffer;
 }
+
+const MAX_FONTS = 8;
 
 type Field = keyof Overrides;
 
@@ -48,6 +56,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [fonts, setFonts] = useState<LoadedFont[]>([]);
   const [selectedId, setSelectedId] = useState<number>();
   const [fallbackId, setFallbackId] = useState<string>();
+  const [kind, setKind] = useState<SystemFont['genericFamily']>('sans-serif');
   const [values, setValues] = useState(AUTO);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -55,28 +64,47 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   useEffect(() => () => parser.current?.dispose(), []);
 
   const addFiles = async (files: File[]) => {
-    if (files.length === 0) return;
+    if (files.length === 0 || busy) return;
     parser.current ??= createFontParser();
     setBusy(true);
     setError('');
     setAnnouncement(t.upload_reading());
     const added: LoadedFont[] = [];
-    for (const file of files) {
-      const buffer = await file.arrayBuffer();
-      const bytes = buffer.slice(0);
-      const result = await parser.current.parse(buffer);
-      if (result.ok) {
-        added.push({ id: nextId.current++, fileName: file.name, metrics: result.font, bytes });
-      } else {
-        setError(`${file.name}: ${errors[result.error.code] ?? t.error_invalid_font()}`);
+    const failures: string[] = [];
+    try {
+      for (const file of files) {
+        if (fonts.length + added.length >= MAX_FONTS) {
+          failures.push(`${file.name}: ${t.error_too_many()}`);
+          continue;
+        }
+        if (file.size > MAX_FONT_BYTES) {
+          failures.push(`${file.name}: ${t.error_too_large()}`);
+          continue;
+        }
+        try {
+          const buffer = await file.arrayBuffer();
+          const bytes = buffer.slice(0);
+          const result = await parser.current.parse(buffer);
+          if (result.ok) {
+            added.push({ id: nextId.current++, fileName: file.name, metrics: result.font, bytes });
+          } else {
+            failures.push(`${file.name}: ${errors[result.error.code] ?? t.error_invalid_font()}`);
+          }
+        } catch {
+          failures.push(`${file.name}: ${t.error_worker_error()}`);
+        }
       }
+    } finally {
+      setBusy(false);
     }
+    setError(failures.join(' '));
     if (added.length > 0) {
       setFonts((current) => [...current, ...added]);
       setSelectedId((current) => current ?? added[0]?.id);
-      setAnnouncement(t.upload_added());
+      setAnnouncement(`${t.upload_added()}: ${fonts.length + added.length}`);
+    } else {
+      setAnnouncement('');
     }
-    setBusy(false);
   };
 
   const selected = fonts.find((font) => font.id === selectedId) ?? fonts[0];
@@ -89,9 +117,10 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     }
   }, [selected]);
 
-  const candidate = ranking?.ok
-    ? (ranking.candidates.find((item) => item.font.id === fallbackId) ?? ranking.candidates[0])
-    : undefined;
+  const ofKind = ranking?.ok
+    ? ranking.candidates.filter((item) => item.font.genericFamily === kind)
+    : [];
+  const candidate = ofKind.find((item) => item.font.id === fallbackId) ?? ofKind[0];
 
   let output: ReturnType<typeof buildCss> | undefined;
   let adjustment: Overrides | undefined;
@@ -103,7 +132,8 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     }
     adjustment = adjustmentOf(candidate.adjustment, manual);
     try {
-      output = buildCss(selected.metrics.names.family ?? 'Custom font', candidate.font, adjustment);
+      const family = selected.metrics.names.family?.trim().slice(0, 200) || 'Custom font';
+      output = buildCss(family, candidate.font, adjustment);
     } catch (failure) {
       if (!(failure instanceof CssExportError)) throw failure;
     }
@@ -153,9 +183,22 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
         <section class="ff-generator__section" aria-labelledby="ff-fit-heading">
           <h2 id="ff-fit-heading">{t.fit_heading()}</h2>
           <Select
+            label={t.fit_type_label()}
+            value={kind}
+            options={[
+              { value: 'sans-serif', label: t.type_sans() },
+              { value: 'serif', label: t.type_serif() },
+              { value: 'monospace', label: t.type_mono() },
+            ]}
+            onChange={(value) => {
+              setKind(value as SystemFont['genericFamily']);
+              setFallbackId(undefined);
+            }}
+          />
+          <Select
             label={t.fallback_font_label()}
             value={candidate.font.id}
-            options={ranking.candidates.map((item) => ({
+            options={ofKind.map((item) => ({
               value: item.font.id,
               label: `${item.font.family} (${(item.adjustment.sizeAdjust * 100).toFixed(1)}%)`,
             }))}
@@ -169,11 +212,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
               label={t[label]()}
               unit={t.fit_percent_unit()}
               value={values[key]}
-              autoValue={
-                (key === 'sizeAdjust'
-                  ? candidate.adjustment.sizeAdjust
-                  : candidate.adjustment[key]) * 100
-              }
+              autoValue={candidate.adjustment[key] * 100}
               min={min}
               max={max}
               step={0.1}

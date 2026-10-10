@@ -50,5 +50,10 @@
   "preview_sample_label": "Текст для примера",
   "preview_sample_default": "The quick brown fox jumps over the lazy dog",
   "preview_web_label": "Веб-шрифт",
-  "preview_fallback_label": "Запасной шрифт с подгонкой"
+  "preview_fallback_label": "Запасной шрифт с подгонкой",
+  "error_too_many": "Загружено слишком много шрифтов; сначала уберите один.",
+  "fit_type_label": "Тип шрифта",
+  "type_sans": "Без засечек",
+  "type_serif": "С засечками",
+  "type_mono": "Моноширинный"
 }

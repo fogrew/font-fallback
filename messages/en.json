@@ -50,5 +50,10 @@
   "preview_sample_label": "Sample text",
   "preview_sample_default": "The quick brown fox jumps over the lazy dog",
   "preview_web_label": "Web font",
-  "preview_fallback_label": "Adjusted fallback"
+  "preview_fallback_label": "Adjusted fallback",
+  "error_too_many": "Too many fonts are loaded; remove one first.",
+  "fit_type_label": "Font type",
+  "type_sans": "Sans-serif",
+  "type_serif": "Serif",
+  "type_mono": "Monospace"
 }

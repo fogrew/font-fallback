@@ -20,14 +20,17 @@ export function FontUpload({
       data-over={over}
       aria-labelledby="ff-upload-heading"
       onDragOver={(event) => {
+        if (!event.dataTransfer?.types.includes('Files')) return;
         event.preventDefault();
         setOver(true);
       }}
-      onDragLeave={() => setOver(false)}
+      onDragLeave={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOver(false);
+      }}
       onDrop={(event) => {
         event.preventDefault();
         setOver(false);
-        onFiles([...(event.dataTransfer?.files ?? [])]);
+        if (!busy) onFiles([...(event.dataTransfer?.files ?? [])]);
       }}
     >
       <h2 id="ff-upload-heading">{t.upload_heading()}</h2>

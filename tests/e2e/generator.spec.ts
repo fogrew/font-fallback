@@ -21,7 +21,7 @@ test('uploading a font produces ranked fallbacks, editable values and CSS', asyn
   await expect(code).not.toContainText('font-family: font-family');
 
   const before = await code.textContent();
-  await fallback.selectOption({ index: 3 });
+  await fallback.selectOption({ index: 2 });
   await expect(code).not.toHaveText(before ?? '');
 
   const size = page.getByRole('spinbutton', { name: /Size adjust/ });
@@ -32,6 +32,15 @@ test('uploading a font produces ranked fallbacks, editable values and CSS', asyn
 
   await fallback.selectOption({ index: 0 });
   await expect(code).toContainText('size-adjust: 110%');
+});
+
+test('serif and monospace fallbacks are available by font type', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"]').setInputFiles(sourceSans);
+  await page.getByLabel('Font type').selectOption('serif');
+  await expect(page.getByLabel('Fallback font')).toContainText('Times New Roman');
+  await expect(page.getByRole('region', { name: 'Generated CSS' })).toContainText('serif;');
 });
 
 test('an invalid file is rejected with an announced error', async ({ page }) => {

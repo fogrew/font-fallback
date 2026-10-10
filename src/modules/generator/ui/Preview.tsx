@@ -19,12 +19,16 @@ export function Preview({
   const t = messagesFor(locale);
   const [sample, setSample] = useState(t.preview_sample_default());
   useEffect(() => {
+    let cancelled = false;
     const face = new FontFace(PREVIEW_FAMILY, bytes.slice(0));
     face
       .load()
-      .then(() => document.fonts.add(face))
+      .then(() => {
+        if (!cancelled) document.fonts.add(face);
+      })
       .catch(() => undefined);
     return () => {
+      cancelled = true;
       document.fonts.delete(face);
     };
   }, [bytes]);
