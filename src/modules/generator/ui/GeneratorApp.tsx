@@ -73,7 +73,8 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [activeOs, setActiveOs] = useState<OsId>();
   const [picks, setPicks] = useState<Partial<Record<OsId, string>>>({});
   const [values, setValues] = useState<Record<string, Values>>({});
-  const [order, setOrder] = useState<string[]>();
+  const [savedOrder, setSavedOrder] = useState<{ key: string; value: string[] }>();
+  const [planNote, setPlanNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [announcement, setAnnouncement] = useState('');
@@ -166,10 +167,11 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     ...Object.values(rankings.result).map((ranking) => ranking?.coverage ?? 1),
   );
 
+  const valueKey = (id: string) => `${selected?.id ?? 0}:${id}`;
   const manualOf = (id: string): Partial<Overrides> => {
     const manual: Partial<Overrides> = {};
     for (const { key } of FIELDS) {
-      const value = values[id]?.[key];
+      const value = values[valueKey(id)]?.[key];
       if (value?.mode === 'manual') manual[key] = value.value / 100;
     }
     return manual;
@@ -179,11 +181,19 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     const pick = pickFor(os);
     return pick && shares ? [{ os, share: shares[os], faceId: pick.id, candidate: pick }] : [];
   });
+  const orderKey = JSON.stringify([
+    selected?.id,
+    language,
+    kind,
+    chosen.map((item) => [item.os, item.faceId, item.share]),
+  ]);
+  const order = savedOrder?.key === orderKey ? savedOrder.value : undefined;
   const plan = chosen.length > 0 ? planStack(chosen, order) : undefined;
+  const previewPick = currentPick ?? chosen[0]?.candidate;
 
   let output: ReturnType<typeof buildCss> | undefined;
   let adjustment: Overrides | undefined;
-  if (selected && plan && currentPick) {
+  if (selected && plan && previewPick) {
     const faces = plan.order.flatMap((id) => {
       const candidate = chosen.find((item) => item.faceId === id)?.candidate;
       return candidate
@@ -196,7 +206,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
           ]
         : [];
     });
-    adjustment = adjustmentOf(currentPick.adjustment, manualOf(currentPick.id));
+    adjustment = adjustmentOf(previewPick.adjustment, manualOf(previewPick.id));
     try {
       const family = selected.metrics.names.family?.trim().slice(0, 200) || 'Custom font';
       output = buildCss(family, faces, kind);
@@ -210,8 +220,20 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
   const familyOf = (id: string) =>
     chosen.find((item) => item.faceId === id)?.candidate.family ?? id;
-  const currentValues = currentPick ? (values[currentPick.id] ?? AUTO) : AUTO;
+  const currentValues = currentPick ? (values[valueKey(currentPick.id)] ?? AUTO) : AUTO;
   const shadowed = plan?.resolution.platforms.filter((item) => item.status === 'shadowed') ?? [];
+  const planIssue =
+    plan?.resolution.blockedBy === 'cycle'
+      ? t.plan_blocked()
+      : shadowed
+          .map((item) =>
+            t.plan_shadowed({
+              system: systemName(item.platform as OsId),
+              winner: familyOf(item.winner ?? ''),
+              font: familyOf(item.preferredFace),
+            }),
+          )
+          .join(' ');
   const optionLabel = (item: Candidate) =>
     `${item.family} (${(item.adjustment.sizeAdjust * 100).toFixed(1)}%)${
       item.latinOnly ? ` · ${t.fit_font_latin_only()}` : ''
@@ -227,6 +249,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
           </p>
         )}
         <LiveRegion>{announcement}</LiveRegion>
+        <LiveRegion>{planIssue || planNote}</LiveRegion>
         {fonts.length > 0 && (
           <section
             class="ff-generator__section ff-generator__section--plain"
@@ -254,6 +277,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                     onClick={() => {
                       setFonts((list) => list.filter((item) => item.id !== font.id));
                       setSelectedId((id) => (id === font.id ? undefined : id));
+                      setValues({});
                     }}
                     aria-label={`${t.upload_remove()}: ${font.fileName}`}
                   >
@@ -290,7 +314,10 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                   { value: 'en', label: t.language_en() },
                   { value: 'ru', label: t.language_ru() },
                 ]}
-                onChange={(value) => setLanguage(value as Language)}
+                onChange={(value) => {
+                  setLanguage(value as Language);
+                  setValues({});
+                }}
               />
               <Select
                 label={t.fit_type_label()}
@@ -303,7 +330,6 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 onChange={(value) => {
                   setKind(value as Category);
                   setPicks({});
-                  setOrder(undefined);
                 }}
               />
               {currentPick && (
@@ -316,7 +342,6 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                   }))}
                   onChange={(value) => {
                     setPicks((all) => ({ ...all, [current]: value }));
-                    setOrder(undefined);
                   }}
                 />
               )}
@@ -343,7 +368,10 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                     onChange={(next) =>
                       setValues((all) => ({
                         ...all,
-                        [currentPick.id]: { ...(all[currentPick.id] ?? AUTO), [key]: next },
+                        [valueKey(currentPick.id)]: {
+                          ...(all[valueKey(currentPick.id)] ?? AUTO),
+                          [key]: next,
+                        },
                       }))
                     }
                   />
@@ -357,7 +385,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
         <AudienceEditor locale={locale} onShares={setShares} active={fonts.length > 0} />
       </div>
       <div class="ff-generator__results">
-        {output && selected && currentPick && adjustment ? (
+        {output && selected && previewPick && adjustment ? (
           <>
             {coverage < LOW_COVERAGE && (
               <p class="ff-error" role="status">
@@ -369,12 +397,14 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
               defaultSample={sampleText(selected.metrics, t.preview_sample_default())}
               locale={locale}
               bytes={selected.bytes}
-              fallback={currentPick}
+              fallback={previewPick}
               adjustment={adjustment}
             />
             {plan && (
               <section class="ff-generator__section" aria-labelledby="ff-plan-heading">
-                <h2 id="ff-plan-heading">{t.plan_heading()}</h2>
+                <h2 id="ff-plan-heading" tabIndex={-1}>
+                  {t.plan_heading()}
+                </h2>
                 <ul>
                   {chosen.map((item) => (
                     <li key={item.os}>
@@ -389,7 +419,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                   ))}
                 </ul>
                 {shadowed.map((item) => (
-                  <p key={item.platform} class="ff-error" role="status">
+                  <p key={item.platform} class="ff-error">
                     {t.plan_shadowed({
                       system: systemName(item.platform as OsId),
                       winner: familyOf(item.winner ?? ''),
@@ -398,14 +428,19 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                   </p>
                 ))}
                 {plan.resolution.suggestion && (
-                  <Button onClick={() => setOrder(plan.resolution.suggestion?.order)}>
+                  <Button
+                    onClick={() => {
+                      const next = plan.resolution.suggestion?.order;
+                      if (next) setSavedOrder({ key: orderKey, value: next });
+                      setPlanNote(t.plan_fixed());
+                      document.getElementById('ff-plan-heading')?.focus();
+                    }}
+                  >
                     {t.plan_fix()}
                   </Button>
                 )}
                 {plan.resolution.blockedBy === 'cycle' && (
-                  <p class="ff-error" role="status">
-                    {t.plan_blocked()}
-                  </p>
+                  <p class="ff-error">{t.plan_blocked()}</p>
                 )}
                 {uncovered.length > 0 && shares && (
                   <p class="ff-muted">

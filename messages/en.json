@@ -133,5 +133,6 @@
   "plan_blocked": "Some systems need opposite font orders. Pick different fonts for them.",
   "plan_uncovered": "No font data yet for {systems} ({share}% of the audience).",
   "fit_font_latin_only": "Latin only",
-  "fit_font_partial": "This font covers {percent}% of the glyphs in your font."
+  "fit_font_partial": "This font covers {percent}% of the glyphs in your font.",
+  "plan_fixed": "Fallback order updated."
 }
