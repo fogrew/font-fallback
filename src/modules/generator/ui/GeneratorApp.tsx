@@ -9,7 +9,7 @@ import {
   type FontParser,
   MAX_FONT_BYTES,
 } from '@/modules/font-metrics';
-import { isNoCoverage, rankFallbacks } from '../lib/compute';
+import { isNoCoverage, LOW_COVERAGE, rankFallbacks, sampleText } from '../lib/compute';
 import { adjustmentOf, buildCss, type Overrides } from '../lib/css';
 import { FontUpload } from './FontUpload';
 import { Preview } from './Preview';
@@ -234,7 +234,14 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
       <div class="ff-generator__results">
         {output && selected && candidate && adjustment ? (
           <>
+            {ranking?.ok && ranking.coverage < LOW_COVERAGE && (
+              <p class="ff-error" role="status">
+                {t.fit_low_coverage()} {Math.round(ranking.coverage * 100)}%
+              </p>
+            )}
             <Preview
+              key={selected.id}
+              defaultSample={sampleText(selected.metrics, t.preview_sample_default())}
               locale={locale}
               bytes={selected.bytes}
               fallback={candidate.font}

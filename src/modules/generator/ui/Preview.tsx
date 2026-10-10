@@ -13,15 +13,18 @@ export function Preview({
   bytes,
   fallback,
   adjustment,
+  defaultSample,
 }: {
   locale: Locale;
   bytes: ArrayBuffer;
   fallback: SystemFont;
   adjustment: Overrides;
+  defaultSample: string;
 }) {
   const t = messagesFor(locale);
-  const [sample, setSample] = useState(t.preview_sample_default());
-  const [mode, setMode] = useState<Mode>('side');
+  const [sample, setSample] = useState(defaultSample);
+  const [loadFailed, setLoadFailed] = useState(false);
+  const [mode, setMode] = useState<Mode>('overlay');
   const [size, setSize] = useState(28);
   const [lineHeight, setLineHeight] = useState(1.4);
   useEffect(() => {
@@ -30,9 +33,14 @@ export function Preview({
     face
       .load()
       .then(() => {
-        if (!cancelled) document.fonts.add(face);
+        if (!cancelled) {
+          document.fonts.add(face);
+          setLoadFailed(false);
+        }
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!cancelled) setLoadFailed(true);
+      });
     return () => {
       cancelled = true;
       document.fonts.delete(face);
@@ -46,6 +54,11 @@ export function Preview({
     <section class="ff-preview" aria-labelledby="ff-preview-heading">
       <h2 id="ff-preview-heading">{t.preview_heading()}</h2>
       <style>{css.fontFaces}</style>
+      {loadFailed && (
+        <p class="ff-error" role="alert">
+          {t.preview_load_failed()}
+        </p>
+      )}
       <div class="ff-preview__controls">
         <Select
           label={t.preview_mode_label()}

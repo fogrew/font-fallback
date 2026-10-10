@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { FontMetrics } from '@/modules/font-metrics';
-import { isNoCoverage, rankFallbacks } from './compute';
+import { isNoCoverage, rankFallbacks, sampleText } from './compute';
 import { adjustmentOf, buildCss } from './css';
 
 function font(codePoints: number[], advance: number): FontMetrics {
@@ -57,5 +57,21 @@ describe('buildCss', () => {
     const css = buildCss('Test', best.font, adjustment);
     expect(css.fontFaces).toContain('size-adjust: 105%');
     expect(css.fontFamily).toContain('"Test Fallback"');
+  });
+});
+
+describe('sampleText', () => {
+  it('keeps the preferred text when the font covers it', () => {
+    expect(sampleText(font(ascii, 500), 'The quick brown fox')).toBe('The quick brown fox');
+  });
+
+  it('builds a sample from the font own glyphs when the preferred text is mostly missing', () => {
+    const runes = Array.from({ length: 20 }, (_, index) => 0x16a0 + index);
+    const sample = sampleText(font([0x20, ...runes], 500), 'The quick brown fox');
+    expect(sample).not.toContain('quick');
+    expect(
+      [...sample.replaceAll(' ', '')].every((char) => runes.includes(char.codePointAt(0) ?? 0)),
+    ).toBe(true);
+    expect(sample.split(' ').length).toBeGreaterThan(1);
   });
 });

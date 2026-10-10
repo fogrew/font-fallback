@@ -62,5 +62,7 @@
   "preview_size_label": "Text size",
   "preview_line_height_label": "Line height",
   "overlay_legend": "Overlay: filled text is the web font, outlined dotted text is the adjusted fallback.",
-  "results_empty": "Load a font to see the fallback fit, the CSS and the preview here."
+  "results_empty": "Load a font to see the fallback fit, the CSS and the preview here.",
+  "preview_load_failed": "The browser could not load this font file, so the preview cannot show it. The generated CSS still applies to the font on your site.",
+  "fit_low_coverage": "This font has glyphs for only part of the Latin sample letters, so the fit is unreliable. Covered share:"
 }

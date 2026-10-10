@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import { buildFont } from '../../src/modules/font-metrics/lib/forged.test-util';
 
 const fonts = new URL('../fixtures/fonts/', import.meta.url).pathname.replace(
   /^\/([A-Za-z]:)/,
@@ -101,6 +102,10 @@ test('preview modes switch between side by side, overlay, web font and fallback'
   await page.locator('input[type="file"]').setInputFiles(sourceSans);
   const mode = page.getByLabel('View', { exact: true });
   const preview = page.getByRole('region', { name: 'Preview' });
+  await expect(mode).toHaveValue('overlay');
+  await expect(preview.getByRole('figure')).toHaveCount(1);
+
+  await mode.selectOption('side');
   await expect(preview.getByRole('figure')).toHaveCount(2);
 
   await mode.selectOption('overlay');
@@ -142,4 +147,29 @@ test('a tall preview keeps the CSS block reachable', async ({ page }) => {
   await expect(code).toBeInViewport();
   const box = await code.boundingBox();
   expect(box?.height).toBeGreaterThan(40);
+});
+
+test('a font with few Latin glyphs warns about coverage and previews its own glyphs', async ({
+  page,
+}) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  const font = buildFont(
+    [
+      [0x61, 0x61, 1],
+      [0x65, 0x65, 2],
+      [0x74, 0x74, 3],
+      [0x16a0, 0x16b3, 4],
+    ],
+    30,
+  );
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'runes.ttf',
+    mimeType: 'font/ttf',
+    buffer: Buffer.from(font),
+  });
+  await expect(page.getByRole('status').filter({ hasText: 'Covered share' })).toBeVisible();
+  const sample = page.getByLabel('Sample text');
+  await expect(sample).not.toHaveValue(/quick/);
+  await expect(sample).toHaveValue(/[ᚠ-ᚳ]/);
 });
