@@ -206,22 +206,25 @@ Each phase ends deployable with a green PR check.
 
 **Phase 5 — `unicode-range`**
 - cmap extraction, coverage-limited ranges, per-script fallback chains with per-script fit.
+- Unicode map and glyph coverage per Unicode block, with counts of covered code points (#100).
 
 **Phase 6 — Data & catalog**
 - OS availability dataset + schema + sources, metrics extraction script, catalog pages, coverage estimates.
 
 **Phase 7 — More inputs**
 - Google Fonts picker, site import (bookmarklet, CORS attempt, paste CSS).
+- Font collections (`.ttc`, `.otc`): list the members, let the user pick one (#99).
 - Preview of text the font cannot render: substitute missing glyphs explicitly and offer per-glyph fallback fonts (#84).
 
 **Phase 8 — Presets, exports, sharing**
 - Presets page, all export formats, impact report, share links, persistence.
 
 **Phase 9 — Polish**
-- Full a11y audit, performance (lazy chunks, worker), SEO/meta/OG, guide page, Credits page, README.
+- Full a11y audit, performance (lazy chunks, worker), SEO/meta/OG, guide page, Credits page, README. The guide also covers `@font-face` syntax, descriptor and format support, font licenses and specification links (#102).
 - Spike: Playwright in the Cloudflare build container (gVisor, Ubuntu 22.04, no root for `apt` deps), to decide whether e2e can run in the build (#7).
 
 **Backlog**
+- Font inspector in the style of everythingfonts.com: colour and background previews (including an image), a size waterfall, a glyph viewer with bounding boxes and line metrics, name-table attributes (#101).
 - Offline use and a service-worker update flow: an "Update" toast with a changelog link while the app is open, the new version downloaded in the background, and a toast after an automatic update linking to the combined changelog of all applied versions (#78).
 
 ## 6. Risks

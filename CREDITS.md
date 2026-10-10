@@ -5,6 +5,7 @@
 - [Fallback Font Generator](https://screenspan.net/fallback) by Brian Louis Ramirez — live preview of adjusted fallback fonts.
 - [Font Fallback Stack Generator](https://abacktools.com/tools/design/font-tools/font-fallback-stack-generator) by Aback Tools — curated stack presets.
 - [CSS Font Stack](https://cssfontstack.com/) — font availability per operating system.
+- [Everything Fonts](https://everythingfonts.com/) — font inspector ideas: `@font-face` syntax and browser support, licenses and specifications, colour and background previews, waterfall, glyph viewer, Unicode map and glyph coverage.
 
 ## Data
 
