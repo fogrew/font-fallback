@@ -118,5 +118,6 @@
   "audience_os_chromeos": "ChromeOS",
   "audience_os_android": "Android",
   "audience_os_ios": "iOS and iPadOS",
-  "audience_os_other": "Other or unknown"
+  "audience_os_other": "Other or unknown",
+  "audience_os_split_defaults": "Showing estimates with the default split."
 }

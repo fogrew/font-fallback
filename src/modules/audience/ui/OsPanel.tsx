@@ -2,13 +2,14 @@ import { useEffect, useId, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Button } from '@/common/ui';
 import {
+  computeManualShares,
   computeOsShares,
   DEFAULT_DESKTOP_SPLIT,
   DESKTOP_OS_IDS,
   type DesktopOs,
   type DesktopSplit,
-  emptyShares,
   isValidSplit,
+  MAX_MANUAL_WEIGHT,
   OS_IDS,
   type Os,
   type OsShares,
@@ -35,6 +36,7 @@ export function OsPanel({
 }) {
   const t = messagesFor(locale);
   const groupId = useId();
+  const splitMessageId = useId();
   const [mode, setMode] = useState<Mode>('browsers');
   const [splitText, setSplitText] = useState<Record<DesktopOs, string>>(() => ({
     windows: String(DEFAULT_DESKTOP_SPLIT.windows),
@@ -53,13 +55,9 @@ export function OsPanel({
   if (mode === 'browsers') {
     shares = computeOsShares(entries ?? [], splitOk ? split : DEFAULT_DESKTOP_SPLIT);
   } else {
-    shares = emptyShares();
-    const weights = MANUAL_IDS.map((id) => Math.max(0, parseNumber(manualText[id] ?? '')) || 0);
-    const sum = weights.reduce((acc, value) => acc + value, 0);
-    if (sum > 0) {
-      for (const [index, id] of MANUAL_IDS.entries())
-        shares[id] = ((weights[index] ?? 0) / sum) * 100;
-    }
+    shares = computeManualShares(
+      Object.fromEntries(MANUAL_IDS.map((id) => [id, parseNumber(manualText[id] ?? '')])),
+    );
   }
   const manualEmpty = mode === 'manual' && OS_IDS.every((id) => shares[id] === 0);
 
@@ -104,6 +102,7 @@ export function OsPanel({
                 step={0.01}
                 value={splitText[id]}
                 aria-invalid={!splitOk}
+                aria-describedby={splitMessageId}
                 onInput={(event) => {
                   const text = event.currentTarget.value;
                   setSplitText((current) => ({ ...current, [id]: text }));
@@ -111,9 +110,11 @@ export function OsPanel({
               />
             </label>
           ))}
-          <p class={splitOk ? 'ff-muted' : 'ff-error'} role="status">
+          <p class="ff-muted">
             {t.audience_os_split_total({ total: number.format(splitTotal(split)) })}
-            {!splitOk && ` ${t.audience_os_split_invalid()}`}
+          </p>
+          <p id={splitMessageId} class="ff-error" role="status">
+            {!splitOk && t.audience_os_split_invalid()}
           </p>
           <p class="ff-muted">{t.audience_os_split_source()}</p>
           <Button
@@ -140,7 +141,8 @@ export function OsPanel({
                 type="number"
                 inputMode="decimal"
                 min={0}
-                step={1}
+                max={MAX_MANUAL_WEIGHT}
+                step="any"
                 value={manualText[id] ?? ''}
                 onInput={(event) => {
                   const text = event.currentTarget.value;
@@ -149,14 +151,13 @@ export function OsPanel({
               />
             </label>
           ))}
-          {manualEmpty && (
-            <p class="ff-error" role="status">
-              {t.audience_os_manual_empty()}
-            </p>
-          )}
+          <p class="ff-error" role="status">
+            {manualEmpty && t.audience_os_manual_empty()}
+          </p>
         </fieldset>
       )}
 
+      {mode === 'browsers' && !splitOk && <p class="ff-muted">{t.audience_os_split_defaults()}</p>}
       <ul class="ff-audience__list" aria-label={t.audience_os_shares_label()}>
         {OS_IDS.filter((id) => shares[id] > 0).map((id) => (
           <li key={id}>

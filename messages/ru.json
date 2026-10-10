@@ -118,5 +118,6 @@
   "audience_os_chromeos": "ChromeOS",
   "audience_os_android": "Android",
   "audience_os_ios": "iOS и iPadOS",
-  "audience_os_other": "Другие или неизвестные"
+  "audience_os_other": "Другие или неизвестные",
+  "audience_os_split_defaults": "Оценки показаны для разбивки по умолчанию."
 }
