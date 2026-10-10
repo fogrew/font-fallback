@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  appleHasFamily,
+  appleStatus,
   parseAndroidFontFiles,
   parseAppleSystemFonts,
   parseOsFontListCsv,
@@ -16,6 +16,7 @@ describe('parseWindowsFontList', () => {
       <tr><td></td><td>Arial Bold</td></tr>
       <tr><td><a>Segoe UI</a></td><td>Segoe UI</td></tr>
     </tbody></table>
+    <h2 id="fonts-included-in-feature-on-demand-fod-packages">Fonts included in Feature On Demand</h2>
     <table><tbody>
       <tr><td><a>Noto Sans Arabic</a></td><td>x</td></tr>
     </tbody></table>`;
@@ -28,35 +29,63 @@ describe('parseWindowsFontList', () => {
 });
 
 describe('Apple system fonts', () => {
-  const html = `
-    <li class="font-item"><span class="filter-font-name">Helvetica</span>
-      <span class="filter-type">iOS</span><span class="filter-type">macOS</span></li>
-    <li class="font-item"><span class="filter-font-name">Helvetica Neue Bold</span>
-      <span class="filter-type">macOS</span></li>
-    <li class="font-item"><span class="filter-font-name">Academy Engraved LET Plain:1.0</span>
-      <span class="filter-type">iOS</span></li>`;
+  const item = (name: string, kinds: [string, string][]) =>
+    `<li class="font-item"><span class="filter-font-name">${name}</span>${kinds
+      .map(
+        ([kind, platform]) =>
+          `<span class="filter-type">${platform} <span class="hidden">${kind} ${platform}</span></span>`,
+      )
+      .join('')}</li>`;
+  const html = [
+    item('Helvetica', [
+      ['system font', 'iOS'],
+      ['system font', 'macOS'],
+    ]),
+    item('Helvetica Neue Bold', [['system font', 'macOS']]),
+    item('Tahoma', [
+      ['downloadable', 'iOS'],
+      ['system font', 'macOS'],
+    ]),
+    item('Arial Black', [['system font', 'macOS']]),
+    item('Academy Engraved LET Plain:1.0', [['document support', 'iOS']]),
+  ].join('');
 
-  it('parses names and platforms', () => {
+  it('parses names and the kind per platform', () => {
     const faces = parseAppleSystemFonts(html);
     expect(faces.map((face) => face.name)).toEqual([
       'Helvetica',
       'Helvetica Neue Bold',
+      'Tahoma',
+      'Arial Black',
       'Academy Engraved LET Plain',
     ]);
-    expect(faces[0]?.platforms).toEqual(['iOS', 'macOS']);
+    expect(faces[2]?.platforms).toEqual({ iOS: 'downloadable', macOS: 'system' });
   });
 
-  it('matches families by style suffix only', () => {
+  it('reports preinstalled, on-demand and missing families', () => {
     const faces = parseAppleSystemFonts(html);
-    expect(appleHasFamily(faces, 'Helvetica', 'macOS')).toBe(true);
-    expect(appleHasFamily(faces, 'Helvetica', 'iOS')).toBe(true);
-    expect(appleHasFamily(faces, 'Helvetica Neue', 'macOS')).toBe(true);
-    expect(appleHasFamily(faces, 'Helvetica Neue', 'iOS')).toBe(false);
-    expect(appleHasFamily(faces, 'Helvet', 'macOS')).toBe(false);
+    expect(appleStatus(faces, 'Helvetica', 'iOS')).toBe('preinstalled');
+    expect(appleStatus(faces, 'Tahoma', 'iOS')).toBe('on-demand');
+    expect(appleStatus(faces, 'Tahoma', 'macOS')).toBe('preinstalled');
+    expect(appleStatus(faces, 'Helvetica Neue', 'macOS')).toBe('preinstalled');
+    expect(appleStatus(faces, 'Helvetica Neue', 'iOS')).toBeNull();
+    expect(appleStatus(faces, 'Arial', 'macOS')).toBeNull();
+    expect(appleStatus(faces, 'Academy Engraved LET', 'iOS')).toBeNull();
+    expect(appleStatus(faces, 'Helvet', 'macOS')).toBeNull();
   });
 });
 
 describe('other sources', () => {
+  it('rejects a Windows page without the Feature On Demand heading', () => {
+    expect(() => parseWindowsFontList('<table></table>')).toThrow();
+  });
+
+  it('reads quoted families in an os-font-list CSV', () => {
+    expect([...parseOsFontListCsv('Family,Name,Filename\n"A, B","A, B",x.ttf\n')]).toEqual([
+      'A, B',
+    ]);
+  });
+
   it('reads the family column of an os-font-list CSV', () => {
     expect([
       ...parseOsFontListCsv(

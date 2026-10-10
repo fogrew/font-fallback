@@ -26,6 +26,7 @@ describe('bundled dataset', () => {
     expect(osAvailability(byId('segoe-ui'), 'windows', osFontsDataset).level).toBe('preinstalled');
     expect(osAvailability(byId('segoe-ui'), 'macos', osFontsDataset).level).toBe('unknown');
     expect(osAvailability(byId('helvetica'), 'ios', osFontsDataset).level).toBe('preinstalled');
+    expect(osAvailability(byId('tahoma'), 'ios', osFontsDataset).level).toBe('on-demand');
     expect(osAvailability(byId('roboto'), 'android', osFontsDataset).level).toBe('preinstalled');
     expect(osAvailability(byId('liberation-sans'), 'linux', osFontsDataset).level).toBe(
       'preinstalled',

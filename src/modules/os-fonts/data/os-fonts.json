@@ -124,7 +124,7 @@
         {
           "os": "ios",
           "versions": ["current"],
-          "status": "preinstalled",
+          "status": "on-demand",
           "source": "https://developer.apple.com/fonts/system-fonts/"
         },
         {
@@ -518,7 +518,7 @@
         {
           "os": "ios",
           "versions": ["current"],
-          "status": "preinstalled",
+          "status": "on-demand",
           "source": "https://developer.apple.com/fonts/system-fonts/"
         },
         {

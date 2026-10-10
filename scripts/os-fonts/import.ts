@@ -16,7 +16,7 @@ import {
   WINDOWS_LISTS,
 } from './families.ts';
 import {
-  appleHasFamily,
+  appleStatus,
   parseAndroidFontFiles,
   parseAppleSystemFonts,
   parseOsFontListCsv,
@@ -27,6 +27,10 @@ import {
 const out = fileURLToPath(
   new URL('../../src/modules/os-fonts/data/os-fonts.json', import.meta.url),
 );
+
+function expectAtLeast(what: string, count: number, minimum: number) {
+  if (count < minimum) throw new Error(`${what}: expected at least ${minimum}, got ${count}`);
+}
 
 async function fetchText(url: string): Promise<string> {
   const response = await fetch(url, { headers: { 'user-agent': 'fontstay-os-fonts-import/1.0' } });
@@ -46,6 +50,7 @@ const add = (id: string, hit: Hit) => hits.set(id, [...(hits.get(id) ?? []), hit
 
 for (const [version, url] of WINDOWS_LISTS) {
   const lists = parseWindowsFontList(await fetchText(url));
+  expectAtLeast(`Windows ${version} preinstalled families`, lists.preinstalled.size, 40);
   for (const spec of FAMILIES) {
     if (!spec.windows) continue;
     if (lists.preinstalled.has(spec.windows)) {
@@ -57,15 +62,15 @@ for (const [version, url] of WINDOWS_LISTS) {
 }
 
 const apple = parseAppleSystemFonts(await fetchText(APPLE_SOURCE));
+expectAtLeast('Apple faces', apple.length, 1000);
 for (const spec of FAMILIES) {
   if (!spec.apple) continue;
   for (const [platform, os] of [
     ['macOS', 'macos'],
     ['iOS', 'ios'],
   ] as const) {
-    if (appleHasFamily(apple, spec.apple, platform)) {
-      add(spec.id, { os, version: 'current', status: 'preinstalled', source: APPLE_SOURCE });
-    }
+    const status = appleStatus(apple, spec.apple, platform);
+    if (status) add(spec.id, { os, version: 'current', status, source: APPLE_SOURCE });
   }
 }
 
@@ -84,6 +89,7 @@ for (const [version, tag] of ANDROID_TAGS) {
   const url = `https://android.googlesource.com/platform/frameworks/base/+/refs/tags/${tag}/data/fonts/fonts.xml`;
   const encoded = await fetchText(`${url}?format=TEXT`);
   const files = [...parseAndroidFontFiles(Buffer.from(encoded, 'base64').toString('utf8'))];
+  expectAtLeast(`Android ${version} font files`, files.length, 100);
   for (const spec of FAMILIES) {
     if (spec.androidFiles && files.some((file) => spec.androidFiles?.test(file))) {
       add(spec.id, { os: 'android', version, status: 'preinstalled', source: url });
@@ -93,6 +99,7 @@ for (const [version, tag] of ANDROID_TAGS) {
 
 for (const [version, url] of UBUNTU_MANIFESTS) {
   const packages = parseUbuntuManifest(await fetchText(url));
+  expectAtLeast(`${version} packages`, packages.size, 500);
   for (const spec of FAMILIES) {
     if (spec.linuxPackages?.some((name) => packages.has(name))) {
       add(spec.id, { os: 'linux', version, status: 'preinstalled', source: url });
@@ -144,6 +151,10 @@ const dataset: OsFontsDataset = {
   fonts,
 };
 
+const missing = FAMILIES.filter((spec) => !hits.has(spec.id));
+if (missing.length > 0) {
+  throw new Error(`No source evidence for: ${missing.map((spec) => spec.family).join(', ')}`);
+}
 writeFileSync(out, `${JSON.stringify(dataset, null, 2)}\n`);
 console.log(`${fonts.length} of ${FAMILIES.length} families written`);
 for (const spec of FAMILIES)

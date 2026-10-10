@@ -27,7 +27,11 @@ export function validateDataset(data: unknown): string[] {
   const errors: string[] = [];
   if (!isRecord(data)) return ['dataset must be an object'];
   if (data.schema !== 1) errors.push('schema must be 1');
-  if (typeof data.generated !== 'string' || !DATE.test(data.generated)) {
+  if (
+    typeof data.generated !== 'string' ||
+    !DATE.test(data.generated) ||
+    Number.isNaN(Date.parse(data.generated))
+  ) {
     errors.push('generated must be a YYYY-MM-DD date');
   }
 
@@ -58,6 +62,7 @@ export function validateDataset(data: unknown): string[] {
   if (!Array.isArray(data.fonts)) return [...errors, 'fonts must be an array'];
   if (data.fonts.length > MAX_FONTS) errors.push('too many fonts');
   const ids = new Set<string>();
+  const families = new Set<string>();
   for (const [index, font] of data.fonts.entries()) {
     const where = `fonts[${index}]`;
     if (!isRecord(font)) {
@@ -69,6 +74,10 @@ export function validateDataset(data: unknown): string[] {
     else ids.add(font.id);
     if (typeof font.family !== 'string' || font.family.trim() === '' || font.family.length > 100) {
       errors.push(`${where}.family is invalid`);
+    } else if (families.has(font.family.toLowerCase())) {
+      errors.push(`${where}.family ${font.family} is duplicated`);
+    } else {
+      families.add(font.family.toLowerCase());
     }
     if (!(CATEGORIES as readonly string[]).includes(font.category as string)) {
       errors.push(`${where}.category is invalid`);
