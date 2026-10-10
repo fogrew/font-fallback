@@ -1,0 +1,972 @@
+{
+  "schema": 1,
+  "generated": "2026-10-10",
+  "platforms": {
+    "windows": {
+      "versions": ["10", "11"]
+    },
+    "macos": {
+      "versions": ["10.15", "current"],
+      "note": "Versions between 10.15 and the current release are not covered by a source."
+    },
+    "ios": {
+      "versions": ["current"]
+    },
+    "android": {
+      "versions": ["10", "11", "12", "13", "14", "15", "16"],
+      "note": "AOSP fonts only; vendor builds add or replace fonts, and local() support depends on the browser."
+    },
+    "linux": {
+      "versions": ["ubuntu-20.04", "ubuntu-22.04", "ubuntu-24.04", "ubuntu-26.04"]
+    },
+    "chromeos": {
+      "versions": []
+    }
+  },
+  "fonts": [
+    {
+      "id": "arial",
+      "family": "Arial",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        },
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "verdana",
+      "family": "Verdana",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        },
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "tahoma",
+      "family": "Tahoma",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        },
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "trebuchet-ms",
+      "family": "Trebuchet MS",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        },
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "times-new-roman",
+      "family": "Times New Roman",
+      "category": "serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        },
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "georgia",
+      "family": "Georgia",
+      "category": "serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        },
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "courier-new",
+      "family": "Courier New",
+      "category": "monospace",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        },
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "segoe-ui",
+      "family": "Segoe UI",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "calibri",
+      "family": "Calibri",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "candara",
+      "family": "Candara",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "corbel",
+      "family": "Corbel",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "cambria",
+      "family": "Cambria",
+      "category": "serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "constantia",
+      "family": "Constantia",
+      "category": "serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "palatino-linotype",
+      "family": "Palatino Linotype",
+      "category": "serif",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "consolas",
+      "family": "Consolas",
+      "category": "monospace",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "lucida-console",
+      "family": "Lucida Console",
+      "category": "monospace",
+      "availability": [
+        {
+          "os": "windows",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_10_font_list"
+        },
+        {
+          "os": "windows",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list"
+        }
+      ]
+    },
+    {
+      "id": "helvetica",
+      "family": "Helvetica",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "helvetica-neue",
+      "family": "Helvetica Neue",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "lucida-grande",
+      "family": "Lucida Grande",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "macos",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "ios",
+          "versions": ["current"],
+          "status": "preinstalled",
+          "source": "https://developer.apple.com/fonts/system-fonts/"
+        },
+        {
+          "os": "macos",
+          "versions": ["10.15"],
+          "status": "preinstalled",
+          "source": "https://raw.githubusercontent.com/adrg/os-font-list/master/csv/macOS/macOS-10.15_Catalina.csv"
+        }
+      ]
+    },
+    {
+      "id": "roboto",
+      "family": "Roboto",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "android",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-10.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-11.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["12"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-12.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["13"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-13.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["14"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-14.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["15"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["16"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r1/data/fonts/fonts.xml"
+        }
+      ]
+    },
+    {
+      "id": "noto-serif",
+      "family": "Noto Serif",
+      "category": "serif",
+      "availability": [
+        {
+          "os": "android",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-10.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-11.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["12"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-12.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["13"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-13.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["14"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-14.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["15"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["16"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "noto-sans",
+      "family": "Noto Sans",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "droid-sans-mono",
+      "family": "Droid Sans Mono",
+      "category": "monospace",
+      "availability": [
+        {
+          "os": "android",
+          "versions": ["10"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-10.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["11"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-11.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["12"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-12.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["13"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-13.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["14"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-14.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["15"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-15.0.0_r1/data/fonts/fonts.xml"
+        },
+        {
+          "os": "android",
+          "versions": ["16"],
+          "status": "preinstalled",
+          "source": "https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-16.0.0_r1/data/fonts/fonts.xml"
+        }
+      ]
+    },
+    {
+      "id": "dejavu-sans",
+      "family": "DejaVu Sans",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-20.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/20.04/ubuntu-20.04.6-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-22.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "dejavu-serif",
+      "family": "DejaVu Serif",
+      "category": "serif",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-20.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/20.04/ubuntu-20.04.6-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-22.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "dejavu-sans-mono",
+      "family": "DejaVu Sans Mono",
+      "category": "monospace",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-20.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/20.04/ubuntu-20.04.6-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-22.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "liberation-sans",
+      "family": "Liberation Sans",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-20.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/20.04/ubuntu-20.04.6-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-22.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "liberation-serif",
+      "family": "Liberation Serif",
+      "category": "serif",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-20.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/20.04/ubuntu-20.04.6-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-22.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "liberation-mono",
+      "family": "Liberation Mono",
+      "category": "monospace",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-20.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/20.04/ubuntu-20.04.6-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-22.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "ubuntu",
+      "family": "Ubuntu",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-20.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/20.04/ubuntu-20.04.6-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-22.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "ubuntu-mono",
+      "family": "Ubuntu Mono",
+      "category": "monospace",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-20.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/20.04/ubuntu-20.04.6-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-22.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/22.04/ubuntu-22.04.5-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-24.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/24.04/ubuntu-24.04.5.1-desktop-amd64.manifest"
+        },
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    },
+    {
+      "id": "lato",
+      "family": "Lato",
+      "category": "sans-serif",
+      "availability": [
+        {
+          "os": "linux",
+          "versions": ["ubuntu-26.04"],
+          "status": "preinstalled",
+          "source": "https://releases.ubuntu.com/26.04/ubuntu-26.04.1-desktop-amd64.manifest"
+        }
+      ]
+    }
+  ]
+}

@@ -29,6 +29,7 @@
     "release": "node scripts/release.ts",
     "i18n:compile": "node scripts/i18n-compile.mjs",
     "i18n:add": "node scripts/i18n-add.ts",
+    "os-fonts:import": "node scripts/os-fonts/import.ts",
     "postinstall": "pnpm i18n:compile"
   },
   "dependencies": {

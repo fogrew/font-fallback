@@ -16,6 +16,10 @@
 | [Browserslist](https://github.com/browserslist/browserslist) | Audience queries | MIT |
 | [caniuse-lite](https://github.com/browserslist/caniuse-lite) / [Can I use](https://caniuse.com/) | Browser usage data | CC BY 4.0 |
 | [baseline-browser-mapping](https://github.com/web-platform-dx/baseline-browser-mapping) | Baseline queries | Apache-2.0 |
+| [Microsoft Learn: Windows 10 and 11 font lists](https://learn.microsoft.com/en-us/typography/fonts/windows_11_font_list) | Font availability on Windows (preinstalled vs Feature on Demand) | Microsoft documentation, facts only |
+| [Apple: System Fonts](https://developer.apple.com/fonts/system-fonts/) | Font availability on current macOS and iOS | Apple documentation, facts only |
+| [AOSP `fonts.xml`](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/data/fonts/fonts.xml) (tags android-10 to android-16) | Fonts shipped with Android | Apache-2.0 |
+| [Ubuntu desktop ISO manifests](https://releases.ubuntu.com/) (20.04, 22.04, 24.04, 26.04) | Font packages installed by default on Ubuntu desktop | Package names only |
 | [MDN browser-compat-data](https://github.com/mdn/browser-compat-data) | `@font-face` descriptor support | CC0-1.0 |
 | [StatCounter Global Stats](https://gs.statcounter.com/) via [Wikipedia: Usage share of operating systems](https://en.wikipedia.org/wiki/Usage_share_of_operating_systems) | Default desktop OS split (worldwide desktop, June 2026: Windows 62.16%, macOS 14.58%, Linux 3.09%, ChromeOS 1.42%, unknown 18.75% redistributed proportionally) | CC BY-SA 3.0 |
 | [Capsize unpack 4.0.1](https://github.com/seek-oss/capsize/tree/master/packages/unpack) | English/Latin frequency weights, sampled from English Wikinews abstracts | MIT; underlying Wikinews content CC BY 2.5 |
