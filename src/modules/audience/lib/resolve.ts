@@ -1,4 +1,5 @@
 import { browserName } from './names';
+import type { UsageStats } from './stats';
 
 export const MAX_QUERY_LENGTH = 512;
 
@@ -9,17 +10,17 @@ export interface BrowserGroup {
 }
 
 export type Resolution =
-  | { ok: true; groups: BrowserGroup[]; count: number; dataDate: string }
+  | { ok: true; groups: BrowserGroup[]; count: number; dataDate: string; coverage?: number }
   | { ok: false; code: 'empty' | 'too-long' | 'invalid' | 'no-match'; detail: string };
 
-export async function resolveQuery(query: string): Promise<Resolution> {
+export async function resolveQuery(query: string, stats?: UsageStats): Promise<Resolution> {
   const text = query.trim();
   if (text === '') return { ok: false, code: 'empty', detail: '' };
   if (text.length > MAX_QUERY_LENGTH) return { ok: false, code: 'too-long', detail: '' };
   const { default: browserslist } = await import('browserslist');
   let entries: string[];
   try {
-    entries = browserslist(text, { path: false });
+    entries = browserslist(text, { path: false, ...(stats ? { stats } : {}) });
   } catch (failure) {
     const detail = failure instanceof Error ? failure.message : String(failure);
     return { ok: false, code: 'invalid', detail: detail.slice(0, 300) };
@@ -42,6 +43,7 @@ export async function resolveQuery(query: string): Promise<Resolution> {
     groups: [...groups.values()],
     count: entries.length,
     dataDate: latestReleaseDate(browserslist.data),
+    ...(stats ? { coverage: browserslist.coverage(entries, stats) } : {}),
   };
 }
 

@@ -11,7 +11,7 @@ const sourceSans = `${fonts}SourceSansPro-Regular.woff2`;
 test('uploading a font produces ranked fallbacks, editable values and CSS', async ({ page }) => {
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
-  await page.locator('input[type="file"]').setInputFiles(sourceSans);
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
 
   const fallback = page.getByLabel('Fallback font');
   await expect(fallback).toBeVisible();
@@ -38,7 +38,7 @@ test('uploading a font produces ranked fallbacks, editable values and CSS', asyn
 test('serif and monospace fallbacks are available by font type', async ({ page }) => {
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
-  await page.locator('input[type="file"]').setInputFiles(sourceSans);
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   await page.getByLabel('Font type').selectOption('serif');
   await expect(page.getByLabel('Fallback font')).toContainText('Times New Roman');
   await expect(page.getByRole('region', { name: 'Generated CSS' })).toContainText('serif;');
@@ -47,7 +47,7 @@ test('serif and monospace fallbacks are available by font type', async ({ page }
 test('an invalid file is rejected with an announced error', async ({ page }) => {
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles({
     name: 'broken.woff2',
     mimeType: 'font/woff2',
     buffer: Buffer.from('not a font at all, just text'),
@@ -61,7 +61,7 @@ for (const locale of ['en', 'ru']) {
   }) => {
     await page.goto(`/${locale}/`);
     await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
-    await page.locator('input[type="file"]').setInputFiles(sourceSans);
+    await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
     await expect(page.getByRole('heading', { level: 2 }).nth(3)).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
@@ -79,7 +79,7 @@ for (const { width, height } of [
     await page.setViewportSize({ width, height });
     await page.goto('/en/');
     await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
-    await page.locator('input[type="file"]').setInputFiles(sourceSans);
+    await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
     await expect(page.getByRole('heading', { name: 'Preview' })).toBeVisible();
     const sizes = await page.evaluate(() => ({
       page: [document.documentElement.scrollHeight, window.innerHeight],
@@ -99,7 +99,7 @@ test('preview modes switch between side by side, overlay, web font and fallback'
 }) => {
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
-  await page.locator('input[type="file"]').setInputFiles(sourceSans);
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   const mode = page.getByLabel('View', { exact: true });
   const preview = page.getByRole('region', { name: 'Preview' });
   await expect(mode).toHaveValue('overlay');
@@ -127,7 +127,7 @@ test('preview does not animate when reduced motion is requested', async ({ page 
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
-  await page.locator('input[type="file"]').setInputFiles(sourceSans);
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   await expect(page.getByRole('figure').first()).toHaveCSS('transition-duration', '0s');
 });
 
@@ -135,7 +135,7 @@ test('a tall preview keeps the CSS block reachable', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
-  await page.locator('input[type="file"]').setInputFiles(sourceSans);
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   const preview = page.getByRole('region', { name: 'Preview' });
   await preview.getByLabel('Text size').fill('72');
   await preview.getByLabel('Line height').fill('2');
@@ -163,7 +163,7 @@ test('a font with few Latin glyphs warns about coverage and previews its own gly
     ],
     30,
   );
-  await page.locator('input[type="file"]').setInputFiles({
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles({
     name: 'runes.ttf',
     mimeType: 'font/ttf',
     buffer: Buffer.from(font),
@@ -206,4 +206,39 @@ test('the audience editor passes axe when open', async ({ page }) => {
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
   expect(results.violations).toEqual([]);
+});
+
+test('imported usage statistics enable "in my stats" queries and report ignored entries', async ({
+  page,
+}) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.getByText('Audience (browsers)').click();
+  const upload = (content: string) =>
+    page.locator('input[type="file"][accept*="json"]').setInputFiles({
+      name: 'browserslist-stats.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(content),
+    });
+
+  await upload('not json');
+  await expect(page.getByText('not valid JSON')).toBeVisible();
+
+  await upload(
+    JSON.stringify({
+      chrome: { '120': 60, '119': 3, '1': 1 },
+      firefox: { '121': 10 },
+      nope: { '1': 1 },
+    }),
+  );
+  await expect(page.getByText(/3 statistics entries loaded/)).toBeVisible();
+  await expect(page.getByText(/Ignored unknown browsers: nope/)).toBeVisible();
+  await expect(page.getByText(/Ignored 1 unknown versions, for example: chrome 1/)).toBeVisible();
+  await expect(page.getByLabel('Browserslist query')).toHaveValue('> 0.5% in my stats');
+  await expect(page.getByText('Covers 73.0% of your traffic')).toBeVisible();
+  await expect(page.getByLabel('Preset')).toHaveValue('mystats');
+
+  await page.getByRole('button', { name: 'Remove my statistics' }).click();
+  await expect(page.getByLabel('Browserslist query')).toHaveValue('baseline widely available');
+  await expect(page.getByRole('link', { name: 'browserslist-ga', exact: true })).toBeVisible();
 });

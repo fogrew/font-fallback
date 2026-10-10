@@ -18,9 +18,17 @@ export const PRESETS = [
   },
 ] as const;
 
+export const MY_STATS_PRESET = {
+  id: 'mystats',
+  query: '> 0.5% in my stats',
+  label: 'audience_preset_mystats',
+} as const;
+
 export const DEFAULT_QUERY = PRESETS[0].query;
 
-export function presetFor(query: string) {
+export function presetFor(query: string, withStats = false) {
   const normalized = query.trim().replace(/\s+/g, ' ');
-  return PRESETS.find((preset) => preset.query === normalized);
+  return [...PRESETS, ...(withStats ? [MY_STATS_PRESET] : [])].find(
+    (preset) => preset.query === normalized,
+  );
 }

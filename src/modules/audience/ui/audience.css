@@ -30,3 +30,17 @@
 .ff-generator .ff-disclosure > div {
   padding-block-end: var(--ff-space-2);
 }
+.ff-audience__stats {
+  display: grid;
+  gap: var(--ff-space-1);
+  padding-block-start: var(--ff-space-2);
+  border-block-start: 1px solid var(--ff-border);
+}
+.ff-audience__stats p {
+  margin: 0;
+}
+.ff-audience__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ff-space-2);
+}

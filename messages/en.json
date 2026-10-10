@@ -85,5 +85,19 @@
   "audience_list_label": "Resolved browsers",
   "audience_preset_baseline2023": "Baseline 2023",
   "audience_preset_usage": "Over 0.5% usage, last 2 versions",
-  "audience_error_no_match": "No browser versions match this query."
+  "audience_error_no_match": "No browser versions match this query.",
+  "audience_stats_import": "Import browserslist-stats.json",
+  "audience_stats_remove": "Remove my statistics",
+  "audience_stats_loaded": "{count} statistics entries loaded. Use “in my stats” in a query.",
+  "audience_stats_local": "The file is read in your browser and never uploaded.",
+  "audience_stats_help": "Generate the file with",
+  "audience_stats_unknown_browsers": "Ignored unknown browsers: {list}",
+  "audience_stats_unknown_versions": "Ignored {count} unknown versions, for example: {list}",
+  "audience_stats_error_too_large": "The file is too large.",
+  "audience_stats_error_not_json": "The file is not valid JSON.",
+  "audience_stats_error_wrong_shape": "Expected an object that maps browsers to version shares, like in the format description linked below.",
+  "audience_stats_error_bad_value": "A share must be a number from 0 to 100:",
+  "audience_stats_error_too_many": "The file has too many entries.",
+  "audience_preset_mystats": "Over 0.5% of my stats",
+  "audience_coverage": "Covers {percent}% of your traffic"
 }

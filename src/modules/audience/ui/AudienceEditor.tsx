@@ -1,28 +1,46 @@
-import { useEffect, useId, useState } from 'preact/hooks';
+import { useEffect, useId, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
-import { Disclosure, Select } from '@/common/ui';
-import { DEFAULT_QUERY, PRESETS, presetFor } from '../lib/presets';
+import { Button, Disclosure, Select } from '@/common/ui';
+import { DEFAULT_QUERY, MY_STATS_PRESET, PRESETS, presetFor } from '../lib/presets';
 import { MAX_QUERY_LENGTH, type Resolution, resolveQuery } from '../lib/resolve';
+import {
+  importStats,
+  MAX_STATS_BYTES,
+  type StatsErrorCode,
+  type StatsResult,
+  type UsageStats,
+} from '../lib/stats';
 import './audience.css';
 
 const CUSTOM = 'custom';
 const DEBOUNCE_MS = 250;
+const GENERATORS = [
+  ['browserslist-ga', 'https://github.com/browserslist/browserslist-ga'],
+  ['browserslist-ga-export', 'https://github.com/browserslist/browserslist-ga-export'],
+  ['browserslist-plausible', 'https://github.com/browserslist/browserslist-plausible'],
+] as const;
+const STATS_FORMAT = 'https://github.com/browserslist/browserslist#custom-usage-data';
 
 type State = Resolution | { loading: true } | { failed: true };
+type StatsInfo = Extract<StatsResult, { ok: true }>;
 
 export function AudienceEditor({ locale }: { locale: Locale }) {
   const t = messagesFor(locale);
   const inputId = useId();
   const messageId = useId();
+  const fileInput = useRef<HTMLInputElement>(null);
   const [opened, setOpened] = useState(false);
   const [query, setQuery] = useState<string>(DEFAULT_QUERY);
   const [state, setState] = useState<State>({ loading: true });
+  const [stats, setStats] = useState<StatsInfo>();
+  const [statsError, setStatsError] = useState('');
+  const userStats: UsageStats | undefined = stats?.stats;
 
   useEffect(() => {
     if (!opened) return;
     let current = true;
     const timer = setTimeout(() => {
-      resolveQuery(query).then(
+      resolveQuery(query, userStats).then(
         (resolution) => current && setState(resolution),
         () => current && setState({ failed: true }),
       );
@@ -31,7 +49,37 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
       current = false;
       clearTimeout(timer);
     };
-  }, [opened, query]);
+  }, [opened, query, userStats]);
+
+  const statsErrors: Record<StatsErrorCode, string> = {
+    'too-large': t.audience_stats_error_too_large(),
+    'not-json': t.audience_stats_error_not_json(),
+    'wrong-shape': t.audience_stats_error_wrong_shape(),
+    'bad-value': t.audience_stats_error_bad_value(),
+    'too-many': t.audience_stats_error_too_many(),
+  };
+
+  const loadStats = async (file: File | undefined) => {
+    if (!file) return;
+    if (file.size > MAX_STATS_BYTES) {
+      setStatsError(statsErrors['too-large']);
+      return;
+    }
+    let result: StatsResult;
+    try {
+      result = await importStats(await file.text());
+    } catch {
+      setStatsError(t.audience_load_failed());
+      return;
+    }
+    if (!result.ok) {
+      setStatsError(`${statsErrors[result.code]} ${result.detail}`.trim());
+      return;
+    }
+    setStatsError('');
+    setStats(result);
+    setQuery(MY_STATS_PRESET.query);
+  };
 
   const invalid = 'ok' in state && !state.ok;
   const errors = {
@@ -40,18 +88,19 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
     invalid: t.audience_error_invalid(),
     'no-match': t.audience_error_no_match(),
   };
+  const presets = stats ? [...PRESETS, MY_STATS_PRESET] : PRESETS;
 
   return (
     <Disclosure summary={t.audience_heading()} onToggle={(open) => open && setOpened(true)}>
       <div class="ff-audience">
         <Select
           label={t.audience_preset_label()}
-          value={presetFor(query)?.id ?? CUSTOM}
+          value={presetFor(query, Boolean(stats))?.id ?? CUSTOM}
           options={[
-            ...PRESETS.map((preset) => ({ value: preset.id, label: t[preset.label]() })),
+            ...presets.map((preset) => ({ value: preset.id, label: t[preset.label]() })),
             { value: CUSTOM, label: t.audience_preset_custom(), disabled: true },
           ]}
-          onChange={(id) => setQuery(PRESETS.find((preset) => preset.id === id)?.query ?? query)}
+          onChange={(id) => setQuery(presets.find((preset) => preset.id === id)?.query ?? query)}
         />
         <div class="ff-field">
           <label for={inputId}>{t.audience_query_label()}</label>
@@ -80,6 +129,9 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
           {'ok' in state && state.ok && (
             <>
               <strong>{t.audience_resolved({ count: state.count })}</strong>
+              {state.coverage !== undefined && (
+                <span>{t.audience_coverage({ percent: state.coverage.toFixed(1) })}</span>
+              )}
               <span class="ff-muted">
                 {t.audience_data_date({
                   date: new Intl.DateTimeFormat(locale, {
@@ -101,6 +153,69 @@ export function AudienceEditor({ locale }: { locale: Locale }) {
             ))}
           </ul>
         )}
+        <div class="ff-audience__stats">
+          <div class="ff-audience__actions">
+            <Button onClick={() => fileInput.current?.click()}>{t.audience_stats_import()}</Button>
+            {stats && (
+              <Button
+                onClick={() => {
+                  setStats(undefined);
+                  if (query.includes('my stats')) setQuery(DEFAULT_QUERY);
+                }}
+              >
+                {t.audience_stats_remove()}
+              </Button>
+            )}
+          </div>
+          <input
+            ref={fileInput}
+            hidden
+            type="file"
+            accept=".json,application/json"
+            onChange={(event) => {
+              void loadStats(event.currentTarget.files?.[0]);
+              event.currentTarget.value = '';
+            }}
+          />
+          <p class="ff-muted">{t.audience_stats_local()}</p>
+          <p class="ff-muted">
+            {t.audience_stats_help()}{' '}
+            {GENERATORS.map(([name, href], index) => (
+              <span key={name}>
+                {index > 0 && ', '}
+                <a href={href} target="_blank" rel="noreferrer noopener">
+                  {name}
+                </a>
+              </span>
+            ))}{' '}
+            (
+            <a href={STATS_FORMAT} target="_blank" rel="noreferrer noopener">
+              JSON
+            </a>
+            )
+          </p>
+          <div role="status">
+            {statsError && <p class="ff-error">{statsError}</p>}
+            {stats && (
+              <>
+                <p>{t.audience_stats_loaded({ count: stats.entries })}</p>
+                {stats.unknownBrowsers.length > 0 && (
+                  <p class="ff-muted">
+                    {t.audience_stats_unknown_browsers({ list: stats.unknownBrowsers.join(', ') })}
+                  </p>
+                )}
+                {stats.unknownVersions.length > 0 && (
+                  <p class="ff-muted">
+                    {t.audience_stats_unknown_versions({
+                      count: stats.unknownVersions.length,
+                      list: stats.unknownVersions.slice(0, 5).join(', '),
+                    })}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </Disclosure>
   );
