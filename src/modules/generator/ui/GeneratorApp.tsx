@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
-import { Button, CodeBlock, FitField, type FitValue, LiveRegion, Select } from '@/common/ui';
+import {
+  Button,
+  CodeBlock,
+  Disclosure,
+  FitField,
+  type FitValue,
+  LiveRegion,
+  Select,
+} from '@/common/ui';
 import {
   AudienceEditor,
   descriptorSupport,
@@ -17,10 +25,16 @@ import {
   type FontParser,
   MAX_FONT_BYTES,
 } from '@/modules/font-metrics';
-import { LayoutShiftPanel, type PanelInput } from '@/modules/layout-shift';
+import {
+  type Dimension,
+  LayoutShiftPanel,
+  type OptimizerSetup,
+  type PanelInput,
+} from '@/modules/layout-shift';
 import type { Category, OsId } from '@/modules/os-fonts';
 import { isNoCoverage, LOW_COVERAGE, sampleText } from '../lib/compute';
 import { adjustmentOf, buildCss, fallbackFamilyName, type Overrides } from '../lib/css';
+import { hasSpacing, loadingCss, loadingScript, type SpacingEm } from '../lib/loading';
 import {
   type Candidate,
   type Language,
@@ -89,6 +103,16 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [editId, setEditId] = useState<string>();
   const [focusSlot, setFocusSlot] = useState<number>();
   const [values, setValues] = useState<Record<string, Values>>({});
+  const [optimized, setOptimized] = useState<Record<string, Partial<Overrides>>>({});
+  const [optimizedSpacing, setOptimizedSpacing] = useState<SpacingEm>();
+  const [spacingValues, setSpacingValues] = useState<{ letter: FitValue; word: FitValue }>({
+    letter: { mode: 'auto' },
+    word: { mode: 'auto' },
+  });
+  const resetOptimization = () => {
+    setOptimized({});
+    setOptimizedSpacing(undefined);
+  };
   const [savedOrder, setSavedOrder] = useState<{ key: string; value: string[] }>();
   const [planNote, setPlanNote] = useState('');
   const [busy, setBusy] = useState(false);
@@ -193,6 +217,10 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   );
 
   const valueKey = (id: string) => `${selected?.id ?? 0}:${id}`;
+  const baseOf = (candidate: Candidate) => ({
+    ...candidate.adjustment,
+    ...optimized[valueKey(candidate.id)],
+  });
   const manualOf = (id: string): Partial<Overrides> => {
     const manual: Partial<Overrides> = {};
     for (const { key } of FIELDS) {
@@ -223,7 +251,18 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   }
   const previewPick = currentPick ?? chosen[0]?.candidate;
 
+  const spacingEm: SpacingEm = {
+    letter:
+      spacingValues.letter.mode === 'manual'
+        ? spacingValues.letter.value / 100
+        : (optimizedSpacing?.letter ?? 0),
+    word:
+      spacingValues.word.mode === 'manual'
+        ? spacingValues.word.value / 100
+        : (optimizedSpacing?.word ?? 0),
+  };
   let simulation: PanelInput | undefined;
+  let optimizer: OptimizerSetup | undefined;
   let output: ReturnType<typeof buildCss> | undefined;
   let adjustment: Overrides | undefined;
   if (selected && plan && previewPick) {
@@ -234,12 +273,12 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
             {
               family: candidate.family,
               localNames: candidate.localNames,
-              adjustment: adjustmentOf(candidate.adjustment, manualOf(id)),
+              adjustment: adjustmentOf(baseOf(candidate), manualOf(id)),
             },
           ]
         : [];
     });
-    adjustment = adjustmentOf(previewPick.adjustment, manualOf(previewPick.id));
+    adjustment = adjustmentOf(baseOf(previewPick), manualOf(previewPick.id));
     try {
       const family = selected.metrics.names.family?.trim().slice(0, 200) || 'Custom font';
       output = buildCss(family, faces, kind);
@@ -252,11 +291,113 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
           ),
           generic: kind,
           language,
+          spacing: { letterEm: spacingEm.letter, wordEm: spacingEm.word },
         };
+        optimizer = optimizerFor(family, previewPick);
       }
     } catch (failure) {
       if (!(failure instanceof CssExportError)) throw failure;
     }
+  }
+
+  function optimizerFor(family: string, pick: Candidate): OptimizerSetup {
+    const base = adjustmentOf(baseOf(pick), manualOf(pick.id));
+    const manual = manualOf(pick.id);
+    const dimension = (
+      key: string,
+      value: number,
+      min: number,
+      max: number,
+      step: number,
+      pinned: boolean,
+    ): Dimension => ({ key, value, min, max, step, pinned });
+    const letter = spacingValues.letter;
+    const word = spacingValues.word;
+    const dimensions = [
+      dimension(
+        'sizeAdjust',
+        base.sizeAdjust,
+        base.sizeAdjust * 0.8,
+        base.sizeAdjust * 1.2,
+        0.01,
+        manual.sizeAdjust !== undefined,
+      ),
+      dimension(
+        'ascentOverride',
+        base.ascentOverride,
+        Math.max(0, base.ascentOverride - 0.3),
+        base.ascentOverride + 0.3,
+        0.02,
+        manual.ascentOverride !== undefined,
+      ),
+      dimension(
+        'descentOverride',
+        base.descentOverride,
+        Math.max(0, base.descentOverride - 0.3),
+        base.descentOverride + 0.3,
+        0.02,
+        manual.descentOverride !== undefined,
+      ),
+      dimension(
+        'lineGapOverride',
+        base.lineGapOverride,
+        0,
+        base.lineGapOverride + 0.3,
+        0.02,
+        manual.lineGapOverride !== undefined,
+      ),
+      dimension(
+        'letterSpacing',
+        letter.mode === 'manual' ? letter.value / 100 : (optimizedSpacing?.letter ?? 0),
+        -0.03,
+        0.03,
+        0.002,
+        letter.mode === 'manual',
+      ),
+      dimension(
+        'wordSpacing',
+        word.mode === 'manual' ? word.value / 100 : (optimizedSpacing?.word ?? 0),
+        -0.2,
+        0.2,
+        0.01,
+        word.mode === 'manual',
+      ),
+    ];
+    return {
+      family: fallbackFamilyName(family, pick.family, 1),
+      dimensions,
+      fontFaces: (v) =>
+        buildCss(
+          family,
+          [
+            {
+              family: pick.family,
+              localNames: pick.localNames,
+              adjustment: {
+                sizeAdjust: v.sizeAdjust ?? base.sizeAdjust,
+                ascentOverride: v.ascentOverride ?? base.ascentOverride,
+                descentOverride: v.descentOverride ?? base.descentOverride,
+                lineGapOverride: v.lineGapOverride ?? base.lineGapOverride,
+              },
+            },
+          ],
+          kind,
+        ).fontFaces,
+      applied: Boolean(optimized[valueKey(pick.id)]) || optimizedSpacing !== undefined,
+      onApply: (v) => {
+        setOptimized((all) => ({
+          ...all,
+          [valueKey(pick.id)]: {
+            sizeAdjust: v.sizeAdjust ?? base.sizeAdjust,
+            ascentOverride: v.ascentOverride ?? base.ascentOverride,
+            descentOverride: v.descentOverride ?? base.descentOverride,
+            lineGapOverride: v.lineGapOverride ?? base.lineGapOverride,
+          },
+        }));
+        setOptimizedSpacing({ letter: v.letterSpacing ?? 0, word: v.wordSpacing ?? 0 });
+      },
+      onReset: resetOptimization,
+    };
   }
 
   const vertical = entries ? lacksVerticalOverrides(descriptorSupport(entries)) : 0;
@@ -319,7 +460,10 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                   value: String(font.id),
                   label: `${font.metrics.names.fullName ?? font.fileName} (${font.fileName})`,
                 }))}
-                onChange={(value) => setSelectedId(Number(value))}
+                onChange={(value) => {
+                  setSelectedId(Number(value));
+                  resetOptimization();
+                }}
               />
             )}
             <ul>
@@ -331,6 +475,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                       setFonts((list) => list.filter((item) => item.id !== font.id));
                       setSelectedId((id) => (id === font.id ? undefined : id));
                       setValues({});
+                      resetOptimization();
                     }}
                     aria-label={`${t.upload_remove()}: ${font.fileName}`}
                   >
@@ -373,6 +518,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 onChange={(value) => {
                   setLanguage(value as Language);
                   setValues({});
+                  resetOptimization();
                 }}
               />
               <Select
@@ -386,6 +532,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 onChange={(value) => {
                   setKind(value as Category);
                   setPicks({});
+                  resetOptimization();
                   setEditId(undefined);
                 }}
               />
@@ -473,7 +620,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                     label={t[label]()}
                     unit={t.fit_percent_unit()}
                     value={currentValues[key]}
-                    autoValue={currentPick.adjustment[key] * 100}
+                    autoValue={baseOf(currentPick)[key] * 100}
                     min={min}
                     max={max}
                     step={0.1}
@@ -488,6 +635,28 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                     }
                   />
                 ))}
+                <Disclosure summary={t.spacing_heading()}>
+                  {(
+                    [
+                      ['letter', t.spacing_letter_label(), -5, 5, 0.01],
+                      ['word', t.spacing_word_label(), -30, 30, 0.1],
+                    ] as const
+                  ).map(([name, label, min, max, step]) => (
+                    <FitField
+                      key={name}
+                      compact
+                      locale={locale}
+                      label={label}
+                      unit={t.spacing_unit()}
+                      value={spacingValues[name]}
+                      autoValue={(optimizedSpacing?.[name] ?? 0) * 100}
+                      min={min}
+                      max={max}
+                      step={step}
+                      onChange={(next) => setSpacingValues((all) => ({ ...all, [name]: next }))}
+                    />
+                  ))}
+                </Disclosure>
               </>
             ) : (
               <p class="ff-muted">{t.plan_no_kind({ system: systemName(current) })}</p>
@@ -572,7 +741,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 )}
               </section>
             )}
-            <LayoutShiftPanel locale={locale} input={simulation} />
+            <LayoutShiftPanel locale={locale} input={simulation} optimizer={optimizer} />
             <section class="ff-generator__section" aria-labelledby="ff-css-heading">
               <h2 id="ff-css-heading">{t.css_heading()}</h2>
               <p class="ff-muted">{t.fit_latin_note()}</p>
@@ -622,9 +791,24 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
               <CodeBlock
                 locale={locale}
                 label={t.css_code_label()}
-                code={[output.fontFaces, output.fontFamily, safariCss].filter(Boolean).join('\n\n')}
+                code={[output.fontFaces, output.fontFamily, safariCss, loadingCss(spacingEm)]
+                  .filter(Boolean)
+                  .join('\n\n')}
               />
             </section>
+            {hasSpacing(spacingEm) && (
+              <section class="ff-generator__section" aria-labelledby="ff-loading-heading">
+                <h2 id="ff-loading-heading">{t.loading_heading()}</h2>
+                <p class="ff-muted">{t.loading_note()}</p>
+                <CodeBlock
+                  locale={locale}
+                  label={t.loading_code_label()}
+                  code={loadingScript(
+                    selected.metrics.names.family?.trim().slice(0, 200) || 'Custom font',
+                  )}
+                />
+              </section>
+            )}
           </>
         ) : (
           <p class="ff-generator__empty">{t.results_empty()}</p>

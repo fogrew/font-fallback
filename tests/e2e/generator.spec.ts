@@ -399,3 +399,43 @@ test('the layout shift simulation reports a score per viewport and accepts a cus
     'true',
   );
 });
+
+test('spacing adds the fonts-loading CSS and script', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  const code = page.getByRole('region', { name: 'Generated CSS' });
+  await expect(code).not.toContainText('fonts-loading');
+  await page.getByText('Spacing while fonts load').click();
+  const letter = page.getByRole('spinbutton', { name: /Letter spacing/ });
+  await letter.fill('0.2');
+  await letter.press('Enter');
+  await expect(code).toContainText('.fonts-loading');
+  await expect(code).toContainText('letter-spacing: 0.002em');
+  const script = page.getByRole('region', { name: 'Font loading script' });
+  await expect(script).toContainText("classList.add('fonts-loading')");
+  await expect(script).toContainText('Source Sans Pro');
+});
+
+test.skip(process.platform !== 'win32', 'the optimizer needs a Windows font on this machine');
+test('Optimize for CLS keeps pinned values and can be reset', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  await page.getByLabel('System', { exact: true }).selectOption('windows');
+  await page.getByLabel('Fallback font 1', { exact: true }).selectOption('arial');
+  const code = page.getByRole('region', { name: 'Generated CSS' });
+  const size = page.getByRole('spinbutton', { name: /Size adjust/ });
+  await size.fill('108');
+  await size.press('Enter');
+  await expect(code).toContainText('size-adjust: 108%');
+
+  const section = page.getByRole('region', { name: 'Layout shift' });
+  await section.getByRole('button', { name: 'Optimize for CLS' }).click();
+  await expect(
+    section.getByText(/Layout shift on this device: |Nothing to improve|not installed/),
+  ).toBeVisible({ timeout: 25_000 });
+  await expect(section.getByText(/not installed/)).toHaveCount(0);
+  await expect(code).toContainText('size-adjust: 108%');
+  await expect(section.getByRole('alert')).toHaveCount(0);
+});

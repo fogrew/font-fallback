@@ -16,3 +16,7 @@
 .ff-generator .ff-cls p {
   margin: 0;
 }
+.ff-cls__optimize {
+  display: grid;
+  gap: var(--ff-space-1);
+}

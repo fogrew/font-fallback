@@ -168,5 +168,19 @@
   "cls_announcement": "Layout shift at {width}px: {score}, {rating}.",
   "cls_custom_hint": "From {min} to {max}.",
   "cls_change": "{before} to {after}",
-  "cls_change_px": "{before} to {after}px"
+  "cls_change_px": "{before} to {after}px",
+  "cls_optimize": "Optimize for CLS",
+  "cls_optimize_reset": "Reset optimization",
+  "cls_optimize_note": "Searches the size, vertical overrides and spacing of the selected fallback for the smallest layout shift on this device. Values you set by hand stay as they are.",
+  "cls_optimizing": "Optimizing… {count} measurements.",
+  "cls_optimized": "Layout shift on this device: {before} to {after} ({count} measurements).",
+  "cls_optimize_none": "Nothing to improve.",
+  "cls_optimize_missing": "The selected fallback font is not installed on this device, so it cannot be measured. Choose the system you are running.",
+  "spacing_heading": "Spacing while fonts load",
+  "spacing_letter_label": "Letter spacing",
+  "spacing_word_label": "Word spacing",
+  "spacing_unit": "% of the font size",
+  "loading_heading": "While the font loads",
+  "loading_note": "Spacing applies only until the web font is ready. Run this script early in the page and keep the CSS above.",
+  "loading_code_label": "Font loading script"
 }

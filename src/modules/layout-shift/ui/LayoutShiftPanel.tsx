@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
-import { LiveRegion } from '@/common/ui';
+import { Button, LiveRegion } from '@/common/ui';
+import { compassSearch, type Dimension } from '../lib/optimize';
 import type { SampleLanguage } from '../lib/samples';
 import {
+  createSimulation,
   DEFAULT_VIEWPORTS,
   ratingOf,
   type SimulationInput,
@@ -18,18 +20,44 @@ const MAX_WIDTH = 3840;
 
 export type PanelInput = Omit<SimulationInput, 'viewports' | 'signal'>;
 
+export interface OptimizerSetup {
+  family: string;
+  dimensions: Dimension[];
+  fontFaces: (values: Record<string, number>) => string;
+  applied: boolean;
+  onApply: (values: Record<string, number>) => void;
+  onReset: () => void;
+}
+
+type OptimizeState =
+  | { state: 'idle' }
+  | { state: 'running'; count: number }
+  | { state: 'missing' }
+  | { state: 'failed' }
+  | { state: 'done'; before: number; after: number; count: number };
+
+const viewportsFor = (widths: readonly number[]) => [
+  ...DEFAULT_VIEWPORTS,
+  ...widths.map((width) => ({ width, height: Math.min(1600, Math.round(width * 1.6)) })),
+];
+
 export function LayoutShiftPanel({
   locale,
   input,
+  optimizer,
 }: {
   locale: Locale;
   input: PanelInput | undefined;
+  optimizer?: OptimizerSetup | undefined;
 }) {
   const t = messagesFor(locale);
   const [results, setResults] = useState<ViewportResult[]>([]);
   const [status, setStatus] = useState<'idle' | 'running' | 'failed'>('idle');
   const [customText, setCustomText] = useState('');
   const [announcement, setAnnouncement] = useState('');
+  const [optimize, setOptimize] = useState<OptimizeState>({ state: 'idle' });
+  const optimizing = useRef<AbortController>();
+  useEffect(() => () => optimizing.current?.abort(), []);
   const customWidth = Number(customText);
   const customValid =
     customText !== '' &&
@@ -44,6 +72,7 @@ export function LayoutShiftPanel({
         input.fallbackFamilies,
         input.generic,
         input.language,
+        input.spacing,
         widths,
       ])
     : '';
@@ -63,11 +92,11 @@ export function LayoutShiftPanel({
     const timer = setTimeout(() => {
       frame = requestAnimationFrame(() => {
         setStatus('running');
-        const viewports = [
-          ...DEFAULT_VIEWPORTS,
-          ...widths.map((width) => ({ width, height: Math.min(1600, Math.round(width * 1.6)) })),
-        ];
-        simulateLayoutShift({ ...current, viewports, signal: controller.signal }).then(
+        simulateLayoutShift({
+          ...current,
+          viewports: viewportsFor(widths),
+          signal: controller.signal,
+        }).then(
           (next) => {
             if (controller.signal.aborted) return;
             setResults(next);
@@ -87,6 +116,60 @@ export function LayoutShiftPanel({
       cancelAnimationFrame(frame);
     };
   }, [key, bytes]);
+
+  const runOptimizer = async () => {
+    if (!input || !optimizer) return;
+    optimizing.current?.abort();
+    const controller = new AbortController();
+    optimizing.current = controller;
+    setOptimize({ state: 'running', count: 0 });
+    const start = Object.fromEntries(optimizer.dimensions.map((dim) => [dim.key, dim.value]));
+    let simulation: Awaited<ReturnType<typeof createSimulation>> | undefined;
+    try {
+      simulation = await createSimulation({
+        ...input,
+        fallbackFamilies: [optimizer.family],
+        fallbackFontFaces: optimizer.fontFaces(start),
+        viewports: viewportsFor(widths),
+        signal: controller.signal,
+      });
+      let missing = false;
+      const active = simulation;
+      const result = await compassSearch(
+        optimizer.dimensions,
+        async (values) => {
+          const measured = await active.measure(optimizer.fontFaces(values), {
+            letterEm: values.letterSpacing ?? 0,
+            wordEm: values.wordSpacing ?? 0,
+          });
+          if (measured.missingFallbacks.length > 0) missing = true;
+          return measured.results.reduce((sum, item) => sum + item.score, 0);
+        },
+        {
+          maxEvaluations: 150,
+          maxMs: 12_000,
+          signal: controller.signal,
+          onProgress: (count) => setOptimize({ state: 'running', count }),
+        },
+      );
+      if (controller.signal.aborted) return;
+      if (missing) {
+        setOptimize({ state: 'missing' });
+      } else {
+        if (result.score < result.startScore - 1e-9) optimizer.onApply(result.values);
+        setOptimize({
+          state: 'done',
+          before: result.startScore,
+          after: Math.min(result.score, result.startScore),
+          count: result.evaluations,
+        });
+      }
+    } catch {
+      if (!controller.signal.aborted) setOptimize({ state: 'failed' });
+    } finally {
+      simulation?.close();
+    }
+  };
 
   const ratingLabel = (score: number) => {
     const rating = ratingOf(score);
@@ -177,6 +260,39 @@ export function LayoutShiftPanel({
             ))}
           </tbody>
         </table>
+      )}
+      {optimizer && (
+        <div class="ff-cls__optimize">
+          <div class="ff-generator__buttons">
+            <Button onClick={runOptimizer} disabled={optimize.state === 'running'}>
+              {t.cls_optimize()}
+            </Button>
+            {optimizer.applied && (
+              <Button
+                onClick={() => {
+                  optimizer.onReset();
+                  setOptimize({ state: 'idle' });
+                }}
+              >
+                {t.cls_optimize_reset()}
+              </Button>
+            )}
+          </div>
+          <p class="ff-muted">{t.cls_optimize_note()}</p>
+          <p class="ff-muted" role="status">
+            {optimize.state === 'running' && t.cls_optimizing({ count: optimize.count })}
+            {optimize.state === 'missing' && t.cls_optimize_missing()}
+            {optimize.state === 'failed' && t.cls_failed()}
+            {optimize.state === 'done' &&
+              (optimize.after < optimize.before - 1e-9
+                ? t.cls_optimized({
+                    before: score(optimize.before),
+                    after: score(optimize.after),
+                    count: optimize.count,
+                  })
+                : t.cls_optimize_none())}
+          </p>
+        </div>
       )}
       <LiveRegion>{announcement}</LiveRegion>
     </section>
