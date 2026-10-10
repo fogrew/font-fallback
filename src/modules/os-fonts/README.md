@@ -17,3 +17,9 @@ The dataset covers a curated list of fallback-relevant families (`scripts/os-fon
 | ChromeOS | none yet | |
 
 Gaps to fill: macOS 11 to the current release, ChromeOS, vendor Android builds and per-font local names.
+
+## Metrics
+
+`data/metrics.json` holds, per family, the vertical metrics (`hhea`, `typo`, `win`), the local names for `@font-face` `local()` and the glyph advances for Latin, Greek, Cyrillic and common punctuation (code point runs plus an advance array). Only metrics are committed, never font files; each entry records the source file, its SHA-256 and, for downloads, URL and license. `osFontMetrics()` decodes them into `Uint32Array`/`Float64Array` pairs compatible with the fit engine.
+
+`pnpm os-fonts:metrics [extra font dirs...]` regenerates the file with the production parser (`parseFontBuffer`), running it through a Vite server. It searches the system font directories (Windows `%WINDIR%\Fonts`, macOS `/System/Library/Fonts`, `/System/Library/Fonts/Supplemental`, `/Library/Fonts`, Linux `/usr/share/fonts`, plus the extra directories), downloads open-source fonts from pinned URLs (cached in the OS temp directory) and keeps previous entries for fonts it cannot find. Font collections use their first member. Helvetica, Helvetica Neue and Lucida Grande need a macOS run.

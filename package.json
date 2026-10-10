@@ -30,6 +30,7 @@
     "i18n:compile": "node scripts/i18n-compile.mjs",
     "i18n:add": "node scripts/i18n-add.ts",
     "os-fonts:import": "node scripts/os-fonts/import.ts",
+    "os-fonts:metrics": "node scripts/os-fonts/extract-metrics.mjs",
     "postinstall": "pnpm i18n:compile"
   },
   "dependencies": {
