@@ -2,5 +2,19 @@
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "app_title": "Font Fallback",
   "home_heading": "Font Fallback",
-  "locale_switcher_label": "Language"
+  "locale_switcher_label": "Language",
+  "ui_auto": "Auto",
+  "ui_skip_content": "Skip to content",
+  "ui_reset_auto": "Reset to auto",
+  "ui_copy_code": "Copy code",
+  "ui_copied": "Copied",
+  "ui_copy_failed": "Copy failed. Select and copy the code manually.",
+  "fit_size_label": "Size adjust",
+  "fit_percent_unit": "%",
+  "fit_recalculate": "Recalculate",
+  "fallback_font_label": "Fallback font",
+  "preview_tabs_label": "Output",
+  "preview_tab": "Preview",
+  "css_tab": "CSS",
+  "guide_disclosure": "How it works"
 }

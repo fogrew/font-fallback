@@ -24,7 +24,7 @@
     "verify": "pnpm lint && pnpm lint:arch && pnpm check && pnpm test && pnpm build",
     "test": "pnpm i18n:compile && vitest run",
     "test:watch": "pnpm i18n:compile && vitest",
-    "test:e2e": "pnpm build && playwright test && playwright test --config tests/worker/playwright.config.ts",
+    "test:e2e": "pnpm build && playwright test && playwright test --config tests/worker/playwright.config.ts && playwright test --config tests/ui/playwright.config.ts",
     "changelog": "git-cliff --output CHANGELOG.md",
     "release": "node scripts/release.ts",
     "i18n:compile": "node scripts/i18n-compile.mjs",

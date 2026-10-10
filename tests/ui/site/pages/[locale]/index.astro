@@ -1,0 +1,20 @@
+---
+import { assertIsLocale, locales, messagesFor } from '@/common/i18n';
+import BaseLayout from '../../../../../src/app/layouts/BaseLayout.astro';
+import { Fixture } from '../../components/Fixture';
+
+export function getStaticPaths() {
+  return locales.map((locale) => ({ params: { locale } }));
+}
+const locale = assertIsLocale(Astro.params.locale);
+const t = messagesFor(locale);
+---
+
+<BaseLayout {locale} path="/">
+    <h1>{t.home_heading()}</h1>
+    <Fixture {locale} client:load />
+</BaseLayout>
+
+<style is:global>
+  .fixture { display: grid; gap: var(--ff-space-6); max-width: 42rem; }
+</style>

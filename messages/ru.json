@@ -2,5 +2,19 @@
   "$schema": "https://inlang.com/schema/inlang-message-format",
   "app_title": "Font Fallback",
   "home_heading": "Font Fallback",
-  "locale_switcher_label": "Язык"
+  "locale_switcher_label": "Язык",
+  "ui_auto": "Авто",
+  "ui_skip_content": "Перейти к содержимому",
+  "ui_reset_auto": "Сбросить в авто",
+  "ui_copy_code": "Копировать код",
+  "ui_copied": "Скопировано",
+  "ui_copy_failed": "Не удалось скопировать. Выделите и скопируйте код вручную.",
+  "fit_size_label": "Масштаб шрифта",
+  "fit_percent_unit": "%",
+  "fit_recalculate": "Пересчитать",
+  "fallback_font_label": "Резервный шрифт",
+  "preview_tabs_label": "Результат",
+  "preview_tab": "Предпросмотр",
+  "css_tab": "CSS",
+  "guide_disclosure": "Как это работает"
 }

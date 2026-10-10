@@ -1,6 +1,7 @@
 node_modules/
 dist/
 .worker-test-dist/
+.ui-test-dist/
 .astro/
 .wrangler/
 .dev.vars*

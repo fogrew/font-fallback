@@ -1,6 +1,7 @@
 ---
 import { getTextDirection, type Locale, messagesFor } from '@/common/i18n';
 import { LocaleSwitcher } from '@/modules/locale-switcher';
+import '../styles/tokens.css';
 
 interface Props {
   locale: Locale;
@@ -18,9 +19,10 @@ const t = messagesFor(locale);
     <title>{t.app_title()}</title>
   </head>
   <body>
+    <a class="ff-skip-link" href="#main-content">{t.ui_skip_content()}</a>
     <header>
       <LocaleSwitcher current={locale} {path} />
     </header>
-    <slot />
+    <main id="main-content" tabindex="-1"><slot /></main>
   </body>
 </html>
