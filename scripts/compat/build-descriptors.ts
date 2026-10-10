@@ -42,9 +42,10 @@ interface Statement {
   version_removed?: string | boolean;
 }
 
-function earliest(support: unknown): string | false {
+function earliest(support: unknown): string | false | null {
   const statements = (Array.isArray(support) ? support : [support]) as Statement[];
   let best: string | false = false;
+  let unknown = false;
   for (const statement of statements) {
     if (
       statement.flags ||
@@ -55,11 +56,15 @@ function earliest(support: unknown): string | false {
       continue;
     }
     const added = statement.version_added;
+    if (added === true || added === null || added === undefined) {
+      unknown = true;
+      continue;
+    }
     if (typeof added !== 'string' || !/^≤?\d+(\.\d+)*$/.test(added)) continue;
     const clean = added.replace('≤', '');
     if (best === false || compare(clean, best) < 0) best = clean;
   }
-  return best;
+  return best === false && unknown ? null : best;
 }
 
 function compare(a: string, b: string): number {
@@ -72,10 +77,10 @@ function compare(a: string, b: string): number {
   return 0;
 }
 
-const features: Record<string, Record<string, string | false>> = {};
+const features: Record<string, Record<string, string | false | null>> = {};
 for (const [name, read] of Object.entries(FEATURES)) {
   const support = read().__compat.support;
-  const row: Record<string, string | false> = {};
+  const row: Record<string, string | false | null> = {};
   for (const [source, target] of Object.entries(BROWSERS)) {
     row[target] = earliest(support[source]);
   }

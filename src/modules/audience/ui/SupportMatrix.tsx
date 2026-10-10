@@ -1,6 +1,11 @@
 import { type Locale, messagesFor } from '@/common/i18n';
 import type { WeightedEntry } from '../lib/os';
-import { descriptorSupport, lacksVerticalOverrides, supportData } from '../lib/support';
+import {
+  descriptorSupport,
+  lacksVerticalOverrides,
+  supportData,
+  VERTICAL_THRESHOLD,
+} from '../lib/support';
 import './audience.css';
 
 export function SupportMatrix({
@@ -42,7 +47,7 @@ export function SupportMatrix({
           </li>
         ))}
       </ul>
-      {vertical >= 0.5 && (
+      {vertical >= VERTICAL_THRESHOLD && (
         <p class="ff-muted">{t.support_vertical_note({ percent: percent(vertical) })}</p>
       )}
       <p class="ff-muted">{t.support_source({ version: supportData.bcdVersion })}</p>

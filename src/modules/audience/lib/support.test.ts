@@ -41,6 +41,18 @@ describe('descriptorSupport', () => {
     expect(find(list, 'size-adjust').supported).toBeCloseTo(33.3, 0);
   });
 
+  it('marks ranges that straddle the first supporting release as unknown', () => {
+    const list = descriptorSupport([
+      entry('ios_saf 16.0-16.3', 1),
+      entry('ios_saf 16.4-16.7', 1),
+      entry('ios_saf 16.0-16.6', 1),
+    ]);
+    const adjust = find(list, 'font-size-adjust');
+    expect(adjust.supported).toBeCloseTo(33.3, 0);
+    expect(adjust.unsupported).toBeCloseTo(33.3, 0);
+    expect(adjust.unknown).toBeCloseTo(33.3, 0);
+  });
+
   it('covers every feature and keeps the data fresh and complete', () => {
     expect(descriptorSupport([entry('chrome 120', 1)]).map((item) => item.feature)).toEqual([
       ...FEATURES,

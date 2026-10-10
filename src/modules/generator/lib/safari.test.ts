@@ -15,6 +15,7 @@ describe('safariStrategyCss', () => {
   it('emits font-size-adjust and a fixed line height', () => {
     const css = safariStrategyCss(0.48774, 1.4);
     expect(css).toContain('font-size-adjust: 0.4877;');
+    expect(css).not.toContain('{');
     expect(css).toContain('line-height: 1.4;');
   });
 

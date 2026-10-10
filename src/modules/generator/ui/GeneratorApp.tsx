@@ -6,6 +6,7 @@ import {
   descriptorSupport,
   lacksVerticalOverrides,
   type OsShares,
+  VERTICAL_THRESHOLD,
   type WeightedEntry,
 } from '@/modules/audience';
 import { CssExportError } from '@/modules/export';
@@ -81,7 +82,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [shares, setShares] = useState<OsShares>();
   const [entries, setEntries] = useState<WeightedEntry[]>();
   const [safari, setSafari] = useState<boolean>();
-  const [lineHeight, setLineHeight] = useState(1.4);
+  const [lineHeightText, setLineHeightText] = useState('1.4');
   const [activeOs, setActiveOs] = useState<OsId>();
   const [picks, setPicks] = useState<Partial<Record<OsId, string[]>>>({});
   const [editId, setEditId] = useState<string>();
@@ -247,9 +248,12 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
 
   const vertical = entries ? lacksVerticalOverrides(descriptorSupport(entries)) : 0;
   const aspect = selected ? aspectOf(selected.metrics) : null;
-  const safariOn = aspect !== null && (safari ?? vertical >= 1);
-  const safariCss =
-    safariOn && aspect !== null && lineHeight > 0 ? safariStrategyCss(aspect, lineHeight) : '';
+  const safariOn = aspect !== null && (safari ?? vertical >= VERTICAL_THRESHOLD);
+  const typedLineHeight = Number(lineHeightText);
+  const lineHeight = Number.isFinite(typedLineHeight)
+    ? Math.min(3, Math.max(0.8, typedLineHeight))
+    : 1.4;
+  const safariCss = safariOn && aspect !== null ? safariStrategyCss(aspect, lineHeight) : '';
 
   const systemName = (os: OsId) => t[`audience_os_${os}`]();
   const percent = (value: number) =>
@@ -564,6 +568,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                     type="checkbox"
                     checked={safariOn}
                     disabled={aspect === null}
+                    aria-describedby={aspect === null ? 'ff-safari-note' : undefined}
                     onChange={(event) => setSafari(event.currentTarget.checked)}
                   />{' '}
                   {t.safari_strategy_label()}
@@ -578,16 +583,19 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                       min={0.8}
                       max={3}
                       step={0.05}
-                      value={lineHeight}
-                      onInput={(event) => {
-                        const next = event.currentTarget.valueAsNumber;
-                        if (Number.isFinite(next)) setLineHeight(Math.min(3, Math.max(0.8, next)));
-                      }}
+                      inputMode="decimal"
+                      value={lineHeightText}
+                      onInput={(event) => setLineHeightText(event.currentTarget.value)}
+                      onBlur={() => setLineHeightText(String(lineHeight))}
                     />
                   </div>
                 )}
-                {aspect === null && <p class="ff-muted">{t.safari_no_xheight()}</p>}
-                {aspect !== null && safari === undefined && vertical >= 1 && (
+                {aspect === null && (
+                  <p id="ff-safari-note" class="ff-muted">
+                    {t.safari_no_xheight()}
+                  </p>
+                )}
+                {aspect !== null && safari === undefined && vertical >= VERTICAL_THRESHOLD && (
                   <p class="ff-muted">
                     {t.safari_recommended({
                       percent: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(

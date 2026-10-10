@@ -15,7 +15,7 @@ export type Feature = (typeof FEATURES)[number];
 
 export interface SupportData {
   bcdVersion: string;
-  features: Record<string, Record<string, string | false>>;
+  features: Record<string, Record<string, string | false | null>>;
 }
 
 export interface FeatureSupport {
@@ -39,23 +39,27 @@ function compareVersions(a: string, b: string): number {
   return 0;
 }
 
-function lowerBound(version: string): string | null {
-  if (version === 'TP') return String(Number.MAX_SAFE_INTEGER);
-  const first = version.split('-', 1)[0] ?? '';
-  return /^\d+(\.\d+)*$/.test(first) ? first : null;
+function bounds(version: string): [string, string] | null {
+  if (version === 'TP') return [String(Number.MAX_SAFE_INTEGER), String(Number.MAX_SAFE_INTEGER)];
+  const parts = version.split('-');
+  const [low, high = low] = parts;
+  const valid = (value: string | undefined): value is string =>
+    value !== undefined && /^\d+(\.\d+)*$/.test(value);
+  return parts.length <= 2 && valid(low) && valid(high) ? [low, high] : null;
 }
 
 type Verdict = 'yes' | 'no' | 'unknown';
 
-function verdictFor(entry: string, row: Record<string, string | false>): Verdict {
+function verdictFor(entry: string, row: Record<string, string | false | null>): Verdict {
   const space = entry.indexOf(' ');
   const id = entry.slice(0, space);
   const added = row[id];
-  if (added === undefined) return 'unknown';
+  if (added === undefined || added === null) return 'unknown';
   if (added === false) return 'no';
-  const version = lowerBound(entry.slice(space + 1));
-  if (version === null) return 'unknown';
-  return compareVersions(version, added) >= 0 ? 'yes' : 'no';
+  const range = bounds(entry.slice(space + 1));
+  if (range === null) return 'unknown';
+  if (compareVersions(range[0], added) >= 0) return 'yes';
+  return compareVersions(range[1], added) < 0 ? 'no' : 'unknown';
 }
 
 export function descriptorSupport(
@@ -93,6 +97,8 @@ export const VERTICAL_OVERRIDES: readonly Feature[] = [
   'descent-override',
   'line-gap-override',
 ];
+
+export const VERTICAL_THRESHOLD = 1;
 
 export function lacksVerticalOverrides(support: readonly FeatureSupport[]): number {
   const found = support.find((item) => item.feature === 'ascent-override');
