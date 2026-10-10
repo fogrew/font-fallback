@@ -188,7 +188,6 @@ Each phase ends deployable with a green PR check.
 - Astro + Preact + TS strict, Biome, lefthook, Vitest, Playwright, Paraglide (EN/RU), FEOD skeleton with `index.ts` per entity.
 - Cloudflare Workers Builds connected; `verify` pipeline running on PRs.
 - Spikes (go/no-go):
-  - Playwright in the Cloudflare build container (gVisor, Ubuntu 22.04, no root for `apt` deps).
   - `@feod/analyzer` (0.1.x): parses `.ts`/`.tsx` only, not `.astro` (see issues).
   - Done: font parsing in a worker (fontkitten, own metrics format) and `@capsizecss/metrics` coverage; results in `docs/spikes/`.
 
@@ -220,6 +219,7 @@ Each phase ends deployable with a green PR check.
 
 **Phase 9 — Polish**
 - Full a11y audit, performance (lazy chunks, worker), SEO/meta/OG, guide page, Credits page, README.
+- Spike: Playwright in the Cloudflare build container (gVisor, Ubuntu 22.04, no root for `apt` deps), to decide whether e2e can run in the build (#7).
 
 **Backlog**
 - Offline use and a service-worker update flow: an "Update" toast with a changelog link while the app is open, the new version downloaded in the background, and a toast after an automatic update linking to the combined changelog of all applied versions (#78).
@@ -239,4 +239,4 @@ Each phase ends deployable with a green PR check.
 Every external source (data, libraries with notable data, inspiration sites, specs) is listed in [`CREDITS.md`](../CREDITS.md) with its license, and rendered on a Credits page of the site (linked from the footer).
 
 ## 8. Open questions
-1. If Playwright cannot run in the Cloudflare build: allow a single GitHub Actions job for e2e only, or run e2e Chromium-only / locally? (resolved by the Phase 0 spike)
+1. If Playwright cannot run in the Cloudflare build: allow a single GitHub Actions job for e2e only, or run e2e Chromium-only / locally? (decided by the spike in Phase 9, #7)
