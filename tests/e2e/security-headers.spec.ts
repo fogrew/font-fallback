@@ -7,7 +7,7 @@ test('pages carry the baseline security headers', async ({ page }) => {
   expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
   expect(headers['permissions-policy']).toContain('camera=()');
   expect(headers['cross-origin-opener-policy']).toBe('same-origin');
-  expect(headers['content-security-policy']).toContain("frame-ancestors 'none'");
+  expect(headers['content-security-policy']).toContain("frame-ancestors 'self'");
 });
 
 test('the hashed CSP allows no unsafe sources', async ({ page }) => {
@@ -27,9 +27,35 @@ test('hashed build assets are cached immutably', async ({ page }) => {
   await page.goto('/en/');
   const src = await page.locator('script[src^="/_astro/"], link[href^="/_astro/"]').first();
   const url = (await src.getAttribute('src')) ?? (await src.getAttribute('href'));
-  const cacheControl = await page.evaluate(
-    async (assetUrl) => (await fetch(assetUrl)).headers.get('cache-control'),
-    url ?? '',
+  const headers = await page.evaluate(async (assetUrl) => {
+    const response = await fetch(assetUrl);
+    return {
+      cacheControl: response.headers.get('cache-control'),
+      nosniff: response.headers.get('x-content-type-options'),
+    };
+  }, url ?? '');
+  expect(headers.cacheControl).toContain('immutable');
+  expect(headers.nosniff).toBe('nosniff');
+});
+
+test('same-origin frames are allowed', async ({ page }) => {
+  await page.goto('/en/');
+  const title = await page.evaluate(
+    (src) =>
+      new Promise<string>((resolve, reject) => {
+        const frame = document.createElement('iframe');
+        frame.onload = () => resolve(frame.contentDocument?.title ?? '');
+        frame.onerror = () => reject(new Error('frame failed'));
+        frame.src = src;
+        document.body.append(frame);
+      }),
+    '/ru/',
   );
-  expect(cacheControl).toContain('immutable');
+  expect(title).toBe('Font Fallback');
+});
+
+test('directory URLs redirect to the trailing-slash form', async ({ request }) => {
+  const response = await request.get('/en', { maxRedirects: 0 });
+  expect(response.status()).toBe(308);
+  expect(response.headers().location).toBe('/en/');
 });

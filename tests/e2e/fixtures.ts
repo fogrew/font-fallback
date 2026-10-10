@@ -2,19 +2,16 @@ import { test as base, expect } from '@playwright/test';
 
 export const test = base.extend({
   page: async ({ page }, use) => {
+    const violations: string[] = [];
+    await page.exposeFunction('__reportCsp', (violation: string) => violations.push(violation));
     await page.addInitScript(() => {
-      const violations: string[] = [];
-      (window as unknown as { __csp: string[] }).__csp = violations;
       document.addEventListener('securitypolicyviolation', (event) => {
-        violations.push(
+        (window as unknown as { __reportCsp: (value: string) => void }).__reportCsp(
           `${event.violatedDirective}: ${event.blockedURI} ${event.sourceFile}:${event.lineNumber}`,
         );
       });
     });
     await use(page);
-    const violations = await page
-      .evaluate(() => (window as unknown as { __csp?: string[] }).__csp ?? [])
-      .catch(() => []);
     expect(violations).toEqual([]);
   },
 });

@@ -81,16 +81,11 @@ test('recovers after corrupt input reaches the worker', async ({ page }) => {
 
 test('main-thread watchdog terminates an infinite loop in a real worker', async ({ page }) => {
   const result = await page.evaluate(async () => {
-    const url = URL.createObjectURL(
-      new Blob(['onmessage = () => { while (true) {} };'], { type: 'text/javascript' }),
-    );
     try {
-      await window.runWorkerTask(() => new Worker(url), null, { timeoutMs: 100 });
+      await window.runWorkerTask(() => new Worker('/hang-worker.js'), null, { timeoutMs: 100 });
       return 'unexpected-success';
     } catch (error) {
       return (error as { code: string }).code;
-    } finally {
-      URL.revokeObjectURL(url);
     }
   });
   expect(result).toBe('timeout');

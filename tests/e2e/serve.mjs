@@ -54,7 +54,8 @@ function headersFor(pathname) {
 }
 
 function resolveFile(pathname) {
-  const target = normalize(join(root, decodeURIComponent(pathname)));
+  if (pathname === '/_headers') return null;
+  const target = normalize(join(root, pathname));
   if (target !== root.slice(0, -1) && !target.startsWith(root)) return null;
   if (existsSync(target) && statSync(target).isFile()) return target;
   const index = join(target, 'index.html');
@@ -62,7 +63,14 @@ function resolveFile(pathname) {
 }
 
 createServer((request, response) => {
-  const { pathname } = new URL(request.url ?? '/', 'http://localhost');
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(request.url ?? '/', 'http://localhost').pathname);
+  } catch {
+    response.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' });
+    response.end('Bad request');
+    return;
+  }
   const file = resolveFile(pathname);
   const isDirectory =
     file?.endsWith(`${sep}index.html`) &&
@@ -83,5 +91,11 @@ createServer((request, response) => {
     'cache-control': 'public, max-age=0, must-revalidate',
     ...headersFor(pathname),
   });
-  createReadStream(file).pipe(response);
+  if (request.method === 'HEAD') {
+    response.end();
+    return;
+  }
+  createReadStream(file)
+    .on('error', () => response.destroy())
+    .pipe(response);
 }).listen(port, '::');

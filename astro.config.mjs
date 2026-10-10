@@ -11,7 +11,8 @@ export default defineConfig({
     csp: {
       directives: [
         "default-src 'self'",
-        "worker-src 'self' blob:",
+        "worker-src 'self'",
+        "frame-src 'self'",
         "font-src 'self' blob: data:",
         "connect-src 'self'",
         "img-src 'self' data: blob:",

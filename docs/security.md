@@ -13,13 +13,14 @@ The app reads font files that users choose and builds CSS and previews from them
 |---|---|---|
 | `default-src` | `'self'` | Nothing is loaded from other origins. |
 | `script-src`, `style-src` | `'self'` plus Astro's hashes | No `'unsafe-inline'` and no `'unsafe-eval'`. |
-| `worker-src` | `'self' blob:` | The font parser worker is a same-origin bundled module. |
+| `worker-src` | `'self'` | The font parser worker is a same-origin bundled module; no blob workers. |
+| `frame-src` | `'self'` | Same-origin frames only (planned CLS simulator). |
 | `font-src` | `'self' blob: data:` | Uploaded fonts are loaded from bytes in memory. |
 | `connect-src` | `'self'` | No network access to other origins. |
 | `img-src` | `'self' data: blob:` | |
 | `object-src`, `base-uri` | `'none'` | |
 | `form-action` | `'self'` | |
-| `frame-ancestors` | `'none'` (header only) | Not valid in a meta tag. The page cannot be framed. |
+| `frame-ancestors` | `'self'` (header only) | Not valid in a meta tag. Other sites cannot frame the app; same-origin frames (the planned CLS simulator) still work. |
 | `X-Content-Type-Options` | `nosniff` | |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | |
 | `Permissions-Policy` | `camera=(), microphone=(), geolocation=(), payment=()` | Only features supported by all major browsers, to avoid console noise. |
@@ -27,12 +28,15 @@ The app reads font files that users choose and builds CSS and previews from them
 | `Cross-Origin-Resource-Policy` | `same-origin` | |
 | `Cache-Control` on `/_astro/*` | `public, max-age=31536000, immutable` | Build output is content-hashed. |
 
+`script-src` and `style-src` exist only in the meta policy, and a meta policy applies only to content parsed after it. Astro places it early in `<head>`, and the app has no HTML injection sink, so the rule against `dangerouslySetInnerHTML` and similar sinks is load-bearing. Possible later hardening: `require-trusted-types-for 'script'`.
+
 ## Rules for code
 
 - No inline `<style>` elements or `style` attributes in HTML at build time; dynamic CSS goes through `CSSStyleSheet` and `document.adoptedStyleSheets` (see `Preview.tsx`), and per-element styles through the CSSOM.
 - No `eval`, no inline event handlers, no `dangerouslySetInnerHTML`.
 - New origins, `blob:` or `data:` sources, or any `'unsafe-*'` keyword must be justified in the PR and listed in the table above.
-- The same-origin iframes planned for the CLS simulator work under `frame-ancestors 'none'` only if they are same-origin documents loaded by the app itself, since the policy forbids framing by other sites, not by the app.
+- Same-origin iframes (CLS simulator) are allowed by `frame-ancestors 'self'`; framing by other origins is not.
+- Features that load external resources add their origin to the matching directive in the PR that introduces them (for example the Google Fonts picker adds `https://fonts.gstatic.com` to `font-src` and `connect-src`).
 - The service worker planned in #78 must be allowed by the policy and served with `Cache-Control: no-cache`.
 
 ## Testing
