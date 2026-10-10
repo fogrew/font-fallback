@@ -29,8 +29,10 @@ type StatsInfo = Extract<StatsResult, { ok: true }>;
 export function AudienceEditor({
   locale,
   onShares,
+  active = false,
 }: {
   locale: Locale;
+  active?: boolean;
   onShares?: ((shares: OsShares) => void) | undefined;
 }) {
   const t = messagesFor(locale);
@@ -46,7 +48,7 @@ export function AudienceEditor({
   const userStats: UsageStats | undefined = stats?.stats;
 
   useEffect(() => {
-    if (!opened) return;
+    if (!opened && !active) return;
     let current = true;
     const timer = setTimeout(() => {
       resolveQuery(query, userStats).then(
@@ -58,7 +60,7 @@ export function AudienceEditor({
       current = false;
       clearTimeout(timer);
     };
-  }, [opened, query, userStats]);
+  }, [opened, active, query, userStats]);
 
   const statsErrors: Record<StatsErrorCode, string> = {
     'too-large': t.audience_stats_error_too_large(),

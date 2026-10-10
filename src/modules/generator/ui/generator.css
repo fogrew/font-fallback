@@ -121,10 +121,12 @@
   .ff-generator {
     flex: 1;
     grid-template-columns: minmax(20rem, 27rem) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     align-items: stretch;
   }
   .ff-generator__settings,
   .ff-generator__results {
+    position: relative;
     overflow-y: auto;
     padding-inline-end: var(--ff-space-1);
   }
@@ -164,18 +166,6 @@
 }
 
 @media (min-width: 64rem) and (min-height: 40rem) {
-  .ff-generator__results {
-    grid-template-rows: auto minmax(10rem, 1fr);
-  }
-  .ff-generator__results > .ff-generator__section {
-    grid-template-rows: auto auto minmax(0, 1fr);
-    min-block-size: 0;
-  }
-  .ff-generator__results .ff-code {
-    display: grid;
-    grid-template-rows: auto minmax(0, 1fr);
-    min-block-size: 0;
-  }
   .ff-generator__results .ff-code__body {
     max-block-size: none;
   }
@@ -195,4 +185,9 @@
   .ff-generator__settings {
     gap: var(--ff-space-2);
   }
+}
+
+.ff-generator__section--plain {
+  padding: 0;
+  border: 0;
 }

@@ -8,7 +8,9 @@ const fonts = new URL('../fixtures/fonts/', import.meta.url).pathname.replace(
 );
 const sourceSans = `${fonts}SourceSansPro-Regular.woff2`;
 
-test('uploading a font produces ranked fallbacks, editable values and CSS', async ({ page }) => {
+test('uploading a font produces per-system fallbacks, editable values and CSS', async ({
+  page,
+}) => {
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
   await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
@@ -18,12 +20,19 @@ test('uploading a font produces ranked fallbacks, editable values and CSS', asyn
   const code = page.getByRole('region', { name: 'Generated CSS' });
   await expect(code).toContainText('@font-face');
   await expect(code).toContainText('size-adjust');
-  await expect(code).toContainText('"Source Sans Pro Fallback"');
+  await expect(code).toContainText('"Source Sans Pro Fallback');
   await expect(code).not.toContainText('font-family: font-family');
+  await expect(
+    page
+      .getByRole('list', { name: /Fallbacks by system/ })
+      .or(page.getByRole('region', { name: 'Fallbacks by system' })),
+  ).toBeVisible();
 
+  await page.getByLabel('System', { exact: true }).selectOption('windows');
   const before = await code.textContent();
   await fallback.selectOption({ index: 2 });
   await expect(code).not.toHaveText(before ?? '');
+  const picked = await fallback.inputValue();
 
   const size = page.getByRole('spinbutton', { name: /Size adjust/ });
   await size.fill('110');
@@ -32,6 +41,8 @@ test('uploading a font produces ranked fallbacks, editable values and CSS', asyn
   await expect(page.getByRole('checkbox', { name: 'Auto' }).first()).not.toBeChecked();
 
   await fallback.selectOption({ index: 0 });
+  await expect(code).not.toContainText('size-adjust: 110%');
+  await fallback.selectOption(picked);
   await expect(code).toContainText('size-adjust: 110%');
 });
 
@@ -39,9 +50,50 @@ test('serif and monospace fallbacks are available by font type', async ({ page }
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
   await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  await page.getByLabel('System', { exact: true }).selectOption('windows');
   await page.getByLabel('Font type').selectOption('serif');
   await expect(page.getByLabel('Fallback font')).toContainText('Times New Roman');
   await expect(page.getByRole('region', { name: 'Generated CSS' })).toContainText('serif;');
+});
+
+test('the fallback list follows the selected system and reports shadowing with a fix', async ({
+  page,
+}) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  const system = page.getByLabel('System', { exact: true });
+  const fallback = page.getByLabel('Fallback font');
+
+  await system.selectOption('android');
+  await expect(fallback).toContainText('Roboto');
+  await expect(fallback).not.toContainText('Segoe UI');
+  await system.selectOption('windows');
+  await expect(fallback).toContainText('Segoe UI');
+  await expect(fallback).not.toContainText('Roboto');
+
+  await page.getByText('Audience (browsers)').click();
+  await page.getByLabel('Browserslist query').fill('safari 17, chrome 120');
+  await system.selectOption('macos');
+  await fallback.selectOption('helvetica');
+  await system.selectOption('windows');
+  await fallback.selectOption('arial');
+  await expect(page.getByText(/would be used instead of/)).toBeVisible();
+  await page.getByRole('button', { name: 'Reorder to fix' }).click();
+  await expect(page.getByText(/would be used instead of/)).toHaveCount(0);
+});
+
+test('the text language changes the fit for Cyrillic', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  await page.getByLabel('System', { exact: true }).selectOption('windows');
+  const fallback = page.getByLabel('Fallback font');
+  await expect(fallback)
+    .toContainText('Latin only')
+    .catch(() => undefined);
+  await page.getByLabel('Text language').selectOption('ru');
+  await expect(fallback).not.toContainText('Latin only');
 });
 
 test('an invalid file is rejected with an announced error', async ({ page }) => {
