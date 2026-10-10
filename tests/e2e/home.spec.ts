@@ -10,6 +10,14 @@ for (const locale of ['en', 'ru']) {
     await expect(page.getByRole('heading', { level: 1, name: 'Font Fallback' })).toBeVisible();
   });
 
+  test(`${locale}: footer links to the repository`, async ({ page }) => {
+    await page.goto(`/${locale}/`);
+    await expect(page.getByRole('contentinfo').getByRole('link')).toHaveAttribute(
+      'href',
+      'https://github.com/fogrew/font-fallback',
+    );
+  });
+
   test(`${locale}: has no detectable accessibility violations`, async ({ page }) => {
     await page.goto(`/${locale}/`);
     const results = await new AxeBuilder({ page }).withTags(wcagTags).analyze();

@@ -35,7 +35,8 @@ body {
   margin: 0;
 }
 header,
-main {
+main,
+footer {
   padding: var(--ff-space-6);
 }
 main {
@@ -44,6 +45,9 @@ main {
 }
 header {
   border-block-end: 1px solid var(--ff-border);
+}
+footer {
+  border-block-start: 1px solid var(--ff-border);
 }
 a {
   color: var(--ff-accent);

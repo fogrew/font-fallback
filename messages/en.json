@@ -3,6 +3,7 @@
   "app_title": "Font Fallback",
   "home_heading": "Font Fallback",
   "locale_switcher_label": "Language",
+  "footer_source": "Source code on GitHub",
   "ui_auto": "Auto",
   "ui_slider_suffix": "slider",
   "ui_number_suffix": "number input",
