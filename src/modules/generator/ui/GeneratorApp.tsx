@@ -141,106 +141,120 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
 
   return (
     <div class="ff-generator">
-      <FontUpload locale={locale} busy={busy} onFiles={addFiles} />
-      {error && (
-        <p class="ff-error" role="alert">
-          {error}
-        </p>
-      )}
-      <LiveRegion>{announcement}</LiveRegion>
-      {fonts.length > 0 && (
-        <section class="ff-generator__section" aria-labelledby="ff-fonts-heading">
-          <h2 id="ff-fonts-heading">{t.upload_fonts_label()}</h2>
-          <Select
-            label={t.upload_select_label()}
-            value={String(selected?.id ?? '')}
-            options={fonts.map((font) => ({
-              value: String(font.id),
-              label: `${font.metrics.names.fullName ?? font.fileName} (${font.fileName})`,
-            }))}
-            onChange={(value) => setSelectedId(Number(value))}
-          />
-          <ul>
-            {fonts.map((font) => (
-              <li key={font.id}>
-                <span>{font.fileName}</span>
-                <Button
-                  onClick={() => {
-                    setFonts((current) => current.filter((item) => item.id !== font.id));
-                    setSelectedId((current) => (current === font.id ? undefined : current));
-                  }}
-                  aria-label={`${t.upload_remove()}: ${font.fileName}`}
-                >
-                  {t.upload_remove()}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {ranking && !ranking.ok && ranking.noCoverage && <p role="alert">{t.fit_no_coverage()}</p>}
-      {ranking?.ok && candidate && adjustment && (
-        <section class="ff-generator__section" aria-labelledby="ff-fit-heading">
-          <h2 id="ff-fit-heading">{t.fit_heading()}</h2>
-          <Select
-            label={t.fit_type_label()}
-            value={kind}
-            options={[
-              { value: 'sans-serif', label: t.type_sans() },
-              { value: 'serif', label: t.type_serif() },
-              { value: 'monospace', label: t.type_mono() },
-            ]}
-            onChange={(value) => {
-              setKind(value as SystemFont['genericFamily']);
-              setFallbackId(undefined);
-            }}
-          />
-          <Select
-            label={t.fallback_font_label()}
-            value={candidate.font.id}
-            options={ofKind.map((item) => ({
-              value: item.font.id,
-              label: `${item.font.family} (${(item.adjustment.sizeAdjust * 100).toFixed(1)}%)`,
-            }))}
-            onChange={setFallbackId}
-          />
-          <p class="ff-muted">{t.fit_ranked_hint()}</p>
-          {FIELDS.map(({ key, label, min, max }) => (
-            <FitField
-              key={key}
-              locale={locale}
-              label={t[label]()}
-              unit={t.fit_percent_unit()}
-              value={values[key]}
-              autoValue={candidate.adjustment[key] * 100}
-              min={min}
-              max={max}
-              step={0.1}
-              onChange={(next) => setValues((current) => ({ ...current, [key]: next }))}
-            />
-          ))}
-          <p class="ff-muted">{t.fit_latin_note()}</p>
-        </section>
-      )}
-      {output && selected && candidate && adjustment && (
-        <>
-          <section class="ff-generator__section" aria-labelledby="ff-css-heading">
-            <h2 id="ff-css-heading">{t.css_heading()}</h2>
-            <CodeBlock
-              locale={locale}
-              label={t.css_code_label()}
-              code={`${output.fontFaces}\n\n${output.fontFamily}`}
-            />
+      <div class="ff-generator__settings">
+        <FontUpload locale={locale} busy={busy} onFiles={addFiles} />
+        {error && (
+          <p class="ff-error" role="alert">
+            {error}
+          </p>
+        )}
+        <LiveRegion>{announcement}</LiveRegion>
+        {fonts.length > 0 && (
+          <section class="ff-generator__section" aria-labelledby="ff-fonts-heading">
+            <h2 id="ff-fonts-heading" class="ff-sr-only">
+              {t.upload_fonts_label()}
+            </h2>
+            {fonts.length > 1 && (
+              <Select
+                label={t.upload_select_label()}
+                value={String(selected?.id ?? '')}
+                options={fonts.map((font) => ({
+                  value: String(font.id),
+                  label: `${font.metrics.names.fullName ?? font.fileName} (${font.fileName})`,
+                }))}
+                onChange={(value) => setSelectedId(Number(value))}
+              />
+            )}
+            <ul>
+              {fonts.map((font) => (
+                <li key={font.id}>
+                  <span>{font.fileName}</span>
+                  <Button
+                    onClick={() => {
+                      setFonts((current) => current.filter((item) => item.id !== font.id));
+                      setSelectedId((current) => (current === font.id ? undefined : current));
+                    }}
+                    aria-label={`${t.upload_remove()}: ${font.fileName}`}
+                  >
+                    {t.upload_remove()}
+                  </Button>
+                </li>
+              ))}
+            </ul>
           </section>
-          <Preview
-            locale={locale}
-            bytes={selected.bytes}
-            fallback={candidate.font}
-            adjustment={adjustment}
-          />
-        </>
-      )}
-      {ranking?.ok && !output && selected && <p role="alert">{t.css_error()}</p>}
+        )}
+        {ranking && !ranking.ok && ranking.noCoverage && <p role="alert">{t.fit_no_coverage()}</p>}
+        {ranking?.ok && candidate && adjustment && (
+          <section class="ff-generator__section" aria-labelledby="ff-fit-heading">
+            <h2 id="ff-fit-heading" class="ff-sr-only">
+              {t.fit_heading()}
+            </h2>
+            <div class="ff-generator__pair">
+              <Select
+                label={t.fit_type_label()}
+                value={kind}
+                options={[
+                  { value: 'sans-serif', label: t.type_sans() },
+                  { value: 'serif', label: t.type_serif() },
+                  { value: 'monospace', label: t.type_mono() },
+                ]}
+                onChange={(value) => {
+                  setKind(value as SystemFont['genericFamily']);
+                  setFallbackId(undefined);
+                }}
+              />
+              <Select
+                label={t.fallback_font_label()}
+                value={candidate.font.id}
+                options={ofKind.map((item) => ({
+                  value: item.font.id,
+                  label: `${item.font.family} (${(item.adjustment.sizeAdjust * 100).toFixed(1)}%)`,
+                }))}
+                onChange={setFallbackId}
+              />
+            </div>
+            {FIELDS.map(({ key, label, min, max }) => (
+              <FitField
+                key={key}
+                compact
+                locale={locale}
+                label={t[label]()}
+                unit={t.fit_percent_unit()}
+                value={values[key]}
+                autoValue={candidate.adjustment[key] * 100}
+                min={min}
+                max={max}
+                step={0.1}
+                onChange={(next) => setValues((current) => ({ ...current, [key]: next }))}
+              />
+            ))}
+          </section>
+        )}
+      </div>
+      <div class="ff-generator__results">
+        {output && selected && candidate && adjustment ? (
+          <>
+            <Preview
+              locale={locale}
+              bytes={selected.bytes}
+              fallback={candidate.font}
+              adjustment={adjustment}
+            />
+            <section class="ff-generator__section" aria-labelledby="ff-css-heading">
+              <h2 id="ff-css-heading">{t.css_heading()}</h2>
+              <p class="ff-muted">{t.fit_latin_note()}</p>
+              <CodeBlock
+                locale={locale}
+                label={t.css_code_label()}
+                code={`${output.fontFaces}\n\n${output.fontFamily}`}
+              />
+            </section>
+          </>
+        ) : (
+          <p class="ff-generator__empty">{t.results_empty()}</p>
+        )}
+        {ranking?.ok && !output && selected && <p role="alert">{t.css_error()}</p>}
+      </div>
     </div>
   );
 }

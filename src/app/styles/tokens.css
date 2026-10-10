@@ -32,6 +32,9 @@
   box-sizing: border-box;
 }
 body {
+  display: flex;
+  flex-direction: column;
+  min-block-size: 100dvh;
   margin: 0;
 }
 header,
@@ -40,8 +43,25 @@ footer {
   padding: var(--ff-space-6);
 }
 main {
-  max-width: 72rem;
+  flex: 1;
+  inline-size: 100%;
+  max-inline-size: 90rem;
   margin-inline: auto;
+}
+@media (min-width: 64rem) and (min-height: 40rem) {
+  body {
+    block-size: 100dvh;
+  }
+  header,
+  footer {
+    padding: var(--ff-space-2) var(--ff-space-6);
+  }
+  main {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 0;
+    padding-block: var(--ff-space-3);
+  }
 }
 header {
   border-block-end: 1px solid var(--ff-border);
@@ -91,5 +111,20 @@ h3 {
     --ff-on-accent: Canvas;
     --ff-error: CanvasText;
     --ff-focus: Highlight;
+  }
+}
+main > h1 {
+  margin-block: 0 var(--ff-space-4);
+  font-size: 1.5rem;
+}
+@media (min-width: 64rem) and (min-height: 40rem) {
+  main > h1 {
+    margin-block-end: var(--ff-space-2);
+  }
+}
+@media (min-width: 64rem) and (min-height: 40rem) and (max-height: 48rem) {
+  main > h1 {
+    margin-block-end: var(--ff-space-1);
+    font-size: 1.25rem;
   }
 }

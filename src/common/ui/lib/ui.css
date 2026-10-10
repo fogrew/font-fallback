@@ -68,6 +68,30 @@
   gap: var(--ff-space-3);
   margin-block-start: var(--ff-space-3);
 }
+.ff-fit--compact {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--ff-space-3);
+  padding: 0 var(--ff-space-3) var(--ff-space-1);
+}
+.ff-fit--compact legend {
+  font-size: 0.875rem;
+}
+.ff-fit--compact .ff-fit__inputs {
+  grid-template-columns: minmax(0, 1fr) 5rem;
+  gap: var(--ff-space-2);
+}
+.ff-fit--compact .ff-fit__inputs input[type="range"] {
+  min-block-size: 1.75rem;
+}
+.ff-fit--compact .ff-fit__actions {
+  margin-block-start: 0;
+}
+.ff-fit--compact .ff-input {
+  min-block-size: 1.75rem;
+  padding-block: 0;
+}
 .ff-check {
   display: inline-flex;
   align-items: center;
@@ -79,6 +103,9 @@
   inline-size: 1.25rem;
   block-size: 1.25rem;
   accent-color: var(--ff-accent);
+}
+.ff-fit--compact .ff-check {
+  min-block-size: 2rem;
 }
 .ff-tabs__list {
   display: flex;

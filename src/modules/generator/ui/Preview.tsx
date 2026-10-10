@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
+import { Select } from '@/common/ui';
 import type { SystemFont } from '@/modules/fallback-fit';
 import { buildCss, type Overrides } from '../lib/css';
 
 const PREVIEW_FAMILY = 'ff-preview-web';
+
+type Mode = 'side' | 'overlay' | 'web' | 'fallback';
 
 export function Preview({
   locale,
@@ -18,6 +21,9 @@ export function Preview({
 }) {
   const t = messagesFor(locale);
   const [sample, setSample] = useState(t.preview_sample_default());
+  const [mode, setMode] = useState<Mode>('side');
+  const [size, setSize] = useState(28);
+  const [lineHeight, setLineHeight] = useState(1.4);
   useEffect(() => {
     let cancelled = false;
     const face = new FontFace(PREVIEW_FAMILY, bytes.slice(0));
@@ -33,10 +39,53 @@ export function Preview({
     };
   }, [bytes]);
   const css = buildCss(PREVIEW_FAMILY, fallback, adjustment);
+  const shared = { fontSize: `${size}px`, lineHeight: String(lineHeight) };
+  const webStyle = { ...shared, fontFamily: `"${PREVIEW_FAMILY}", sans-serif` };
+  const fallbackStyle = { ...shared, fontFamily: `"${PREVIEW_FAMILY} Fallback", sans-serif` };
   return (
     <section class="ff-preview" aria-labelledby="ff-preview-heading">
       <h2 id="ff-preview-heading">{t.preview_heading()}</h2>
       <style>{css.fontFaces}</style>
+      <div class="ff-preview__controls">
+        <Select
+          label={t.preview_mode_label()}
+          value={mode}
+          options={[
+            { value: 'side', label: t.mode_side() },
+            { value: 'overlay', label: t.mode_overlay() },
+            { value: 'web', label: t.preview_web_label() },
+            { value: 'fallback', label: t.preview_fallback_label() },
+          ]}
+          onChange={(value) => setMode(value as Mode)}
+        />
+        <div class="ff-field">
+          <label for="ff-preview-size">
+            {t.preview_size_label()}: {size}px
+          </label>
+          <input
+            id="ff-preview-size"
+            type="range"
+            min={12}
+            max={72}
+            value={size}
+            onInput={(event) => setSize(event.currentTarget.valueAsNumber)}
+          />
+        </div>
+        <div class="ff-field">
+          <label for="ff-preview-line">
+            {t.preview_line_height_label()}: {lineHeight}
+          </label>
+          <input
+            id="ff-preview-line"
+            type="range"
+            min={1}
+            max={2}
+            step={0.05}
+            value={lineHeight}
+            onInput={(event) => setLineHeight(event.currentTarget.valueAsNumber)}
+          />
+        </div>
+      </div>
       <div class="ff-field">
         <label for="ff-preview-sample">{t.preview_sample_label()}</label>
         <input
@@ -47,22 +96,38 @@ export function Preview({
           onInput={(event) => setSample(event.currentTarget.value)}
         />
       </div>
-      <div class="ff-preview__grid">
-        <figure>
-          <figcaption>{t.preview_web_label()}</figcaption>
-          <p class="ff-preview__text" style={{ fontFamily: `"${PREVIEW_FAMILY}", sans-serif` }}>
-            {sample}
-          </p>
-        </figure>
-        <figure>
-          <figcaption>{t.preview_fallback_label()}</figcaption>
-          <p
-            class="ff-preview__text"
-            style={{ fontFamily: `"${PREVIEW_FAMILY} Fallback", sans-serif` }}
-          >
-            {sample}
-          </p>
-        </figure>
+      <div class="ff-preview__stage">
+        {(mode === 'side' || mode === 'web') && (
+          <figure>
+            <figcaption>{t.preview_web_label()}</figcaption>
+            <p class="ff-preview__text" style={webStyle}>
+              {sample}
+            </p>
+          </figure>
+        )}
+        {(mode === 'side' || mode === 'fallback') && (
+          <figure>
+            <figcaption>{t.preview_fallback_label()}</figcaption>
+            <p class="ff-preview__text" style={fallbackStyle}>
+              {sample}
+            </p>
+          </figure>
+        )}
+        {mode === 'overlay' && (
+          <figure>
+            <figcaption>{t.overlay_legend()}</figcaption>
+            <div class="ff-preview__text ff-preview__overlay">
+              <p style={{ ...webStyle, margin: 0 }}>{sample}</p>
+              <p
+                class="ff-preview__outline"
+                aria-hidden="true"
+                style={{ ...fallbackStyle, margin: 0 }}
+              >
+                {sample}
+              </p>
+            </div>
+          </figure>
+        )}
       </div>
     </section>
   );

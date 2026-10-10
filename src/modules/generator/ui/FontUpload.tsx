@@ -34,8 +34,8 @@ export function FontUpload({
       }}
     >
       <h2 id="ff-upload-heading">{t.upload_heading()}</h2>
-      <p>
-        {t.upload_drop()}{' '}
+      <p class="ff-drop__row">
+        <span>{t.upload_drop()}</span>
         <Button variant="primary" disabled={busy} onClick={() => input.current?.click()}>
           {t.upload_choose()}
         </Button>

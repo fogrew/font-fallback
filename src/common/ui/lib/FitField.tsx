@@ -13,6 +13,7 @@ export interface FitFieldProps {
   max: number;
   step?: number;
   disabled?: boolean;
+  compact?: boolean;
   onChange: (value: FitValue) => void;
 }
 
@@ -26,6 +27,7 @@ export function FitField({
   max,
   step = 1,
   disabled = false,
+  compact = false,
   onChange,
 }: FitFieldProps) {
   const id = useId();
@@ -47,7 +49,7 @@ export function FitField({
     } else setDraft(String(current));
   };
   return (
-    <fieldset class="ff-fit" disabled={disabled}>
+    <fieldset class={compact ? 'ff-fit ff-fit--compact' : 'ff-fit'} disabled={disabled}>
       <legend>
         {label} <span class="ff-muted">({unit})</span>
       </legend>
@@ -100,12 +102,14 @@ export function FitField({
           />
           {t.ui_auto()}
         </label>
-        <Button
-          onClick={() => onChange({ mode: 'auto' })}
-          disabled={disabled || value.mode === 'auto'}
-        >
-          {t.ui_reset_auto()}
-        </Button>
+        {!compact && (
+          <Button
+            onClick={() => onChange({ mode: 'auto' })}
+            disabled={disabled || value.mode === 'auto'}
+          >
+            {t.ui_reset_auto()}
+          </Button>
+        )}
       </div>
     </fieldset>
   );

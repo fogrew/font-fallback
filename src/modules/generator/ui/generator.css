@@ -1,14 +1,22 @@
 .ff-generator {
   display: grid;
-  gap: var(--ff-space-6);
-  max-width: 48rem;
+  gap: var(--ff-space-4);
+  min-block-size: 0;
+}
+.ff-generator__settings,
+.ff-generator__results {
+  display: grid;
+  align-content: start;
+  gap: var(--ff-space-3);
+  min-inline-size: 0;
+  min-block-size: 0;
 }
 .ff-drop,
 .ff-preview,
 .ff-generator__section {
   display: grid;
-  gap: var(--ff-space-4);
-  padding: var(--ff-space-4);
+  gap: var(--ff-space-2);
+  padding: var(--ff-space-3);
   border: 1px dashed var(--ff-border);
   border-radius: var(--ff-radius);
 }
@@ -16,17 +24,20 @@
   border-style: solid;
   border-color: var(--ff-accent);
 }
+.ff-drop p {
+  margin: 0;
+}
 .ff-preview,
 .ff-generator__section {
   border-style: solid;
 }
 .ff-generator h2 {
   margin: 0;
-  font-size: 1.125rem;
+  font-size: 1rem;
 }
 .ff-generator ul {
   display: grid;
-  gap: var(--ff-space-2);
+  gap: var(--ff-space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -34,24 +45,148 @@
 .ff-generator li {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--ff-space-3);
+  gap: var(--ff-space-2);
   align-items: center;
+  justify-content: space-between;
 }
-.ff-preview__grid {
+.ff-generator .ff-button {
+  min-block-size: 2rem;
+  padding-block: var(--ff-space-1);
+}
+.ff-generator__pair {
   display: grid;
-  gap: var(--ff-space-4);
+  gap: var(--ff-space-2);
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+}
+.ff-generator .ff-muted,
+.ff-generator__empty {
+  margin: 0;
+  font-size: 0.8125rem;
+}
+.ff-preview__controls {
+  display: grid;
+  gap: var(--ff-space-2);
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  align-items: end;
+}
+.ff-preview__controls input[type="range"] {
+  inline-size: 100%;
+  min-block-size: 1.75rem;
+  accent-color: var(--ff-accent);
+}
+.ff-preview__stage {
+  display: grid;
+  gap: var(--ff-space-2);
   grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
 }
 .ff-preview figure {
   margin: 0;
-  padding: var(--ff-space-3);
+  padding: var(--ff-space-2) var(--ff-space-3);
   border: 1px solid var(--ff-border);
   border-radius: var(--ff-radius);
+  min-inline-size: 0;
 }
 .ff-preview figcaption {
+  font-size: 0.875rem;
   font-weight: 600;
 }
 .ff-preview__text {
-  margin: var(--ff-space-2) 0 0;
-  font-size: 1.5rem;
+  margin: var(--ff-space-1) 0 0;
+  overflow-wrap: anywhere;
+}
+.ff-preview__overlay {
+  display: grid;
+}
+.ff-preview__overlay > * {
+  grid-area: 1 / 1;
+}
+.ff-preview__outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ff-accent);
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+}
+.ff-generator .ff-code__body {
+  max-block-size: 11rem;
+}
+.ff-generator .ff-code pre {
+  padding: var(--ff-space-2) var(--ff-space-3);
+  font-size: 0.8125rem;
+}
+.ff-generator .ff-code__header {
+  padding: var(--ff-space-1) var(--ff-space-3);
+}
+
+@media (min-width: 64rem) and (min-height: 40rem) {
+  .ff-generator {
+    flex: 1;
+    grid-template-columns: minmax(20rem, 27rem) minmax(0, 1fr);
+    align-items: stretch;
+  }
+  .ff-generator__settings,
+  .ff-generator__results {
+    overflow-y: auto;
+    padding-inline-end: var(--ff-space-1);
+  }
+  .ff-generator .ff-code__body {
+    max-block-size: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ff-preview figure {
+    transition: opacity 0.15s ease-out;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ff-preview figure {
+    transition: none;
+  }
+}
+
+.ff-drop__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ff-space-2);
+}
+.ff-generator .ff-input {
+  min-block-size: 2rem;
+  padding-block: var(--ff-space-1);
+}
+.ff-generator .ff-fit__number {
+  min-inline-size: 5.5rem;
+}
+.ff-generator .ff-field {
+  gap: var(--ff-space-1);
+}
+
+@media (min-width: 64rem) and (min-height: 40rem) {
+  .ff-generator__results {
+    grid-template-rows: auto minmax(0, 1fr);
+    overflow: hidden;
+  }
+  .ff-generator__results > .ff-generator__section {
+    grid-template-rows: auto auto minmax(0, 1fr);
+    min-block-size: 0;
+  }
+  .ff-generator__results .ff-code {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-block-size: 0;
+  }
+  .ff-generator__results .ff-code__body {
+    max-block-size: none;
+  }
+}
+
+@media (min-width: 64rem) and (min-height: 40rem) {
+  .ff-generator__settings {
+    gap: var(--ff-space-2);
+  }
+  .ff-drop,
+  .ff-generator__section {
+    padding: var(--ff-space-2) var(--ff-space-3);
+  }
 }

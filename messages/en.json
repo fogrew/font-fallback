@@ -55,5 +55,12 @@
   "fit_type_label": "Font type",
   "type_sans": "Sans-serif",
   "type_serif": "Serif",
-  "type_mono": "Monospace"
+  "type_mono": "Monospace",
+  "preview_mode_label": "View",
+  "mode_side": "Side by side",
+  "mode_overlay": "Overlay",
+  "preview_size_label": "Text size",
+  "preview_line_height_label": "Line height",
+  "overlay_legend": "Overlay: filled text is the web font, outlined dotted text is the adjusted fallback.",
+  "results_empty": "Load a font to see the fallback fit, the CSS and the preview here."
 }
