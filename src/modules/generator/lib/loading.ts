@@ -23,6 +23,7 @@ export function loadingCss(spacing: SpacingEm): string {
 export function loadingScript(family: string): string {
   const font = JSON.stringify(`1em ${JSON.stringify(family)}`);
   return `const root = document.documentElement;
+const done = () => root.classList.remove('${LOADING_CLASS}');
 root.classList.add('${LOADING_CLASS}');
-document.fonts.load(${font}).finally(() => root.classList.remove('${LOADING_CLASS}'));`;
+document.fonts.load(${font}).then(done, done);`;
 }

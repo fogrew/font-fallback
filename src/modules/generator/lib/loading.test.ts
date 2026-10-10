@@ -24,11 +24,18 @@ describe('loadingScript', () => {
     expect(script).toContain("classList.add('fonts-loading')");
     expect(script).toContain('document.fonts.load("1em \\"Source Sans Pro\\"")');
     expect(script).toContain("classList.remove('fonts-loading')");
+    expect(script).toContain('.then(done, done)');
   });
 
   it('escapes quotes and backslashes in the family name', () => {
     const script = loadingScript('A"B\\C');
     expect(script).toContain('A\\\\\\"B');
     expect(() => new Function(script.replace('document.fonts.load', 'void'))).not.toThrow();
+  });
+
+  it('stays a valid script for names with line breaks and script-like text', () => {
+    const script = loadingScript('x\n</script><script>alert(1)//');
+    expect(() => new Function(script.replace('document.fonts.load', 'void'))).not.toThrow();
+    expect(script.split('\n').length).toBe(4);
   });
 });

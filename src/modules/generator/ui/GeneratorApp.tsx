@@ -104,14 +104,14 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [focusSlot, setFocusSlot] = useState<number>();
   const [values, setValues] = useState<Record<string, Values>>({});
   const [optimized, setOptimized] = useState<Record<string, Partial<Overrides>>>({});
-  const [optimizedSpacing, setOptimizedSpacing] = useState<SpacingEm>();
+  const [spacingResult, setSpacingResult] = useState<{ key: string; value: SpacingEm }>();
   const [spacingValues, setSpacingValues] = useState<{ letter: FitValue; word: FitValue }>({
     letter: { mode: 'auto' },
     word: { mode: 'auto' },
   });
   const resetOptimization = () => {
     setOptimized({});
-    setOptimizedSpacing(undefined);
+    setSpacingResult(undefined);
   };
   const [savedOrder, setSavedOrder] = useState<{ key: string; value: string[] }>();
   const [planNote, setPlanNote] = useState('');
@@ -250,6 +250,8 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     if (!(failure instanceof StackResolveError)) throw failure;
   }
   const previewPick = currentPick ?? chosen[0]?.candidate;
+  const spacingKey = JSON.stringify([selected?.id, language, kind, previewPick?.id]);
+  const optimizedSpacing = spacingResult?.key === spacingKey ? spacingResult.value : undefined;
 
   const spacingEm: SpacingEm = {
     letter:
@@ -394,7 +396,10 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
             lineGapOverride: v.lineGapOverride ?? base.lineGapOverride,
           },
         }));
-        setOptimizedSpacing({ letter: v.letterSpacing ?? 0, word: v.wordSpacing ?? 0 });
+        setSpacingResult({
+          key: spacingKey,
+          value: { letter: v.letterSpacing ?? 0, word: v.wordSpacing ?? 0 },
+        });
       },
       onReset: resetOptimization,
     };

@@ -79,6 +79,11 @@ export function LayoutShiftPanel({
   const latest = useRef(input);
   latest.current = input;
   const bytes = input?.webBytes;
+  const optimizerFamily = optimizer?.family;
+  useEffect(() => {
+    optimizing.current?.abort();
+    setOptimize((current) => (current.state === 'running' ? { state: 'idle' } : current));
+  }, [key, optimizerFamily]);
 
   useEffect(() => {
     const current = latest.current;
@@ -142,7 +147,10 @@ export function LayoutShiftPanel({
             letterEm: values.letterSpacing ?? 0,
             wordEm: values.wordSpacing ?? 0,
           });
-          if (measured.missingFallbacks.length > 0) missing = true;
+          if (measured.missingFallbacks.length > 0) {
+            missing = true;
+            controller.abort();
+          }
           return measured.results.reduce((sum, item) => sum + item.score, 0);
         },
         {
@@ -152,9 +160,10 @@ export function LayoutShiftPanel({
           onProgress: (count) => setOptimize({ state: 'running', count }),
         },
       );
-      if (controller.signal.aborted) return;
       if (missing) {
         setOptimize({ state: 'missing' });
+      } else if (controller.signal.aborted) {
+        return;
       } else {
         if (result.score < result.startScore - 1e-9) optimizer.onApply(result.values);
         setOptimize({
@@ -264,9 +273,24 @@ export function LayoutShiftPanel({
       {optimizer && (
         <div class="ff-cls__optimize">
           <div class="ff-generator__buttons">
-            <Button onClick={runOptimizer} disabled={optimize.state === 'running'}>
+            <Button
+              onClick={() => {
+                if (optimize.state !== 'running') void runOptimizer();
+              }}
+              aria-disabled={optimize.state === 'running'}
+            >
               {t.cls_optimize()}
             </Button>
+            {optimize.state === 'running' && (
+              <Button
+                onClick={() => {
+                  optimizing.current?.abort();
+                  setOptimize({ state: 'idle' });
+                }}
+              >
+                {t.cls_optimize_cancel()}
+              </Button>
+            )}
             {optimizer.applied && (
               <Button
                 onClick={() => {

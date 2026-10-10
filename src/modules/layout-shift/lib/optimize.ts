@@ -27,6 +27,24 @@ export interface OptimizeResult {
 
 const EPSILON = 1e-12;
 
+class DeadlineError extends Error {}
+
+function withDeadline<T>(
+  work: Promise<T>,
+  remainingMs: number,
+  signal: AbortSignal | undefined,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new DeadlineError()), Math.max(0, remainingMs));
+    const abort = () => reject(new DeadlineError());
+    signal?.addEventListener('abort', abort, { once: true });
+    work.then(resolve, reject).finally(() => {
+      clearTimeout(timer);
+      signal?.removeEventListener('abort', abort);
+    });
+  });
+}
+
 export async function compassSearch(
   dimensions: readonly Dimension[],
   evaluate: (values: Record<string, number>) => Promise<number>,
@@ -46,7 +64,11 @@ export async function compassSearch(
 
   const cost = async (values: Record<string, number>): Promise<number> => {
     evaluations += 1;
-    const base = await evaluate({ ...values });
+    const base = await withDeadline(
+      evaluate({ ...values }),
+      options.maxMs - (now() - startedAt),
+      options.signal,
+    );
     let penalty = 0;
     for (const dim of free) {
       const range = dim.max - dim.min;
@@ -55,7 +77,19 @@ export async function compassSearch(
     return base + lambda * penalty;
   };
 
-  const startScore = await cost(current);
+  let startScore: number;
+  try {
+    startScore = await cost(current);
+  } catch (failure) {
+    if (!(failure instanceof DeadlineError)) throw failure;
+    return {
+      values: current,
+      score: Number.POSITIVE_INFINITY,
+      startScore: Number.POSITIVE_INFINITY,
+      evaluations,
+      stoppedBy: options.signal?.aborted ? 'aborted' : 'time',
+    };
+  }
   let best = startScore;
   options.onProgress?.(evaluations, best);
   let stoppedBy: OptimizeResult['stoppedBy'] = 'converged';
@@ -83,7 +117,14 @@ export async function compassSearch(
           Math.max(dim.min, (current[dim.key] ?? 0) + direction * (steps[dim.key] ?? 0)),
         );
         if (Math.abs(candidate - (current[dim.key] ?? 0)) < EPSILON) continue;
-        const next = await cost({ ...current, [dim.key]: candidate });
+        let next: number;
+        try {
+          next = await cost({ ...current, [dim.key]: candidate });
+        } catch (failure) {
+          if (!(failure instanceof DeadlineError)) throw failure;
+          stoppedBy = options.signal?.aborted ? 'aborted' : 'time';
+          break search;
+        }
         if (next < bestCost - EPSILON) {
           bestCost = next;
           bestCandidate = candidate;

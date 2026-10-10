@@ -182,5 +182,6 @@
   "spacing_unit": "% of the font size",
   "loading_heading": "While the font loads",
   "loading_note": "Spacing applies only until the web font is ready. Run this script early in the page and keep the CSS above.",
-  "loading_code_label": "Font loading script"
+  "loading_code_label": "Font loading script",
+  "cls_optimize_cancel": "Cancel"
 }

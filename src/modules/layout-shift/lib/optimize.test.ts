@@ -78,6 +78,21 @@ describe('compassSearch', () => {
     expect(aborted.values.a).toBe(0);
   });
 
+  it('stops on time even when an evaluation never settles', async () => {
+    const result = await compassSearch([dim('a', 0)], () => new Promise<number>(() => undefined), {
+      maxEvaluations: 10,
+      maxMs: 20,
+    });
+    expect(result.stoppedBy).toBe('time');
+    expect(result.values.a).toBe(0);
+  });
+
+  it('propagates evaluation failures', async () => {
+    await expect(
+      compassSearch([dim('a', 0)], async () => Promise.reject(new Error('boom')), options),
+    ).rejects.toThrow('boom');
+  });
+
   it('keeps the start when nothing improves and prefers small moves on plateaus', async () => {
     const flat = await compassSearch([dim('a', 2)], async () => 1, options);
     expect(flat.values.a).toBe(2);
