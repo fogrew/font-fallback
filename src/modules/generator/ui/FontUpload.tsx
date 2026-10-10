@@ -1,0 +1,54 @@
+import { useRef, useState } from 'preact/hooks';
+import { type Locale, messagesFor } from '@/common/i18n';
+import { Button } from '@/common/ui';
+
+export function FontUpload({
+  locale,
+  busy,
+  onFiles,
+}: {
+  locale: Locale;
+  busy: boolean;
+  onFiles: (files: File[]) => void;
+}) {
+  const t = messagesFor(locale);
+  const input = useRef<HTMLInputElement>(null);
+  const [over, setOver] = useState(false);
+  return (
+    <section
+      class="ff-drop"
+      data-over={over}
+      aria-labelledby="ff-upload-heading"
+      onDragOver={(event) => {
+        event.preventDefault();
+        setOver(true);
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(event) => {
+        event.preventDefault();
+        setOver(false);
+        onFiles([...(event.dataTransfer?.files ?? [])]);
+      }}
+    >
+      <h2 id="ff-upload-heading">{t.upload_heading()}</h2>
+      <p>
+        {t.upload_drop()}{' '}
+        <Button variant="primary" disabled={busy} onClick={() => input.current?.click()}>
+          {t.upload_choose()}
+        </Button>
+      </p>
+      <input
+        ref={input}
+        hidden
+        type="file"
+        multiple
+        accept=".woff2,.woff,.ttf,.otf,font/woff2,font/woff,font/ttf,font/otf"
+        onChange={(event) => {
+          onFiles([...(event.currentTarget.files ?? [])]);
+          event.currentTarget.value = '';
+        }}
+      />
+      <p class="ff-muted">{t.upload_local()}</p>
+    </section>
+  );
+}

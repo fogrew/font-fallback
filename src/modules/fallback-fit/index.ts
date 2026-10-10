@@ -18,4 +18,5 @@ export {
   type StackResolution,
   StackResolveError,
 } from './lib/stack-model';
+export { type SystemFont, systemFonts } from './lib/system-fonts';
 export { languageWeights } from './lib/weights';

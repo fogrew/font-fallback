@@ -39,6 +39,10 @@ Variable-font inputs represent whichever instance was extracted. Width fitting
 uses raw advances, without shaping, kerning, ligatures or contextual substitutions;
 rendered-text optimization is a separate plan task.
 
+## System fonts
+
+`systemFonts` lists nine common system fallbacks (Arial, Helvetica, Times New Roman, Georgia, Verdana, Tahoma, Trebuchet MS, Courier New, Segoe UI) with hhea metrics and the Latin-weighted average advance (`xWidthAvg`) from `@capsizecss/metrics` 4.3.0 (MIT), converted to em. They feed `fitFromAverages` when no glyph data for the fallback is available, so the fit is limited to Latin text and uses Capsize's English weighting.
+
 ## Frequency profiles
 
 `languageWeights('en' | 'ru')` returns fresh mutable copies. English is the Latin

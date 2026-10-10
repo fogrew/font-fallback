@@ -1,5 +1,6 @@
 ---
 import { type Locale, messagesFor } from '@/common/i18n';
+import { GeneratorApp } from '@/modules/generator';
 
 interface Props {
   locale: Locale;
@@ -9,3 +10,4 @@ const t = messagesFor(Astro.props.locale);
 ---
 
 <h1>{t.home_heading()}</h1>
+<GeneratorApp locale={Astro.props.locale} client:load />
