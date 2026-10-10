@@ -165,5 +165,8 @@
   "cls_rating_good": "Good",
   "cls_rating_needs": "Needs improvement",
   "cls_rating_poor": "Poor",
-  "cls_announcement": "Layout shift at {width}px: {score}, {rating}."
+  "cls_announcement": "Layout shift at {width}px: {score}, {rating}.",
+  "cls_custom_hint": "From {min} to {max}.",
+  "cls_change": "{before} to {after}",
+  "cls_change_px": "{before} to {after}px"
 }

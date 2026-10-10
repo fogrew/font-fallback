@@ -78,7 +78,7 @@ function snapshot(root: Element): Snapshot {
       return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
     }),
     lines: elements.map(lineCount),
-    height: root.ownerDocument.documentElement.scrollHeight,
+    height: (root as HTMLElement).offsetHeight,
   };
 }
 
@@ -114,6 +114,10 @@ function waitForFrame(frame: HTMLIFrameElement): Promise<void> {
   });
 }
 
+function throwIfAborted(signal: AbortSignal | undefined) {
+  if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+}
+
 async function nextFrame(window: Window): Promise<void> {
   await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
 }
@@ -129,7 +133,7 @@ export async function simulateLayoutShift(input: SimulationInput): Promise<Viewp
     ) {
       throw new RangeError('Invalid viewport');
     }
-    if (input.signal?.aborted) throw new DOMException('Aborted', 'AbortError');
+    throwIfAborted(input.signal);
     const frame = document.createElement('iframe');
     frame.setAttribute('sandbox', 'allow-same-origin');
     frame.setAttribute('aria-hidden', 'true');
@@ -145,6 +149,7 @@ export async function simulateLayoutShift(input: SimulationInput): Promise<Viewp
     document.body.append(frame);
     try {
       await waitForFrame(frame);
+      throwIfAborted(input.signal);
       const view = frame.contentWindow;
       const doc = frame.contentDocument;
       if (!view || !doc) throw new Error('Simulation frame is unavailable');
@@ -159,6 +164,7 @@ export async function simulateLayoutShift(input: SimulationInput): Promise<Viewp
         input.webBytes.slice(0),
       );
       await web.load();
+      throwIfAborted(input.signal);
       doc.fonts.add(web);
 
       doc.body.className = 'sim-a';
@@ -167,12 +173,14 @@ export async function simulateLayoutShift(input: SimulationInput): Promise<Viewp
       );
       await doc.fonts.ready;
       await nextFrame(view);
+      throwIfAborted(input.signal);
       const before = snapshot(doc.body);
 
       doc.body.className = 'sim-b';
       await doc.fonts.load(`16px ${quote(WEB_FAMILY)}`);
       await doc.fonts.ready;
       await nextFrame(view);
+      throwIfAborted(input.signal);
       const after = snapshot(doc.body);
 
       const count = Math.min(before.boxes.length, after.boxes.length);

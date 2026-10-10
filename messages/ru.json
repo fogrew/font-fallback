@@ -165,5 +165,8 @@
   "cls_rating_good": "Хорошо",
   "cls_rating_needs": "Нужно улучшить",
   "cls_rating_poor": "Плохо",
-  "cls_announcement": "Сдвиг вёрстки при {width}px: {score}, {rating}."
+  "cls_announcement": "Сдвиг вёрстки при {width}px: {score}, {rating}.",
+  "cls_custom_hint": "От {min} до {max}.",
+  "cls_change": "{before} → {after}",
+  "cls_change_px": "{before} → {after}px"
 }

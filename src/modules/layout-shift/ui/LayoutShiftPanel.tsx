@@ -36,7 +36,8 @@ export function LayoutShiftPanel({
     Number.isInteger(customWidth) &&
     customWidth >= MIN_WIDTH &&
     customWidth <= MAX_WIDTH;
-  const widths = customValid ? [customWidth] : [];
+  const known = DEFAULT_VIEWPORTS.some((viewport) => viewport.width === customWidth);
+  const widths = customValid && !known ? [customWidth] : [];
   const key = input
     ? JSON.stringify([
         input.fallbackFontFaces,
@@ -52,7 +53,11 @@ export function LayoutShiftPanel({
 
   useEffect(() => {
     const current = latest.current;
-    if (!current || key === '') return;
+    if (!current || key === '') {
+      setResults([]);
+      setStatus('idle');
+      return;
+    }
     const controller = new AbortController();
     let frame = 0;
     const timer = setTimeout(() => {
@@ -69,7 +74,9 @@ export function LayoutShiftPanel({
             setStatus('idle');
           },
           () => {
-            if (!controller.signal.aborted) setStatus('failed');
+            if (controller.signal.aborted) return;
+            setResults([]);
+            setStatus('failed');
           },
         );
       });
@@ -126,10 +133,16 @@ export function LayoutShiftPanel({
           max={MAX_WIDTH}
           value={customText}
           aria-invalid={customText !== '' && !customValid}
+          aria-describedby="ff-cls-width-hint"
           onInput={(event) => setCustomText(event.currentTarget.value)}
         />
       </div>
-      {status === 'running' && <p class="ff-muted">{t.cls_running()}</p>}
+      <p id="ff-cls-width-hint" class="ff-muted">
+        {t.cls_custom_hint({ min: MIN_WIDTH, max: MAX_WIDTH })}
+      </p>
+      <p class="ff-muted" role="status">
+        {status === 'running' && t.cls_running()}
+      </p>
       {status === 'failed' && (
         <p class="ff-error" role="alert">
           {t.cls_failed()}
@@ -137,6 +150,7 @@ export function LayoutShiftPanel({
       )}
       {results.length > 0 && (
         <table class="ff-cls__table">
+          <caption class="ff-sr-only">{t.cls_heading()}</caption>
           <thead>
             <tr>
               <th scope="col">{t.cls_viewport()}</th>
@@ -151,8 +165,13 @@ export function LayoutShiftPanel({
               <tr key={item.viewport.width}>
                 <th scope="row">{`${item.viewport.width}px`}</th>
                 <td>{`${score(item.score)} · ${ratingLabel(item.score)}`}</td>
-                <td>{`${item.linesBefore} → ${item.linesAfter}`}</td>
-                <td>{`${Math.round(item.heightBefore)} → ${Math.round(item.heightAfter)}px`}</td>
+                <td>{t.cls_change({ before: item.linesBefore, after: item.linesAfter })}</td>
+                <td>
+                  {t.cls_change_px({
+                    before: Math.round(item.heightBefore),
+                    after: Math.round(item.heightAfter),
+                  })}
+                </td>
                 <td>{item.lineBreakMismatches}</td>
               </tr>
             ))}
