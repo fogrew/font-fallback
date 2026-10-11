@@ -27,19 +27,41 @@ export interface Layout {
 
 const WIDTH_EPSILON = 0.01;
 
+interface Table {
+  widths: Map<number, number>;
+  fallback: number;
+}
+
+const tables = new WeakMap<object, Table>();
+const webLayouts = new WeakMap<PredictFont, Map<string, Layout>>();
+
+function tableOf(font: PredictFont): Table {
+  const key = font.advances as object;
+  const cached = tables.get(key);
+  if (cached) return cached;
+  const widths = new Map<number, number>();
+  let total = 0;
+  for (let index = 0; index < font.codePoints.length; index++) {
+    const advance = font.advances[index] ?? 0;
+    widths.set(font.codePoints[index] ?? 0, advance);
+    total += advance;
+  }
+  const table = {
+    widths,
+    fallback: font.codePoints.length > 0 ? total / font.codePoints.length : font.unitsPerEm / 2,
+  };
+  tables.set(key, table);
+  return table;
+}
+
 class Metrics {
-  private readonly widths = new Map<number, number>();
+  private readonly widths: Map<number, number>;
   private readonly fallback: number;
 
   constructor(private readonly font: PredictFont) {
-    let total = 0;
-    for (let index = 0; index < font.codePoints.length; index++) {
-      const advance = font.advances[index] ?? 0;
-      this.widths.set(font.codePoints[index] ?? 0, advance);
-      total += advance;
-    }
-    this.fallback =
-      font.codePoints.length > 0 ? total / font.codePoints.length : font.unitsPerEm / 2;
+    const table = tableOf(font);
+    this.widths = table.widths;
+    this.fallback = table.fallback;
   }
 
   glyph(codePoint: number, fontPx: number): number {
@@ -122,6 +144,20 @@ export function layoutDocument(
   return { boxes, lines, height: bottom + (previousMargin ?? 0) + BODY_PADDING };
 }
 
+function cachedLayout(font: PredictFont, blocks: readonly Block[], width: number): Layout {
+  let byKey = webLayouts.get(font);
+  if (!byKey) {
+    byKey = new Map();
+    webLayouts.set(font, byKey);
+  }
+  const key = `${blocks.length}:${blocks[0]?.text.length ?? 0}:${width}`;
+  const cached = byKey.get(key);
+  if (cached) return cached;
+  const layout = layoutDocument(font, blocks, width);
+  byKey.set(key, layout);
+  return layout;
+}
+
 export function predictViewport(
   web: PredictFont,
   fallback: PredictFont,
@@ -129,7 +165,7 @@ export function predictViewport(
   viewport: Viewport,
 ): ViewportResult {
   const before = layoutDocument(fallback, blocks, viewport.width);
-  const after = layoutDocument(web, blocks, viewport.width);
+  const after = cachedLayout(web, blocks, viewport.width);
   const items = before.boxes.map((box, index) => ({
     before: box,
     after: after.boxes[index] as Box,

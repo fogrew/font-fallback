@@ -163,7 +163,7 @@
   "cls_change_px": "{before} to {after}px",
   "cls_optimize": "Optimize for CLS",
   "cls_optimize_reset": "Reset optimization",
-  "cls_optimize_note": "Searches the size, vertical overrides and spacing of the selected fallback for the smallest layout shift on this device. Values you set by hand stay as they are.",
+  "cls_optimize_note": "Searches the size, vertical overrides and spacing of the selected fallback for the smallest estimated layout shift. Values you set by hand stay as they are.",
   "cls_optimizing": "Optimizing… {count} measurements.",
   "cls_optimized": "Layout shift on this device: {before} to {after} ({count} measurements).",
   "cls_optimize_none": "Nothing to improve.",

@@ -89,6 +89,14 @@ export function LayoutShiftPanel({
     [model],
   );
 
+  const signature = rows
+    .map((row) => `${row.face.id}:${row.results?.map((item) => item.score.toFixed(5)).join(',')}`)
+    .join('|');
+  useEffect(() => {
+    verifying.current?.abort();
+    setVerified({ state: 'idle' });
+  }, [signature]);
+
   const ratingLabel = (score: number) => {
     const rating = ratingOf(score);
     if (rating === 'good') return t.cls_rating_good();
@@ -123,9 +131,12 @@ export function LayoutShiftPanel({
     if (!model || !optimizer) return;
     setOptimize({ state: 'running', count: 0 });
     try {
+      let evaluated = 0;
       const result = await compassSearch(
         optimizer.dimensions,
         async (values) => {
+          evaluated += 1;
+          if (evaluated % 40 === 0) await new Promise<void>((resolve) => setTimeout(resolve));
           const font = optimizer.fontFor(values);
           if (!font) return 0;
           return scoreOf(model, font).reduce((sum, item) => sum + item.score, 0);
@@ -245,6 +256,7 @@ export function LayoutShiftPanel({
             </Button>
           )}
         </div>
+        {optimizer && <p class="ff-muted">{t.cls_optimize_note()}</p>}
         <p class="ff-muted" role="status">
           {optimize.state === 'running' && t.cls_optimizing({ count: optimize.count })}
           {optimize.state === 'failed' && t.cls_failed()}
@@ -258,16 +270,13 @@ export function LayoutShiftPanel({
               : t.cls_optimize_none())}
           {verified.state === 'running' && ` ${t.cls_verifying()}`}
           {verified.state === 'failed' && ` ${t.cls_failed()}`}
-        </p>
-        {verified.state === 'done' && (
-          <p class="ff-muted">
-            {t.cls_verified({
+          {verified.state === 'done' &&
+            ` ${t.cls_verified({
               results: verified.results
                 .map((item) => `${item.viewport.width}px: ${score(item.score)}`)
                 .join(', '),
-            })}
-          </p>
-        )}
+            })}`}
+        </p>
       </div>
       <LiveRegion>{announcement}</LiveRegion>
     </section>

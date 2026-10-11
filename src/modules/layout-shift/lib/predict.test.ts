@@ -99,3 +99,47 @@ describe('predictViewport', () => {
     expect(result.heightBefore).toBeGreaterThan(result.heightAfter);
   });
 });
+
+describe('spacing and margins', () => {
+  it('adds letter spacing after every character and word spacing to spaces', () => {
+    const text = [{ tag: 'p' as const, text: 'aa aa' }];
+    expect(layoutDocument(font(500), text, 16 * 2 + 39).lines[0]).toBe(2);
+    expect(layoutDocument(font(500), text, 16 * 2 + 40).lines[0]).toBe(1);
+    expect(layoutDocument(font(500, { letterEm: -0.05 }), text, 16 * 2 + 39).lines[0]).toBe(1);
+    expect(layoutDocument(font(500, { wordEm: 0.1 }), text, 16 * 2 + 40).lines[0]).toBe(2);
+  });
+
+  it('collapses the margins between different blocks and indents list items', () => {
+    const layout = layoutDocument(
+      font(500),
+      [
+        { tag: 'p', text: 'a' },
+        { tag: 'h2', text: 'a' },
+        { tag: 'li', text: 'a' },
+        { tag: 'h3', text: 'a' },
+      ],
+      300,
+    );
+    const [p, h2, li, h3] = layout.boxes;
+    expect((h2?.y ?? 0) - ((p?.y ?? 0) + (p?.height ?? 0))).toBe(20);
+    expect(li?.x).toBe(16 + 24);
+    expect(li?.width).toBe(300 - 32 - 24);
+    expect((h3?.y ?? 0) - ((li?.y ?? 0) + (li?.height ?? 0))).toBe(16);
+  });
+
+  it('does not break at non-breaking spaces', () => {
+    const nbsp = [{ tag: 'p' as const, text: 'aa\u00a0aa aa' }];
+    expect(layoutDocument(font(500), nbsp, 16 * 2 + 40).lines[0]).toBe(2);
+  });
+
+  it('uses the average advance for glyphs the font lacks', () => {
+    const layout = layoutDocument(font(500), [{ tag: 'p', text: 'zzzz' }], 100);
+    expect(layout.lines[0]).toBe(1);
+    const cyr = layoutDocument(
+      font(500),
+      [{ tag: 'p', text: 'ёёёёёёёёёёёёёёёё ёёёёёёёёёё' }],
+      16 * 2 + 100,
+    );
+    expect(cyr.lines[0]).toBeGreaterThan(1);
+  });
+});
