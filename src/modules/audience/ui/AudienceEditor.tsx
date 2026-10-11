@@ -40,7 +40,7 @@ export function AudienceEditor({
   locale: Locale;
   active?: boolean;
   onEntries?: ((data: AudienceData | undefined) => void) | undefined;
-  onShares?: ((shares: OsShares) => void) | undefined;
+  onShares?: ((shares: OsShares, mode: 'browsers' | 'manual') => void) | undefined;
 }) {
   const t = messagesFor(locale);
   const inputId = useId();

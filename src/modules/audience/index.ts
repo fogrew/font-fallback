@@ -8,7 +8,6 @@ export {
   descriptorSupport,
   type FeatureSupport,
   lacksVerticalOverrides,
-  VERTICAL_THRESHOLD,
 } from './lib/support';
 export { type AudienceData, AudienceEditor } from './ui/AudienceEditor';
 export { SupportMatrix } from './ui/SupportMatrix';

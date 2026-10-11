@@ -94,4 +94,28 @@ describe('buildMatrix', () => {
     );
     expect(groups.map((group) => group.share)).toEqual([50, 50]);
   });
+
+  it('keeps unknown browsers unknown when a system is switched off and merges equal neighbours', () => {
+    const groups = buildMatrix(
+      [entry('op_mini all', 5), entry('chrome 119', 5), entry('chrome 120', 5)],
+      { windows: 100, macos: 0, linux: 0, chromeos: 0 },
+      { windows: system('Arial', false), other: system('', false) },
+      { released: { chrome: ['119', '120', '121'], op_mini: ['all'] } },
+    );
+    const windows = groups.find((group) => group.os === 'windows');
+    expect(windows?.columns[0]?.cells).toEqual([{ label: '119–120', state: 'none', shift: null }]);
+    const other = groups.find((group) => group.os === 'other');
+    expect(other?.columns[0]?.cells).toEqual([{ label: 'all', state: 'unknown', shift: null }]);
+  });
+
+  it('treats safari TP and versions missing from the release list as separate cells', () => {
+    const groups = buildMatrix(
+      [entry('safari 18', 1), entry('safari TP', 1)],
+      { windows: 0, macos: 100, linux: 0, chromeos: 0 },
+      { macos: system('Helvetica') },
+      { released: { safari: ['17', '18'] } },
+    );
+    const cells = groups[0]?.columns[0]?.cells.map((cell) => cell.label);
+    expect(cells).toEqual(['18', 'TP']);
+  });
 });

@@ -11,7 +11,7 @@ import {
   type WeightedEntry,
 } from '../lib/os';
 
-type Mode = 'browsers' | 'manual';
+export type Mode = 'browsers' | 'manual';
 
 const MANUAL_IDS = OS_IDS.filter((id) => id !== 'other');
 
@@ -26,7 +26,7 @@ export function OsPanel({
 }: {
   locale: Locale;
   entries: readonly WeightedEntry[] | undefined;
-  onChange?: ((shares: OsShares) => void) | undefined;
+  onChange?: ((shares: OsShares, mode: Mode) => void) | undefined;
 }) {
   const t = messagesFor(locale);
   const groupId = useId();
@@ -43,8 +43,8 @@ export function OsPanel({
 
   const key = JSON.stringify(shares);
   useEffect(() => {
-    onChange?.(JSON.parse(key) as OsShares);
-  }, [key, onChange]);
+    onChange?.(JSON.parse(key) as OsShares, mode);
+  }, [key, mode, onChange]);
 
   const number = new Intl.NumberFormat(locale, { maximumFractionDigits: 1 });
   const label = (id: Os) => t[`audience_os_${id}`]();

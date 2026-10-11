@@ -107,8 +107,6 @@ export const VERTICAL_OVERRIDES: readonly Feature[] = [
   'line-gap-override',
 ];
 
-export const VERTICAL_THRESHOLD = 1;
-
 export function lacksVerticalOverrides(support: readonly FeatureSupport[]): number {
   const found = support.find((item) => item.feature === 'ascent-override');
   return found ? found.unsupported + found.unknown : 0;

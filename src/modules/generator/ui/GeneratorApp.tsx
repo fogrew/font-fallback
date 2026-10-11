@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import {
   Button,
@@ -19,7 +19,6 @@ import {
   type OsShares,
   SupportMatrix,
   type SystemInfo,
-  VERTICAL_THRESHOLD,
 } from '@/modules/audience';
 import { CssExportError } from '@/modules/export';
 import { StackResolveError } from '@/modules/fallback-fit';
@@ -109,6 +108,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [kind, setKind] = useState<Category>('sans-serif');
   const [language, setLanguage] = useState<Language>('en');
   const [shares, setShares] = useState<OsShares>();
+  const [manualSystems, setManualSystems] = useState(false);
   const [audience, setAudience] = useState<AudienceData>();
   const [enabledSystems, setEnabledSystems] = useState<Partial<Record<OsId, boolean>>>({});
   const [activeOs, setActiveOs] = useState<OsId>();
@@ -122,6 +122,10 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     letter: { mode: 'auto' },
     word: { mode: 'auto' },
   });
+  const handleShares = useCallback((next: OsShares, mode: 'browsers' | 'manual') => {
+    setShares(next);
+    setManualSystems(mode === 'manual');
+  }, []);
   const resetOptimization = () => {
     setOptimized({});
     setSpacingResult(undefined);
@@ -445,9 +449,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const vertical = audience ? lacksVerticalOverrides(descriptorSupport(audience.entries)) : 0;
   const aspect = selected ? aspectOf(selected.metrics) : null;
   const safariCss =
-    aspect !== null && vertical >= VERTICAL_THRESHOLD
-      ? safariStrategyCss(aspect, STRATEGY_LINE_HEIGHT)
-      : '';
+    aspect !== null && vertical > 0.05 ? safariStrategyCss(aspect, STRATEGY_LINE_HEIGHT) : '';
 
   const anyRanking = Object.values(rankings.result).find(Boolean);
   const winnerOf = (os: OsId) => {
@@ -489,15 +491,31 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
       return value;
     },
   });
-  const matrixGroups =
-    audience && selected && anyRanking
-      ? buildMatrix(
-          audience.entries,
-          DEFAULT_DESKTOP_SPLIT,
-          Object.fromEntries(ALL_SYSTEMS.map((os) => [os, systemInfo(os)])),
-          { released: audience.released },
-        )
-      : [];
+  const matrixKey = JSON.stringify([
+    selected?.id,
+    language,
+    kind,
+    enabledSystems,
+    spacingEm,
+    chosen.map((item) => [
+      item.os,
+      item.faceId,
+      adjustmentOf(baseOf(item.candidate), manualOf(item.candidate.id)),
+    ]),
+    plan?.order,
+  ]);
+  const matrixGroups = useMemo(
+    () =>
+      audience && selected && anyRanking
+        ? buildMatrix(
+            audience.entries,
+            DEFAULT_DESKTOP_SPLIT,
+            Object.fromEntries(ALL_SYSTEMS.map((os) => [os, systemInfo(os)])),
+            { released: audience.released },
+          )
+        : [],
+    [audience, matrixKey],
+  );
   const ratingText = (shift: number) => {
     const rating = ratingOf(shift);
     if (rating === 'good') return t.cls_rating_good();
@@ -775,7 +793,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
         )}
         <AudienceEditor
           locale={locale}
-          onShares={setShares}
+          onShares={handleShares}
           onEntries={setAudience}
           active={fonts.length > 0}
         />
@@ -851,7 +869,11 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 )}
               </section>
             )}
-            <SupportMatrix locale={locale} groups={matrixGroups} rating={ratingText} />
+            {manualSystems ? (
+              <p class="ff-muted">{t.matrix_manual()}</p>
+            ) : (
+              <SupportMatrix locale={locale} groups={matrixGroups} rating={ratingText} />
+            )}
             <LayoutShiftPanel
               locale={locale}
               model={model}

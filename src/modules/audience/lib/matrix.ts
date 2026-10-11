@@ -101,29 +101,28 @@ export function buildMatrix(
     };
     const items = [...column.items].sort((a, b) => rank(a.version) - rank(b.version));
     const cells: MatrixCell[] = [];
-    let run: Weighted[] = [];
+    let run: string[] = [];
     let runState: CellState | undefined;
+    let runRank = -1;
     const flush = () => {
       if (run.length === 0 || runState === undefined) return;
-      const state: CellState = system?.enabled ? runState : 'none';
-      const shift = system?.enabled && state !== 'unknown' ? (system.shift(state) ?? null) : null;
-      cells.push({
-        label: versionRanges(
-          run.map((item) => item.version),
-          released,
-        ).join(', '),
-        state,
-        shift,
-      });
+      const shift =
+        system?.enabled && runState !== 'unknown' ? (system.shift(runState) ?? null) : null;
+      cells.push({ label: versionRanges(run, released).join(', '), state: runState, shift });
       run = [];
     };
     for (const item of items) {
-      const state = stateOf(`${column.browser} ${item.version}`);
-      const previous = run.at(-1);
-      const adjacent = previous !== undefined && rank(item.version) === rank(previous.version) + 1;
+      const detected = stateOf(`${column.browser} ${item.version}`);
+      const state: CellState = system?.enabled
+        ? detected
+        : detected === 'unknown'
+          ? 'unknown'
+          : 'none';
+      const adjacent = runRank >= 0 && rank(item.version) === runRank + 1;
       if (runState !== undefined && (state !== runState || !adjacent)) flush();
       runState = state;
-      run.push(item);
+      runRank = rank(item.version);
+      run.push(item.version);
     }
     flush();
     const share = percent(column.items.reduce((acc, item) => acc + item.weight, 0));
