@@ -1,56 +1,86 @@
 import { type Locale, messagesFor } from '@/common/i18n';
-import type { WeightedEntry } from '../lib/os';
-import {
-  descriptorSupport,
-  lacksVerticalOverrides,
-  supportData,
-  VERTICAL_THRESHOLD,
-} from '../lib/support';
+import type { CellState, MatrixGroup } from '../lib/matrix';
 import './audience.css';
+
+const SYMBOLS: Record<CellState, string> = { full: '✓', partial: '~', none: '✗', unknown: '?' };
 
 export function SupportMatrix({
   locale,
-  entries,
+  groups,
+  rating,
 }: {
   locale: Locale;
-  entries: readonly WeightedEntry[] | undefined;
+  groups: readonly MatrixGroup[];
+  rating: (shift: number) => string;
 }) {
   const t = messagesFor(locale);
-  if (!entries || entries.length === 0) {
-    return <p class="ff-muted">{t.support_manual()}</p>;
-  }
-  const support = descriptorSupport(entries);
-  const vertical = lacksVerticalOverrides(support);
-  const percent = (value: number) =>
-    new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(value);
+  const number = (value: number, digits: number) =>
+    new Intl.NumberFormat(locale, { maximumFractionDigits: digits }).format(value);
+  const stateLabel = (state: CellState) => {
+    if (state === 'full') return t.matrix_full();
+    if (state === 'partial') return t.matrix_partial();
+    return state === 'none' ? t.matrix_none() : t.matrix_unknown();
+  };
+  if (groups.length === 0) return <p class="ff-muted">{t.matrix_empty()}</p>;
   return (
-    <div class="ff-audience__support">
-      <ul class="ff-audience__list" aria-label={t.support_heading()}>
-        {support.map((item) => (
-          <li key={item.feature}>
-            <code>{item.feature}</code>
-            <span>
-              {t.support_row({ percent: percent(item.supported) })}
-              {item.unsupportedBrowsers.length > 0 && (
-                <span class="ff-muted">
-                  {' '}
-                  {t.support_unsupported({ browsers: item.unsupportedBrowsers.join(', ') })}
-                </span>
-              )}
-              {item.unknownBrowsers.length > 0 && (
-                <span class="ff-muted">
-                  {' '}
-                  {t.support_unknown({ browsers: item.unknownBrowsers.join(', ') })}
-                </span>
-              )}
-            </span>
+    <section class="ff-matrix" aria-labelledby="ff-matrix-heading">
+      <h2 id="ff-matrix-heading">{t.matrix_heading()}</h2>
+      <ul class="ff-matrix__legend">
+        {(['full', 'partial', 'none', 'unknown'] as const).map((state) => (
+          <li key={state} data-state={state}>
+            <span aria-hidden="true">{SYMBOLS[state]}</span> {stateLabel(state)}
           </li>
         ))}
       </ul>
-      {vertical >= VERTICAL_THRESHOLD && (
-        <p class="ff-muted">{t.support_vertical_note({ percent: percent(vertical) })}</p>
-      )}
-      <p class="ff-muted">{t.support_source({ version: supportData.bcdVersion })}</p>
-    </div>
+      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: keyboard users scroll the wide matrix */}
+      <section class="ff-matrix__scroll" tabIndex={0} aria-label={t.matrix_scroll()}>
+        <div class="ff-matrix__groups">
+          {groups.map((group) => (
+            <section class="ff-matrix__group" key={group.os}>
+              <h3>
+                {t[`audience_os_${group.os}`]()} <span>{number(group.share, 1)}%</span>
+              </h3>
+              <p class="ff-muted">
+                {group.enabled
+                  ? group.fonts
+                  : group.available
+                    ? t.matrix_generic()
+                    : t.matrix_nodata()}
+              </p>
+              <div class="ff-matrix__columns">
+                {group.columns.map((column) => (
+                  <div class="ff-matrix__column" key={column.browser}>
+                    <h4>
+                      {column.name} <span>{number(column.share, 1)}%</span>
+                    </h4>
+                    <ul>
+                      {column.cells.map((cell) => (
+                        <li key={cell.label} data-state={cell.state}>
+                          <span aria-hidden="true">{SYMBOLS[cell.state]}</span>
+                          <span class="ff-sr-only">{stateLabel(cell.state)}: </span>
+                          {cell.label}
+                          {cell.shift !== null && (
+                            <span class="ff-matrix__shift">
+                              {t.matrix_shift({
+                                score: number(cell.shift, 3),
+                                rating: rating(cell.shift),
+                              })}
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+              {group.hiddenShare > 0 && (
+                <p class="ff-muted">{t.matrix_hidden({ percent: number(group.hiddenShare, 1) })}</p>
+              )}
+            </section>
+          ))}
+        </div>
+      </section>
+      <p class="ff-muted">{t.matrix_note()}</p>
+    </section>
   );
 }

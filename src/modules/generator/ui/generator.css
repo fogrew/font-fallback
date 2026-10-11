@@ -203,10 +203,12 @@
   gap: var(--ff-space-1);
 }
 
-.ff-generator__strategy {
+.ff-generator__systems {
   display: grid;
-  gap: var(--ff-space-2);
-}
-.ff-generator__strategy p {
+  gap: var(--ff-space-1);
   margin: 0;
+  padding: var(--ff-space-2);
+  border: 1px solid var(--ff-border);
+  border-radius: var(--ff-radius);
+  font-size: 0.875rem;
 }

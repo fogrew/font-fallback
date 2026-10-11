@@ -17,6 +17,7 @@ export interface PredictFont {
   lineGap: number;
   letterEm: number;
   wordEm: number;
+  lineHeightEm?: number | undefined;
 }
 
 export interface Layout {
@@ -82,6 +83,7 @@ class Metrics {
   }
 
   lineHeight(fontPx: number): number {
+    if (this.font.lineHeightEm !== undefined) return this.font.lineHeightEm * fontPx;
     const { ascent, descent, lineGap } = this.font;
     return (
       Math.round(ascent * fontPx) + Math.round(descent * fontPx) + Math.round(lineGap * fontPx)

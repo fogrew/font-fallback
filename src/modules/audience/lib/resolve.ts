@@ -8,6 +8,35 @@ export interface BrowserGroup {
   id: string;
   name: string;
   versions: string[];
+  ranges: string[];
+}
+
+export function versionRanges(versions: readonly string[], released: readonly string[]): string[] {
+  const index = new Map(released.map((version, position) => [version, position]));
+  const known = versions
+    .filter((version) => index.has(version))
+    .sort((a, b) => (index.get(a) ?? 0) - (index.get(b) ?? 0));
+  const unknown = versions.filter((version) => !index.has(version));
+  const ranges: string[] = [];
+  let start = 0;
+  for (let at = 1; at <= known.length; at++) {
+    const previous = known[at - 1] ?? '';
+    const current = known[at];
+    const adjacent =
+      current !== undefined && (index.get(current) ?? 0) === (index.get(previous) ?? 0) + 1;
+    if (adjacent) continue;
+    const first = (known[start] ?? '').split('-')[0] ?? '';
+    const last = previous.split('-').at(-1) ?? '';
+    ranges.push(
+      start === at - 1 && !previous.includes('-')
+        ? previous
+        : first === last
+          ? first
+          : `${first}–${last}`,
+    );
+    start = at;
+  }
+  return [...ranges, ...unknown];
 }
 
 export type Resolution =
@@ -15,6 +44,7 @@ export type Resolution =
       ok: true;
       groups: BrowserGroup[];
       entries: WeightedEntry[];
+      released: Record<string, string[]>;
       count: number;
       dataDate: string;
       coverage?: number;
@@ -41,14 +71,21 @@ export async function resolveQuery(query: string, stats?: UsageStats): Promise<R
     const version = space < 0 ? '' : entry.slice(space + 1);
     let group = groups.get(id);
     if (!group) {
-      group = { id, name: browserName(id), versions: [] };
+      group = { id, name: browserName(id), versions: [], ranges: [] };
       groups.set(id, group);
     }
     group.versions.push(version);
   }
+  const list = [...groups.values()];
+  for (const group of list) {
+    group.ranges = versionRanges(group.versions, browserslist.data[group.id]?.released ?? []);
+  }
   return {
     ok: true,
-    groups: [...groups.values()],
+    groups: list,
+    released: Object.fromEntries(
+      list.map((group) => [group.id, [...(browserslist.data[group.id]?.released ?? [])]]),
+    ),
     entries: weigh(entries, stats ? flatten(stats) : (browserslist.usage.global ?? {})),
     count: entries.length,
     dataDate: latestReleaseDate(browserslist.data),

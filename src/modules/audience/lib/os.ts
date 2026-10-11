@@ -60,18 +60,22 @@ export function osOf(entry: string): readonly Os[] {
   return BROWSER_OS[id] ?? ['other'];
 }
 
+export function osWeights(entry: string, split: DesktopSplit): [Os, number][] {
+  const systems = osOf(entry);
+  const splitWeights = systems.map((os) => (isDesktop(os) ? split[os] : 1));
+  const splitSum = splitWeights.reduce((sum, value) => sum + value, 0);
+  return systems.map((os, index) => [
+    os,
+    splitSum > 0 ? (splitWeights[index] ?? 0) / splitSum : 1 / systems.length,
+  ]);
+}
+
 export function computeOsShares(entries: readonly WeightedEntry[], split: DesktopSplit): OsShares {
   const total = entries.reduce((sum, item) => sum + item.usage, 0);
   const shares = emptyShares();
   for (const { entry, usage } of entries) {
     const weight = total > 0 ? usage : 1;
-    const systems = osOf(entry);
-    const splitWeights = systems.map((os) => (isDesktop(os) ? split[os] : 1));
-    const splitSum = splitWeights.reduce((sum, value) => sum + value, 0);
-    systems.forEach((os, index) => {
-      const fraction = splitSum > 0 ? (splitWeights[index] ?? 0) / splitSum : 1 / systems.length;
-      shares[os] += weight * fraction;
-    });
+    for (const [os, fraction] of osWeights(entry, split)) shares[os] += weight * fraction;
   }
   const sum = OS_IDS.reduce((acc, id) => acc + shares[id], 0);
   if (sum > 0) for (const id of OS_IDS) shares[id] = (shares[id] / sum) * 100;

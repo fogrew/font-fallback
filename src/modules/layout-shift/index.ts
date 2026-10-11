@@ -9,4 +9,5 @@ export {
   type OptimizerSetup,
   type PanelInput,
   type PanelModel,
+  scoreOf,
 } from './ui/LayoutShiftPanel';

@@ -48,7 +48,7 @@ function bounds(version: string): [string, string] | null {
   return parts.length <= 2 && valid(low) && valid(high) ? [low, high] : null;
 }
 
-type Verdict = 'yes' | 'no' | 'unknown';
+export type Verdict = 'yes' | 'no' | 'unknown';
 
 function verdictFor(entry: string, row: Record<string, string | false | null>): Verdict {
   const space = entry.indexOf(' ');
@@ -60,6 +60,15 @@ function verdictFor(entry: string, row: Record<string, string | false | null>): 
   if (range === null) return 'unknown';
   if (compareVersions(range[0], added) >= 0) return 'yes';
   return compareVersions(range[1], added) < 0 ? 'no' : 'unknown';
+}
+
+export function verdictsOf(
+  entry: string,
+  data: SupportData = supportData,
+): Record<Feature, Verdict> {
+  return Object.fromEntries(
+    FEATURES.map((feature) => [feature, verdictFor(entry, data.features[feature] ?? {})]),
+  ) as Record<Feature, Verdict>;
 }
 
 export function descriptorSupport(

@@ -9,6 +9,10 @@
   --ff-on-accent: light-dark(#ffffff, #152a1f);
   --ff-error: light-dark(#a62625, #ffb0a4);
   --ff-focus: light-dark(#155da4, #8ac8ff);
+  --ff-state-full: light-dark(#c8e6d1, #1f4a30);
+  --ff-state-partial: light-dark(#f3e1a6, #5a4710);
+  --ff-state-none: light-dark(#f3c4bd, #5c2220);
+  --ff-state-unknown: light-dark(#dedede, #3a3a3a);
   --ff-space-1: 0.25rem;
   --ff-space-2: 0.5rem;
   --ff-space-3: 0.75rem;
@@ -111,6 +115,10 @@ h3 {
     --ff-on-accent: Canvas;
     --ff-error: CanvasText;
     --ff-focus: Highlight;
+    --ff-state-full: Canvas;
+    --ff-state-partial: Canvas;
+    --ff-state-none: Canvas;
+    --ff-state-unknown: Canvas;
   }
 }
 main > h1 {

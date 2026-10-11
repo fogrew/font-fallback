@@ -10,12 +10,16 @@ import {
   Select,
 } from '@/common/ui';
 import {
+  type AudienceData,
   AudienceEditor,
+  buildMatrix,
+  DEFAULT_DESKTOP_SPLIT,
   descriptorSupport,
   lacksVerticalOverrides,
   type OsShares,
+  SupportMatrix,
+  type SystemInfo,
   VERTICAL_THRESHOLD,
-  type WeightedEntry,
 } from '@/modules/audience';
 import { CssExportError } from '@/modules/export';
 import { StackResolveError } from '@/modules/fallback-fit';
@@ -31,6 +35,8 @@ import {
   type OptimizerSetup,
   type PanelInput,
   type PanelModel,
+  ratingOf,
+  scoreOf,
 } from '@/modules/layout-shift';
 import type { Category, OsId } from '@/modules/os-fonts';
 import { isNoCoverage, LOW_COVERAGE, sampleText } from '../lib/compute';
@@ -44,7 +50,13 @@ import {
   rankFor,
   systemsWithFonts,
 } from '../lib/per-os';
-import { fallbackPredictFont, webPredictFont } from '../lib/predict-input';
+import {
+  fallbackPredictFont,
+  STRATEGY_LINE_HEIGHT,
+  type Variant,
+  variantPredictFont,
+  webPredictFont,
+} from '../lib/predict-input';
 import { aspectOf, safariStrategyCss } from '../lib/safari';
 import { FontUpload } from './FontUpload';
 import { Preview } from './Preview';
@@ -97,9 +109,8 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
   const [kind, setKind] = useState<Category>('sans-serif');
   const [language, setLanguage] = useState<Language>('en');
   const [shares, setShares] = useState<OsShares>();
-  const [entries, setEntries] = useState<WeightedEntry[]>();
-  const [safari, setSafari] = useState<boolean>();
-  const [lineHeightText, setLineHeightText] = useState('1.4');
+  const [audience, setAudience] = useState<AudienceData>();
+  const [enabledSystems, setEnabledSystems] = useState<Partial<Record<OsId, boolean>>>({});
   const [activeOs, setActiveOs] = useState<OsId>();
   const [picks, setPicks] = useState<Partial<Record<OsId, string[]>>>({});
   const [editId, setEditId] = useState<string>();
@@ -232,11 +243,14 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     return manual;
   };
 
-  const chosen = systems.flatMap((os) =>
-    shares
-      ? listFor(os).map((pick) => ({ os, share: shares[os], faceId: pick.id, candidate: pick }))
-      : [],
-  );
+  const isEnabled = (os: OsId) => enabledSystems[os] !== false;
+  const chosen = systems
+    .filter(isEnabled)
+    .flatMap((os) =>
+      shares
+        ? listFor(os).map((pick) => ({ os, share: shares[os], faceId: pick.id, candidate: pick }))
+        : [],
+    );
   const orderKey = JSON.stringify([
     selected?.id,
     language,
@@ -428,14 +442,67 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     };
   }
 
-  const vertical = entries ? lacksVerticalOverrides(descriptorSupport(entries)) : 0;
+  const vertical = audience ? lacksVerticalOverrides(descriptorSupport(audience.entries)) : 0;
   const aspect = selected ? aspectOf(selected.metrics) : null;
-  const safariOn = aspect !== null && (safari ?? vertical >= VERTICAL_THRESHOLD);
-  const typedLineHeight = Number(lineHeightText);
-  const lineHeight = Number.isFinite(typedLineHeight)
-    ? Math.min(3, Math.max(0.8, typedLineHeight))
-    : 1.4;
-  const safariCss = safariOn && aspect !== null ? safariStrategyCss(aspect, lineHeight) : '';
+  const safariCss =
+    aspect !== null && vertical >= VERTICAL_THRESHOLD
+      ? safariStrategyCss(aspect, STRATEGY_LINE_HEIGHT)
+      : '';
+
+  const anyRanking = Object.values(rankings.result).find(Boolean);
+  const winnerOf = (os: OsId) => {
+    const winner = plan?.resolution.platforms.find((item) => item.platform === os)?.winner;
+    return (
+      chosen.find((item) => item.os === os && item.faceId === winner) ??
+      chosen.find((item) => item.os === os)
+    );
+  };
+  const shiftCache = new Map<string, number | null>();
+  const systemInfo = (os: OsId): SystemInfo => ({
+    available: systems.includes(os),
+    enabled: isEnabled(os) && chosen.some((item) => item.os === os),
+    fonts: [
+      ...new Set(chosen.filter((item) => item.os === os).map((item) => item.candidate.family)),
+    ].join(', '),
+    shift: (variant: Variant) => {
+      const key = `${os}:${variant}`;
+      if (shiftCache.has(key)) return shiftCache.get(key) ?? null;
+      const entry = winnerOf(os);
+      let value: number | null = null;
+      if (entry && selected && anyRanking) {
+        const web = webPredictFont(
+          selected.metrics,
+          anyRanking,
+          variant === 'partial' ? STRATEGY_LINE_HEIGHT : undefined,
+        );
+        const font = variantPredictFont(
+          entry.candidate,
+          adjustmentOf(baseOf(entry.candidate), manualOf(entry.candidate.id)),
+          spacingEm,
+          variant,
+        );
+        if (font) {
+          value = Math.max(...scoreOf({ web, language }, font).map((result) => result.score));
+        }
+      }
+      shiftCache.set(key, value);
+      return value;
+    },
+  });
+  const matrixGroups =
+    audience && selected && anyRanking
+      ? buildMatrix(
+          audience.entries,
+          DEFAULT_DESKTOP_SPLIT,
+          Object.fromEntries(ALL_SYSTEMS.map((os) => [os, systemInfo(os)])),
+          { released: audience.released },
+        )
+      : [];
+  const ratingText = (shift: number) => {
+    const rating = ratingOf(shift);
+    if (rating === 'good') return t.cls_rating_good();
+    return rating === 'needs-improvement' ? t.cls_rating_needs() : t.cls_rating_poor();
+  };
 
   const percent = (value: number) =>
     new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
@@ -564,6 +631,22 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 }}
               />
             </div>
+            <fieldset class="ff-generator__systems">
+              <legend>{t.systems_legend()}</legend>
+              {systems.map((os) => (
+                <label key={os}>
+                  <input
+                    type="checkbox"
+                    checked={isEnabled(os)}
+                    onChange={(event) => {
+                      const checked = event.currentTarget.checked;
+                      setEnabledSystems((all) => ({ ...all, [os]: checked }));
+                    }}
+                  />{' '}
+                  {systemName(os)} ({percent(shares?.[os] ?? 0)}%)
+                </label>
+              ))}
+            </fieldset>
             {currentList.map((pick, index) => (
               <div class="ff-generator__row" key={`${current}-${index}`} data-slot={index}>
                 <Select
@@ -693,7 +776,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
         <AudienceEditor
           locale={locale}
           onShares={setShares}
-          onEntries={setEntries}
+          onEntries={setAudience}
           active={fonts.length > 0}
         />
       </div>
@@ -768,6 +851,7 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 )}
               </section>
             )}
+            <SupportMatrix locale={locale} groups={matrixGroups} rating={ratingText} />
             <LayoutShiftPanel
               locale={locale}
               model={model}
@@ -777,49 +861,6 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
             <section class="ff-generator__section" aria-labelledby="ff-css-heading">
               <h2 id="ff-css-heading">{t.css_heading()}</h2>
               <p class="ff-muted">{t.fit_latin_note()}</p>
-              <div class="ff-generator__strategy">
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={safariOn}
-                    disabled={aspect === null}
-                    aria-describedby={aspect === null ? 'ff-safari-note' : undefined}
-                    onChange={(event) => setSafari(event.currentTarget.checked)}
-                  />{' '}
-                  {t.safari_strategy_label()}
-                </label>
-                {safariOn && (
-                  <div class="ff-field">
-                    <label for="ff-safari-line-height">{t.safari_line_height_label()}</label>
-                    <input
-                      id="ff-safari-line-height"
-                      class="ff-input"
-                      type="number"
-                      min={0.8}
-                      max={3}
-                      step={0.05}
-                      inputMode="decimal"
-                      value={lineHeightText}
-                      onInput={(event) => setLineHeightText(event.currentTarget.value)}
-                      onBlur={() => setLineHeightText(String(lineHeight))}
-                    />
-                  </div>
-                )}
-                {aspect === null && (
-                  <p id="ff-safari-note" class="ff-muted">
-                    {t.safari_no_xheight()}
-                  </p>
-                )}
-                {aspect !== null && safari === undefined && vertical >= VERTICAL_THRESHOLD && (
-                  <p class="ff-muted">
-                    {t.safari_recommended({
-                      percent: new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(
-                        vertical,
-                      ),
-                    })}
-                  </p>
-                )}
-              </div>
               <CodeBlock
                 locale={locale}
                 label={t.css_code_label()}

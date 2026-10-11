@@ -28,7 +28,27 @@ interface PoolFont {
   category: Category;
   fit: FitFont | null;
   latinWidthEm: number | null;
+  native: Vertical;
   dataset: OsFont;
+}
+
+export interface Vertical {
+  ascent: number;
+  descent: number;
+  lineGap: number;
+}
+
+function nativeOf(metrics: {
+  unitsPerEm: number;
+  hhea: { ascent: number; descent: number; lineGap: number };
+  typo: { ascent: number; descent: number; lineGap: number; useTypoMetrics: boolean } | null;
+}): Vertical {
+  const used = metrics.typo?.useTypoMetrics ? metrics.typo : metrics.hhea;
+  return {
+    ascent: used.ascent / metrics.unitsPerEm,
+    descent: Math.abs(used.descent) / metrics.unitsPerEm,
+    lineGap: Math.max(0, used.lineGap) / metrics.unitsPerEm,
+  };
 }
 
 export interface Candidate {
@@ -40,6 +60,7 @@ export interface Candidate {
   coverage: number;
   latinOnly: boolean;
   fit: FitFont | null;
+  native: Vertical;
 }
 
 export interface Ranking {
@@ -65,6 +86,7 @@ function fonts(): PoolFont[] {
       category: dataset.category,
       fit: metrics,
       latinWidthEm: null,
+      native: nativeOf(metrics),
       dataset,
     });
   }
@@ -78,6 +100,7 @@ function fonts(): PoolFont[] {
       category: dataset.category,
       fit: null,
       latinWidthEm: system.latinWidthEm,
+      native: nativeOf(system.metrics),
       dataset,
     });
   }
@@ -117,6 +140,7 @@ export function rankFor(web: FontMetrics, os: OsId, language: Language): Ranking
           coverage: own.coverage > 0 ? Math.min(1, result.coverage / own.coverage) : 0,
           latinOnly: false,
           fit: font.fit,
+          native: font.native,
         });
       } else if (font.latinWidthEm !== null && language === 'en') {
         candidates.push({
@@ -128,6 +152,7 @@ export function rankFor(web: FontMetrics, os: OsId, language: Language): Ranking
           coverage: 1,
           latinOnly: true,
           fit: null,
+          native: font.native,
         });
       }
     } catch (failure) {

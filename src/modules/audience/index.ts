@@ -1,3 +1,4 @@
+export { buildMatrix, type CellState, type MatrixGroup, type SystemInfo } from './lib/matrix';
 export type { WeightedEntry } from './lib/os';
 export { DEFAULT_DESKTOP_SPLIT, type OsShares } from './lib/os';
 export { PRESETS } from './lib/presets';
@@ -9,5 +10,5 @@ export {
   lacksVerticalOverrides,
   VERTICAL_THRESHOLD,
 } from './lib/support';
-export { AudienceEditor } from './ui/AudienceEditor';
+export { type AudienceData, AudienceEditor } from './ui/AudienceEditor';
 export { SupportMatrix } from './ui/SupportMatrix';

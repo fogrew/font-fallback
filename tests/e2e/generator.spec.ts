@@ -298,7 +298,7 @@ test('imported usage statistics enable "in my stats" queries and report ignored 
   await expect(page.getByRole('link', { name: 'browserslist-ga', exact: true })).toBeVisible();
 });
 
-test('system shares follow the desktop split and the manual mode', async ({ page }) => {
+test('system shares follow the query and the manual mode', async ({ page }) => {
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
   await page.getByText('Audience (browsers)').click();
@@ -310,11 +310,6 @@ test('system shares follow the desktop split and the manual mode', async ({ page
 
   await page.getByLabel('Browserslist query').fill('firefox 120');
   await expect(shares).toContainText('Windows');
-  await page.getByLabel('Windows').fill('10');
-  await expect(page.getByText(/must be non-negative and add up to 100%/)).toBeVisible();
-  await page.getByRole('button', { name: 'Reset to defaults' }).click();
-  await expect(page.getByText('Total: 100%')).toBeVisible();
-
   await page.getByLabel('Choose systems manually').check();
   await expect(page.getByText('Enter a weight for at least one system.')).toBeVisible();
   await page.getByLabel('Android').fill('3');
@@ -354,27 +349,41 @@ test('a system can have several ordered fallbacks', async ({ page }) => {
   await expect(page.getByText(/Windows \(\d+%\): Segoe UI$/)).toBeVisible();
 });
 
-test('descriptor support is listed and the Safari strategy extends the CSS', async ({ page }) => {
+test('the support matrix shows the audience by system with ranges, states and shifts', async ({
+  page,
+}) => {
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
   await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   const code = page.getByRole('region', { name: 'Generated CSS' });
-  const strategy = page.getByRole('checkbox', { name: /Safari strategy/ });
-  await expect(strategy).toBeChecked();
   await expect(code).toContainText('font-size-adjust');
   await expect(code).toContainText('line-height: 1.4');
 
-  await page.getByLabel('Line height', { exact: true }).last().fill('1.6');
-  await expect(code).toContainText('line-height: 1.6');
-  await strategy.uncheck();
-  await expect(code).not.toContainText('font-size-adjust');
+  const matrix = page.getByRole('region', { name: 'Browser support' });
+  await expect(matrix.getByRole('heading', { level: 3 }).first()).toBeVisible();
+  await expect(matrix).toContainText('Safari');
+  await expect(matrix).toContainText('Partly adjusted');
+  await expect(matrix).toContainText(/\d+–\d+/);
+  await expect(matrix.getByText(/shift \d\.\d{3}/).first()).toBeVisible();
 
   await page.getByText('Audience (browsers)').click();
-  const support = page.getByRole('list', { name: 'Descriptor support' });
-  await expect(support).toContainText('size-adjust');
-  await expect(support).toContainText('ascent-override');
-  await expect(support).toContainText('Safari on iOS');
-  await expect(page.getByText(/MDN browser-compat-data/)).toBeVisible();
+  await page.getByLabel('Browserslist query').fill('chrome 120');
+  await expect(matrix.getByRole('heading', { level: 4, name: /^Chrome/ }).first()).toBeVisible();
+  await expect(matrix.getByRole('heading', { level: 4, name: /^Safari/ })).toHaveCount(0);
+  await expect(code).not.toContainText('font-size-adjust');
+});
+
+test('a system can be switched off and then falls back to the generic family', async ({ page }) => {
+  await page.goto('/en/');
+  await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
+  await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
+  const matrix = page.getByRole('region', { name: 'Browser support' });
+  await expect(matrix).not.toContainText('Generic fallback');
+  await page.getByRole('checkbox', { name: /^Android/ }).uncheck();
+  await expect(matrix).toContainText('Generic fallback');
+  await expect(matrix.locator('[data-state="none"]').first()).toBeVisible();
+  await page.getByRole('checkbox', { name: /^Android/ }).check();
+  await expect(matrix).not.toContainText('Generic fallback');
 });
 
 test('the layout shift estimate covers every fallback and viewport and can be verified', async ({

@@ -12,7 +12,6 @@ import {
   type UsageStats,
 } from '../lib/stats';
 import { OsPanel } from './OsPanel';
-import { SupportMatrix } from './SupportMatrix';
 import './audience.css';
 
 const CUSTOM = 'custom';
@@ -27,6 +26,11 @@ const STATS_FORMAT = 'https://github.com/browserslist/browserslist#custom-usage-
 type State = Resolution | { loading: true } | { failed: true };
 type StatsInfo = Extract<StatsResult, { ok: true }>;
 
+export interface AudienceData {
+  entries: WeightedEntry[];
+  released: Record<string, string[]>;
+}
+
 export function AudienceEditor({
   locale,
   onShares,
@@ -35,7 +39,7 @@ export function AudienceEditor({
 }: {
   locale: Locale;
   active?: boolean;
-  onEntries?: ((entries: WeightedEntry[] | undefined) => void) | undefined;
+  onEntries?: ((data: AudienceData | undefined) => void) | undefined;
   onShares?: ((shares: OsShares) => void) | undefined;
 }) {
   const t = messagesFor(locale);
@@ -95,10 +99,10 @@ export function AudienceEditor({
     setQuery(MY_STATS_PRESET.query);
   };
 
-  const resolvedEntries = 'ok' in state && state.ok ? state.entries : undefined;
+  const resolved = 'ok' in state && state.ok ? state : undefined;
   useEffect(() => {
-    onEntries?.(resolvedEntries);
-  }, [resolvedEntries, onEntries]);
+    onEntries?.(resolved ? { entries: resolved.entries, released: resolved.released } : undefined);
+  }, [resolved, onEntries]);
   const invalid = 'ok' in state && !state.ok;
   const errors = {
     empty: t.audience_error_empty(),
@@ -173,7 +177,7 @@ export function AudienceEditor({
             {state.groups.map((group) => (
               <li key={group.id}>
                 <span>{group.name}</span>
-                <span class="ff-muted">{group.versions.join(', ')}</span>
+                <span class="ff-muted">{group.ranges.join(', ')}</span>
               </li>
             ))}
           </ul>
@@ -183,10 +187,6 @@ export function AudienceEditor({
           entries={'ok' in state && state.ok ? state.entries : undefined}
           onChange={onShares}
         />
-        <div class="ff-audience__os">
-          <h3>{t.support_heading()}</h3>
-          <SupportMatrix locale={locale} entries={resolvedEntries} />
-        </div>
         <div class="ff-audience__stats">
           <div class="ff-audience__actions" ref={actions}>
             <Button onClick={() => fileInput.current?.click()}>{t.audience_stats_import()}</Button>
