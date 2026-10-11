@@ -1,29 +1,39 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { type Locale, messagesFor } from '@/common/i18n';
 import { Button, LiveRegion } from '@/common/ui';
+import { sampleBlocks } from '../lib/document';
 import { compassSearch, type Dimension } from '../lib/optimize';
+import { type PredictFont, predictViewport } from '../lib/predict';
 import type { SampleLanguage } from '../lib/samples';
+import type { ViewportResult } from '../lib/score';
 import {
-  createSimulation,
   DEFAULT_VIEWPORTS,
   ratingOf,
   type SimulationInput,
   simulateLayoutShift,
-  type ViewportResult,
 } from '../lib/simulate';
 import './layout-shift.css';
 
 const SETTLE_MS = 700;
-const DEBOUNCE_MS = 150;
-const MIN_WIDTH = 280;
-const MAX_WIDTH = 3840;
+
+export interface ModelFace {
+  id: string;
+  label: string;
+  systems: string;
+  font: PredictFont | null;
+}
+
+export interface PanelModel {
+  web: PredictFont;
+  faces: ModelFace[];
+  language: SampleLanguage;
+}
 
 export type PanelInput = Omit<SimulationInput, 'viewports' | 'signal'>;
 
 export interface OptimizerSetup {
-  family: string;
   dimensions: Dimension[];
-  fontFaces: (values: Record<string, number>) => string;
+  fontFor: (values: Record<string, number>) => PredictFont | null;
   applied: boolean;
   onApply: (values: Record<string, number>) => void;
   onReset: () => void;
@@ -32,153 +42,52 @@ export interface OptimizerSetup {
 type OptimizeState =
   | { state: 'idle' }
   | { state: 'running'; count: number }
-  | { state: 'missing' }
   | { state: 'failed' }
   | { state: 'done'; before: number; after: number; count: number };
 
-const viewportsFor = (widths: readonly number[]) => [
-  ...DEFAULT_VIEWPORTS,
-  ...widths.map((width) => ({ width, height: Math.min(1600, Math.round(width * 1.6)) })),
-];
+type VerifyState =
+  | { state: 'idle' }
+  | { state: 'running' }
+  | { state: 'failed' }
+  | { state: 'done'; results: ViewportResult[] };
+
+export function scoreOf(
+  model: Pick<PanelModel, 'web' | 'language'>,
+  font: PredictFont,
+  viewports = DEFAULT_VIEWPORTS,
+): ViewportResult[] {
+  const blocks = sampleBlocks(model.language);
+  return viewports.map((viewport) => predictViewport(model.web, font, blocks, viewport));
+}
 
 export function LayoutShiftPanel({
   locale,
-  input,
+  model,
+  verify,
   optimizer,
 }: {
   locale: Locale;
-  input: PanelInput | undefined;
+  model: PanelModel | undefined;
+  verify?: PanelInput | undefined;
   optimizer?: OptimizerSetup | undefined;
 }) {
   const t = messagesFor(locale);
-  const [results, setResults] = useState<ViewportResult[]>([]);
-  const [status, setStatus] = useState<'idle' | 'running' | 'failed'>('idle');
-  const [customText, setCustomText] = useState('');
   const [announcement, setAnnouncement] = useState('');
   const [optimize, setOptimize] = useState<OptimizeState>({ state: 'idle' });
-  const optimizing = useRef<AbortController>();
-  useEffect(() => () => optimizing.current?.abort(), []);
-  const customWidth = Number(customText);
-  const customValid =
-    customText !== '' &&
-    Number.isInteger(customWidth) &&
-    customWidth >= MIN_WIDTH &&
-    customWidth <= MAX_WIDTH;
-  const known = DEFAULT_VIEWPORTS.some((viewport) => viewport.width === customWidth);
-  const widths = customValid && !known ? [customWidth] : [];
-  const key = input
-    ? JSON.stringify([
-        input.fallbackFontFaces,
-        input.fallbackFamilies,
-        input.generic,
-        input.language,
-        input.spacing,
-        widths,
-      ])
-    : '';
-  const latest = useRef(input);
-  latest.current = input;
-  const bytes = input?.webBytes;
-  const optimizerFamily = optimizer?.family;
-  useEffect(() => {
-    optimizing.current?.abort();
-    setOptimize((current) => (current.state === 'running' ? { state: 'idle' } : current));
-  }, [key, optimizerFamily]);
+  const [verified, setVerified] = useState<VerifyState>({ state: 'idle' });
+  const verifying = useRef<AbortController>();
+  useEffect(() => () => verifying.current?.abort(), []);
 
-  useEffect(() => {
-    const current = latest.current;
-    if (!current || key === '') {
-      setResults([]);
-      setStatus('idle');
-      return;
-    }
-    const controller = new AbortController();
-    let frame = 0;
-    const timer = setTimeout(() => {
-      frame = requestAnimationFrame(() => {
-        setStatus('running');
-        simulateLayoutShift({
-          ...current,
-          viewports: viewportsFor(widths),
-          signal: controller.signal,
-        }).then(
-          (next) => {
-            if (controller.signal.aborted) return;
-            setResults(next);
-            setStatus('idle');
-          },
-          () => {
-            if (controller.signal.aborted) return;
-            setResults([]);
-            setStatus('failed');
-          },
-        );
-      });
-    }, DEBOUNCE_MS);
-    return () => {
-      controller.abort();
-      clearTimeout(timer);
-      cancelAnimationFrame(frame);
-    };
-  }, [key, bytes]);
-
-  const runOptimizer = async () => {
-    if (!input || !optimizer) return;
-    optimizing.current?.abort();
-    const controller = new AbortController();
-    optimizing.current = controller;
-    setOptimize({ state: 'running', count: 0 });
-    const start = Object.fromEntries(optimizer.dimensions.map((dim) => [dim.key, dim.value]));
-    let simulation: Awaited<ReturnType<typeof createSimulation>> | undefined;
-    try {
-      simulation = await createSimulation({
-        ...input,
-        fallbackFamilies: [optimizer.family],
-        fallbackFontFaces: optimizer.fontFaces(start),
-        viewports: viewportsFor(widths),
-        signal: controller.signal,
-      });
-      let missing = false;
-      const active = simulation;
-      const result = await compassSearch(
-        optimizer.dimensions,
-        async (values) => {
-          const measured = await active.measure(optimizer.fontFaces(values), {
-            letterEm: values.letterSpacing ?? 0,
-            wordEm: values.wordSpacing ?? 0,
-          });
-          if (measured.missingFallbacks.length > 0) {
-            missing = true;
-            controller.abort();
-          }
-          return measured.results.reduce((sum, item) => sum + item.score, 0);
-        },
-        {
-          maxEvaluations: 150,
-          maxMs: 12_000,
-          signal: controller.signal,
-          onProgress: (count) => setOptimize({ state: 'running', count }),
-        },
-      );
-      if (missing) {
-        setOptimize({ state: 'missing' });
-      } else if (controller.signal.aborted) {
-        return;
-      } else {
-        if (result.score < result.startScore - 1e-9) optimizer.onApply(result.values);
-        setOptimize({
-          state: 'done',
-          before: result.startScore,
-          after: Math.min(result.score, result.startScore),
-          count: result.evaluations,
-        });
-      }
-    } catch {
-      if (!controller.signal.aborted) setOptimize({ state: 'failed' });
-    } finally {
-      simulation?.close();
-    }
-  };
+  const rows = useMemo(
+    () =>
+      model
+        ? model.faces.map((face) => ({
+            face,
+            results: face.font ? scoreOf(model, face.font) : null,
+          }))
+        : [],
+    [model],
+  );
 
   const ratingLabel = (score: number) => {
     const rating = ratingOf(score);
@@ -191,88 +100,121 @@ export function LayoutShiftPanel({
     );
 
   useEffect(() => {
-    if (status !== 'idle' || results.length === 0) return;
+    const worst = rows
+      .flatMap((row) => (row.results ?? []).map((item) => ({ face: row.face.label, item })))
+      .sort((a, b) => b.item.score - a.item.score)[0];
+    if (!worst) return;
     const timer = setTimeout(
       () =>
         setAnnouncement(
-          results
-            .map((item) =>
-              t.cls_announcement({
-                width: item.viewport.width,
-                score: score(item.score),
-                rating: ratingLabel(item.score),
-              }),
-            )
-            .join(' '),
+          t.cls_announcement({
+            face: worst.face,
+            width: worst.item.viewport.width,
+            score: score(worst.item.score),
+            rating: ratingLabel(worst.item.score),
+          }),
         ),
       SETTLE_MS,
     );
     return () => clearTimeout(timer);
-  }, [results, status]);
+  }, [rows]);
+
+  const runOptimizer = async () => {
+    if (!model || !optimizer) return;
+    setOptimize({ state: 'running', count: 0 });
+    try {
+      const result = await compassSearch(
+        optimizer.dimensions,
+        async (values) => {
+          const font = optimizer.fontFor(values);
+          if (!font) return 0;
+          return scoreOf(model, font).reduce((sum, item) => sum + item.score, 0);
+        },
+        {
+          maxEvaluations: 1500,
+          maxMs: 4000,
+          onProgress: (count) => setOptimize({ state: 'running', count }),
+        },
+      );
+      if (result.score < result.startScore - 1e-9) optimizer.onApply(result.values);
+      setOptimize({
+        state: 'done',
+        before: result.startScore,
+        after: Math.min(result.score, result.startScore),
+        count: result.evaluations,
+      });
+    } catch {
+      setOptimize({ state: 'failed' });
+    }
+  };
+
+  const runVerify = async () => {
+    if (!verify) return;
+    verifying.current?.abort();
+    const controller = new AbortController();
+    verifying.current = controller;
+    setVerified({ state: 'running' });
+    try {
+      const results = await simulateLayoutShift({
+        ...verify,
+        viewports: DEFAULT_VIEWPORTS,
+        signal: controller.signal,
+      });
+      if (!controller.signal.aborted) setVerified({ state: 'done', results });
+    } catch {
+      if (!controller.signal.aborted) setVerified({ state: 'failed' });
+    }
+  };
 
   return (
     <section class="ff-generator__section ff-cls" aria-labelledby="ff-cls-heading">
       <h2 id="ff-cls-heading">{t.cls_heading()}</h2>
       <p class="ff-muted">{t.cls_note()}</p>
-      <div class="ff-field ff-cls__custom">
-        <label for="ff-cls-width">{t.cls_custom_label()}</label>
-        <input
-          id="ff-cls-width"
-          class="ff-input"
-          type="number"
-          inputMode="numeric"
-          min={MIN_WIDTH}
-          max={MAX_WIDTH}
-          value={customText}
-          aria-invalid={customText !== '' && !customValid}
-          aria-describedby="ff-cls-width-hint"
-          onInput={(event) => setCustomText(event.currentTarget.value)}
-        />
-      </div>
-      <p id="ff-cls-width-hint" class="ff-muted">
-        {t.cls_custom_hint({ min: MIN_WIDTH, max: MAX_WIDTH })}
-      </p>
-      <p class="ff-muted" role="status">
-        {status === 'running' && t.cls_running()}
-      </p>
-      {status === 'failed' && (
-        <p class="ff-error" role="alert">
-          {t.cls_failed()}
-        </p>
-      )}
-      {results.length > 0 && (
+      {rows.length > 0 && (
         <table class="ff-cls__table">
           <caption class="ff-sr-only">{t.cls_heading()}</caption>
           <thead>
             <tr>
-              <th scope="col">{t.cls_viewport()}</th>
-              <th scope="col">{t.cls_score()}</th>
-              <th scope="col">{t.cls_lines()}</th>
-              <th scope="col">{t.cls_height()}</th>
-              <th scope="col">{t.cls_mismatches()}</th>
+              <th scope="col">{t.cls_font()}</th>
+              {DEFAULT_VIEWPORTS.map((viewport) => (
+                <th scope="col" key={viewport.width}>{`${viewport.width}px`}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
-            {results.map((item) => (
-              <tr key={item.viewport.width}>
-                <th scope="row">{`${item.viewport.width}px`}</th>
-                <td>{`${score(item.score)} · ${ratingLabel(item.score)}`}</td>
-                <td>{t.cls_change({ before: item.linesBefore, after: item.linesAfter })}</td>
-                <td>
-                  {t.cls_change_px({
-                    before: Math.round(item.heightBefore),
-                    after: Math.round(item.heightAfter),
-                  })}
-                </td>
-                <td>{item.lineBreakMismatches}</td>
+            {rows.map(({ face, results }) => (
+              <tr key={face.id}>
+                <th scope="row">
+                  {face.label}
+                  <span class="ff-muted"> {face.systems}</span>
+                </th>
+                {results ? (
+                  results.map((item) => (
+                    <td key={item.viewport.width}>
+                      {`${score(item.score)} · ${ratingLabel(item.score)}`}
+                      <span class="ff-muted">
+                        {' '}
+                        {t.cls_detail({
+                          lines: t.cls_change({ before: item.linesBefore, after: item.linesAfter }),
+                          height: t.cls_change_px({
+                            before: Math.round(item.heightBefore),
+                            after: Math.round(item.heightAfter),
+                          }),
+                        })}
+                      </span>
+                    </td>
+                  ))
+                ) : (
+                  <td colSpan={DEFAULT_VIEWPORTS.length}>{t.cls_no_glyphs()}</td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       )}
-      {optimizer && (
-        <div class="ff-cls__optimize">
-          <div class="ff-generator__buttons">
+      <div class="ff-cls__optimize">
+        <div class="ff-generator__buttons">
+          {optimizer && (
             <Button
               onClick={() => {
                 if (optimize.state !== 'running') void runOptimizer();
@@ -281,46 +223,53 @@ export function LayoutShiftPanel({
             >
               {t.cls_optimize()}
             </Button>
-            {optimize.state === 'running' && (
-              <Button
-                onClick={() => {
-                  optimizing.current?.abort();
-                  setOptimize({ state: 'idle' });
-                }}
-              >
-                {t.cls_optimize_cancel()}
-              </Button>
-            )}
-            {optimizer.applied && (
-              <Button
-                onClick={() => {
-                  optimizer.onReset();
-                  setOptimize({ state: 'idle' });
-                }}
-              >
-                {t.cls_optimize_reset()}
-              </Button>
-            )}
-          </div>
-          <p class="ff-muted">{t.cls_optimize_note()}</p>
-          <p class="ff-muted" role="status">
-            {optimize.state === 'running' && t.cls_optimizing({ count: optimize.count })}
-            {optimize.state === 'missing' && t.cls_optimize_missing()}
-            {optimize.state === 'failed' && t.cls_failed()}
-            {optimize.state === 'done' &&
-              (optimize.after < optimize.before - 1e-9
-                ? t.cls_optimized({
-                    before: score(optimize.before),
-                    after: score(optimize.after),
-                    count: optimize.count,
-                  })
-                : t.cls_optimize_none())}
-          </p>
+          )}
+          {optimizer?.applied && (
+            <Button
+              onClick={() => {
+                optimizer.onReset();
+                setOptimize({ state: 'idle' });
+              }}
+            >
+              {t.cls_optimize_reset()}
+            </Button>
+          )}
+          {verify && (
+            <Button
+              onClick={() => {
+                if (verified.state !== 'running') void runVerify();
+              }}
+              aria-disabled={verified.state === 'running'}
+            >
+              {t.cls_verify()}
+            </Button>
+          )}
         </div>
-      )}
+        <p class="ff-muted" role="status">
+          {optimize.state === 'running' && t.cls_optimizing({ count: optimize.count })}
+          {optimize.state === 'failed' && t.cls_failed()}
+          {optimize.state === 'done' &&
+            (optimize.after < optimize.before - 1e-9
+              ? t.cls_optimized({
+                  before: score(optimize.before),
+                  after: score(optimize.after),
+                  count: optimize.count,
+                })
+              : t.cls_optimize_none())}
+          {verified.state === 'running' && ` ${t.cls_verifying()}`}
+          {verified.state === 'failed' && ` ${t.cls_failed()}`}
+        </p>
+        {verified.state === 'done' && (
+          <p class="ff-muted">
+            {t.cls_verified({
+              results: verified.results
+                .map((item) => `${item.viewport.width}px: ${score(item.score)}`)
+                .join(', '),
+            })}
+          </p>
+        )}
+      </div>
       <LiveRegion>{announcement}</LiveRegion>
     </section>
   );
 }
-
-export type { SampleLanguage };

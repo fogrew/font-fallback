@@ -1,4 +1,12 @@
+export { sampleBlocks } from './lib/document';
 export type { Dimension } from './lib/optimize';
-export { layoutShiftScore, type ShiftScore } from './lib/score';
-export { type Rating, ratingOf } from './lib/simulate';
-export { LayoutShiftPanel, type OptimizerSetup, type PanelInput } from './ui/LayoutShiftPanel';
+export { type PredictFont, predictViewport } from './lib/predict';
+export { layoutShiftScore, type ShiftScore, type ViewportResult } from './lib/score';
+export { DEFAULT_VIEWPORTS, type Rating, ratingOf } from './lib/simulate';
+export {
+  LayoutShiftPanel,
+  type ModelFace,
+  type OptimizerSetup,
+  type PanelInput,
+  type PanelModel,
+} from './ui/LayoutShiftPanel';

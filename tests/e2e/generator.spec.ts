@@ -80,9 +80,9 @@ test('the fallback list follows the selected system and reports shadowing with a
   await fallback.selectOption('helvetica');
   await system.selectOption('windows');
   await fallback.selectOption('arial');
-  await expect(page.getByText(/would be used instead of/)).toBeVisible();
+  await expect(page.locator('p.ff-error', { hasText: /would be used instead of/ })).toBeVisible();
   await page.getByRole('button', { name: 'Reorder to fix' }).click();
-  await expect(page.getByText(/would be used instead of/)).toHaveCount(0);
+  await expect(page.locator('p.ff-error', { hasText: /would be used instead of/ })).toHaveCount(0);
 });
 
 test('the text language changes the fit for Cyrillic', async ({ page }) => {
@@ -377,7 +377,7 @@ test('descriptor support is listed and the Safari strategy extends the CSS', asy
   await expect(page.getByText(/MDN browser-compat-data/)).toBeVisible();
 });
 
-test('the layout shift simulation reports a score per viewport and accepts a custom width', async ({
+test('the layout shift estimate covers every fallback and viewport and can be verified', async ({
   page,
 }) => {
   await page.goto('/en/');
@@ -385,19 +385,19 @@ test('the layout shift simulation reports a score per viewport and accepts a cus
   await page.locator('input[type="file"][accept*="woff2"]').setInputFiles(sourceSans);
   const section = page.getByRole('region', { name: 'Layout shift' });
   const table = section.getByRole('table');
-  await expect(table.getByRole('row')).toHaveCount(4);
-  await expect(table.getByRole('rowheader', { name: '360px' })).toBeVisible();
-  await expect(table).toContainText(/(Good|Needs improvement|Poor)/);
+  for (const width of ['360px', '768px', '1280px']) {
+    await expect(table.getByRole('columnheader', { name: width })).toBeVisible();
+  }
+  await expect(table.getByRole('row').nth(1)).toContainText(/(Good|Needs improvement|Poor)/);
+  await expect(section.getByLabel('Extra viewport width (px)')).toHaveCount(0);
   await expect(section.getByRole('alert')).toHaveCount(0);
 
-  await section.getByLabel('Extra viewport width (px)').fill('1920');
-  await expect(table.getByRole('row')).toHaveCount(5);
-  await expect(table.getByRole('rowheader', { name: '1920px' })).toBeVisible();
-  await section.getByLabel('Extra viewport width (px)').fill('100');
-  await expect(section.getByLabel('Extra viewport width (px)')).toHaveAttribute(
-    'aria-invalid',
-    'true',
-  );
+  await page.getByLabel('System', { exact: true }).selectOption('windows');
+  await page.getByRole('button', { name: 'Add fallback' }).click();
+  await expect(table.getByRole('row').nth(2)).toBeVisible();
+
+  await section.getByRole('button', { name: 'Verify on this device' }).click();
+  await expect(section.getByText(/Measured in the browser/)).toBeVisible({ timeout: 25_000 });
 });
 
 test('spacing adds the fonts-loading CSS and script', async ({ page }) => {
@@ -417,7 +417,6 @@ test('spacing adds the fonts-loading CSS and script', async ({ page }) => {
   await expect(script).toContainText('Source Sans Pro');
 });
 
-test.skip(process.platform !== 'win32', 'the optimizer needs a Windows font on this machine');
 test('Optimize for CLS keeps pinned values and can be reset', async ({ page }) => {
   await page.goto('/en/');
   await page.waitForFunction(() => document.querySelector('astro-island:not([ssr])'));
@@ -432,10 +431,9 @@ test('Optimize for CLS keeps pinned values and can be reset', async ({ page }) =
 
   const section = page.getByRole('region', { name: 'Layout shift' });
   await section.getByRole('button', { name: 'Optimize for CLS' }).click();
-  await expect(
-    section.getByText(/Layout shift on this device: |Nothing to improve|not installed/),
-  ).toBeVisible({ timeout: 25_000 });
-  await expect(section.getByText(/not installed/)).toHaveCount(0);
+  await expect(section.getByText(/Layout shift on this device: |Nothing to improve/)).toBeVisible({
+    timeout: 25_000,
+  });
   await expect(code).toContainText('size-adjust: 108%');
   await expect(section.getByRole('alert')).toHaveCount(0);
 });

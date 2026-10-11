@@ -10,6 +10,19 @@ export interface Viewport {
   height: number;
 }
 
+export interface ViewportResult {
+  viewport: Viewport;
+  score: number;
+  impactFraction: number;
+  distanceFraction: number;
+  shiftedElements: number;
+  linesBefore: number;
+  linesAfter: number;
+  heightBefore: number;
+  heightAfter: number;
+  lineBreakMismatches: number;
+}
+
 export interface ShiftInput {
   before: Box;
   after: Box;

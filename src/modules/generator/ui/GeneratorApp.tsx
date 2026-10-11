@@ -30,6 +30,7 @@ import {
   LayoutShiftPanel,
   type OptimizerSetup,
   type PanelInput,
+  type PanelModel,
 } from '@/modules/layout-shift';
 import type { Category, OsId } from '@/modules/os-fonts';
 import { isNoCoverage, LOW_COVERAGE, sampleText } from '../lib/compute';
@@ -43,6 +44,7 @@ import {
   rankFor,
   systemsWithFonts,
 } from '../lib/per-os';
+import { fallbackPredictFont, webPredictFont } from '../lib/predict-input';
 import { aspectOf, safariStrategyCss } from '../lib/safari';
 import { FontUpload } from './FontUpload';
 import { Preview } from './Preview';
@@ -263,7 +265,9 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
         ? spacingValues.word.value / 100
         : (optimizedSpacing?.word ?? 0),
   };
+  const systemName = (os: OsId) => t[`audience_os_${os}`]();
   let simulation: PanelInput | undefined;
+  let model: PanelModel | undefined;
   let optimizer: OptimizerSetup | undefined;
   let output: ReturnType<typeof buildCss> | undefined;
   let adjustment: Overrides | undefined;
@@ -281,6 +285,32 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
         : [];
     });
     adjustment = adjustmentOf(baseOf(previewPick), manualOf(previewPick.id));
+    const anyRanking = Object.values(rankings.result).find(Boolean);
+    if (anyRanking) {
+      model = {
+        web: webPredictFont(selected.metrics, anyRanking),
+        language,
+        faces: plan.order.flatMap((id) => {
+          const candidate = chosen.find((item) => item.faceId === id)?.candidate;
+          if (!candidate) return [];
+          return [
+            {
+              id,
+              label: candidate.family,
+              systems: `(${chosen
+                .filter((item) => item.faceId === id)
+                .map((item) => systemName(item.os))
+                .join(', ')})`,
+              font: fallbackPredictFont(
+                candidate,
+                adjustmentOf(baseOf(candidate), manualOf(id)),
+                spacingEm,
+              ),
+            },
+          ];
+        }),
+      };
+    }
     try {
       const family = selected.metrics.names.family?.trim().slice(0, 200) || 'Custom font';
       output = buildCss(family, faces, kind);
@@ -295,14 +325,14 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
           language,
           spacing: { letterEm: spacingEm.letter, wordEm: spacingEm.word },
         };
-        optimizer = optimizerFor(family, previewPick);
+        optimizer = optimizerFor(previewPick);
       }
     } catch (failure) {
       if (!(failure instanceof CssExportError)) throw failure;
     }
   }
 
-  function optimizerFor(family: string, pick: Candidate): OptimizerSetup {
+  function optimizerFor(pick: Candidate): OptimizerSetup {
     const base = adjustmentOf(baseOf(pick), manualOf(pick.id));
     const manual = manualOf(pick.id);
     const dimension = (
@@ -366,25 +396,18 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
       ),
     ];
     return {
-      family: fallbackFamilyName(family, pick.family, 1),
       dimensions,
-      fontFaces: (v) =>
-        buildCss(
-          family,
-          [
-            {
-              family: pick.family,
-              localNames: pick.localNames,
-              adjustment: {
-                sizeAdjust: v.sizeAdjust ?? base.sizeAdjust,
-                ascentOverride: v.ascentOverride ?? base.ascentOverride,
-                descentOverride: v.descentOverride ?? base.descentOverride,
-                lineGapOverride: v.lineGapOverride ?? base.lineGapOverride,
-              },
-            },
-          ],
-          kind,
-        ).fontFaces,
+      fontFor: (v) =>
+        fallbackPredictFont(
+          pick,
+          {
+            sizeAdjust: v.sizeAdjust ?? base.sizeAdjust,
+            ascentOverride: v.ascentOverride ?? base.ascentOverride,
+            descentOverride: v.descentOverride ?? base.descentOverride,
+            lineGapOverride: v.lineGapOverride ?? base.lineGapOverride,
+          },
+          { letter: v.letterSpacing ?? 0, word: v.wordSpacing ?? 0 },
+        ),
       applied: Boolean(optimized[valueKey(pick.id)]) || optimizedSpacing !== undefined,
       onApply: (v) => {
         setOptimized((all) => ({
@@ -414,7 +437,6 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
     : 1.4;
   const safariCss = safariOn && aspect !== null ? safariStrategyCss(aspect, lineHeight) : '';
 
-  const systemName = (os: OsId) => t[`audience_os_${os}`]();
   const percent = (value: number) =>
     new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value);
   const familyOf = (id: string) =>
@@ -746,7 +768,12 @@ export function GeneratorApp({ locale }: { locale: Locale }) {
                 )}
               </section>
             )}
-            <LayoutShiftPanel locale={locale} input={simulation} optimizer={optimizer} />
+            <LayoutShiftPanel
+              locale={locale}
+              model={model}
+              verify={simulation}
+              optimizer={optimizer}
+            />
             <section class="ff-generator__section" aria-labelledby="ff-css-heading">
               <h2 id="ff-css-heading">{t.css_heading()}</h2>
               <p class="ff-muted">{t.fit_latin_note()}</p>

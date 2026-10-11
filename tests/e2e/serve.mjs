@@ -98,4 +98,4 @@ createServer((request, response) => {
   createReadStream(file)
     .on('error', () => response.destroy())
     .pipe(response);
-}).listen(port, '::');
+}).listen({ port, host: '::', backlog: 1024 });

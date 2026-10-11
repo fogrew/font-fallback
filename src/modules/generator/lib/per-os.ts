@@ -39,11 +39,13 @@ export interface Candidate {
   adjustment: FitAdjustment;
   coverage: number;
   latinOnly: boolean;
+  fit: FitFont | null;
 }
 
 export interface Ranking {
   candidates: Candidate[];
   coverage: number;
+  web: { ascent: number; descent: number; lineGap: number };
 }
 
 let pool: PoolFont[] | undefined;
@@ -114,6 +116,7 @@ export function rankFor(web: FontMetrics, os: OsId, language: Language): Ranking
           adjustment: result,
           coverage: own.coverage > 0 ? Math.min(1, result.coverage / own.coverage) : 0,
           latinOnly: false,
+          fit: font.fit,
         });
       } else if (font.latinWidthEm !== null && language === 'en') {
         candidates.push({
@@ -124,6 +127,7 @@ export function rankFor(web: FontMetrics, os: OsId, language: Language): Ranking
           adjustment: fitFromAverages(web, own.targetWidthEm, font.latinWidthEm),
           coverage: 1,
           latinOnly: true,
+          fit: null,
         });
       }
     } catch (failure) {
@@ -135,7 +139,15 @@ export function rankFor(web: FontMetrics, os: OsId, language: Language): Ranking
       Number(b.coverage >= 0.95) - Number(a.coverage >= 0.95) ||
       Math.abs(Math.log(a.adjustment.sizeAdjust)) - Math.abs(Math.log(b.adjustment.sizeAdjust)),
   );
-  return { candidates, coverage: own.coverage };
+  return {
+    candidates,
+    coverage: own.coverage,
+    web: {
+      ascent: own.ascentOverride,
+      descent: own.descentOverride,
+      lineGap: own.lineGapOverride,
+    },
+  };
 }
 
 export interface SystemPick {

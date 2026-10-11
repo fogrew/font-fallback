@@ -1,5 +1,14 @@
-import { type SampleLanguage, samples } from './samples';
-import { type Box, layoutShiftScore, MAX_ELEMENTS, type Viewport } from './score';
+import { blockCss, sampleBlocks } from './document';
+import type { SampleLanguage } from './samples';
+import {
+  type Box,
+  layoutShiftScore,
+  MAX_ELEMENTS,
+  type Viewport,
+  type ViewportResult,
+} from './score';
+
+export type { ViewportResult };
 
 export const WEB_FAMILY = 'ff-sim-web';
 const MISSING_FAMILY = 'ff-sim-missing';
@@ -26,19 +35,6 @@ export interface SimulationInput {
 export interface Spacing {
   letterEm: number;
   wordEm: number;
-}
-
-export interface ViewportResult {
-  viewport: Viewport;
-  score: number;
-  impactFraction: number;
-  distanceFraction: number;
-  shiftedElements: number;
-  linesBefore: number;
-  linesAfter: number;
-  heightBefore: number;
-  heightAfter: number;
-  lineBreakMismatches: number;
 }
 
 export interface Measurement {
@@ -77,12 +73,7 @@ export function buildStylesheet(
   return `${input.fallbackFontFaces}
 html, body { margin: 0; padding: 0; }
 body { padding: 16px; font-size: 16px; line-height: normal; }
-h1 { font-size: 32px; margin: 0 0 12px; }
-h2 { font-size: 24px; margin: 20px 0 8px; }
-h3 { font-size: 19px; margin: 16px 0 6px; }
-p, li, blockquote { margin: 0 0 12px; }
-button { font: inherit; padding: 8px 14px; margin: 0 8px 8px 0; }
-ul { margin: 0 0 12px; padding-left: 24px; }
+${blockCss()}
 body.sim-a, body.sim-a * { font-family: ${quote(MISSING_FAMILY)}, ${tail}; letter-spacing: ${finite(spacing.letterEm)}em; word-spacing: ${finite(spacing.wordEm)}em; }
 body.sim-b, body.sim-b * { font-family: ${quote(WEB_FAMILY)}, ${tail}; }`;
 }
@@ -110,27 +101,11 @@ function snapshot(root: Element): Snapshot {
 }
 
 function buildSample(doc: Document, language: SampleLanguage) {
-  const sample = samples[language];
-  const add = <K extends keyof HTMLElementTagNameMap>(
-    tag: K,
-    text: string,
-    parent: Element = doc.body,
-  ) => {
-    const element = doc.createElement(tag);
-    element.textContent = text;
-    parent.append(element);
-    return element;
-  };
-  add('h1', sample.title);
-  add('p', sample.intro);
-  add('h2', sample.heading);
-  for (const paragraph of sample.paragraphs) add('p', paragraph);
-  const list = doc.createElement('ul');
-  for (const item of sample.items) add('li', item, list);
-  doc.body.append(list);
-  add('h3', sample.subheading);
-  add('blockquote', sample.quote);
-  for (const label of sample.buttons) add('button', label);
+  for (const block of sampleBlocks(language)) {
+    const element = doc.createElement(block.tag);
+    element.textContent = block.text;
+    doc.body.append(element);
+  }
 }
 
 function waitForFrame(frame: HTMLIFrameElement): Promise<void> {
